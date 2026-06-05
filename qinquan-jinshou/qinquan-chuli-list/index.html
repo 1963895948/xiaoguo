@@ -117,10 +117,15 @@
   .st-wordfail{ background:#fff1f0; color:#f5455c; }
   .st-keep{ background:#f0f9f3; color:#16b364; }
 
-  .op{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
-  .op a{ color:var(--link); cursor:pointer; font-size:12px; }
-  .op a:hover{ text-decoration:underline; }
-  .op a.disabled{ color:var(--text-3); cursor:not-allowed; text-decoration:none; }
+  .op-trigger{ color:var(--link); cursor:pointer; user-select:none; display:inline-flex; align-items:center; gap:3px; font-size:12px; }
+  .op-trigger:hover{ text-decoration:underline; }
+  .op-trigger .caret{ font-size:9px; }
+  .op-menu{ position:fixed; display:none; background:#fff; border:1px solid var(--border); border-radius:6px;
+    box-shadow:0 6px 20px rgba(0,0,0,.14); min-width:124px; z-index:120; padding:4px 0; }
+  .op-menu.show{ display:block; }
+  .op-mi{ padding:8px 16px; font-size:12px; color:var(--text); cursor:pointer; white-space:nowrap; }
+  .op-mi:hover{ background:#f3f6fb; color:var(--primary); }
+  .op-mi.disabled{ color:var(--text-3); cursor:not-allowed; background:none; }
 
   .time{ color:var(--text-2); font-size:11px; line-height:1.8; white-space:nowrap; }
 
@@ -289,6 +294,9 @@
   </div>
 </div>
 
+<!-- 操作下拉浮层（共用） -->
+<div class="op-menu" id="opMenu"></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -442,9 +450,13 @@ function keepReason(r){
   return "";
 }
 
-function opLink(label, enabled, reason, handler){
-  if(enabled) return `<a data-act="${handler}">${label}</a>`;
-  return `<a class="disabled" title="${reason}">${label}</a>`;
+function buildOpMenu(r){
+  const item=(label,enabled,reason,act)=> enabled
+    ? `<div class="op-mi" data-act="${act}">${label}</div>`
+    : `<div class="op-mi disabled" title="${reason}">${label}</div>`;
+  return item("删listing",canDelete(r),delReason(r),"del")
+       + item("修改文案",canEdit(r),editReason(r),"edit")
+       + item("保留",canKeep(r),keepReason(r),"keep");
 }
 
 function render(){
@@ -484,11 +496,7 @@ function render(){
       <td>${kwCell(r)}</td>
       <td><span class="pill ${STATUS[r.status].c}">${STATUS[r.status].t}</span></td>
       <td><div class="time">${r.add}<br>${r.upd}</div></td>
-      <td><div class="op">
-        ${opLink("删listing", canDelete(r), delReason(r), "del")}
-        ${opLink("修改文案", canEdit(r), editReason(r), "edit")}
-        ${opLink("保留", canKeep(r), keepReason(r), "keep")}
-      </div></td>
+      <td><span class="op-trigger" data-trigger="${i}">操作 <span class="caret">▾</span></span></td>
     </tr>
   `).join('');
   bindRowActions();
@@ -556,27 +564,46 @@ document.getElementById('editSave').onclick = ()=>{
   }
 };
 
-/* 行内操作绑定 */
+/* 操作下拉浮层 */
+const opMenu = document.getElementById('opMenu');
+let opMenuRow = -1;
+function hideOpMenu(){ opMenu.classList.remove('show'); opMenuRow = -1; }
+function doAct(i, act){
+  const r = rows[i];
+  if(act==="del"){
+    confirmBox('⚠️ 删除 listing 确认',
+      `确认立即删除该 listing？此操作不可恢复。<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b>`,
+      ()=>{ r.status="todel"; r.upd="刚刚"; render(); toast('已提交删除，状态更新为「待删除listing」'); });
+  } else if(act==="edit"){
+    openEdit(i);
+  } else if(act==="keep"){
+    confirmBox('保留确认',
+      `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、')}</b>`,
+      ()=>{ r.status="keep"; r.upd="刚刚"; render(); toast('已保留，状态更新为「保留」'); });
+  }
+}
 function bindRowActions(){
-  document.querySelectorAll('#tbody [data-act]').forEach(a=>{
-    a.onclick = ()=>{
-      const i = +a.closest('tr').dataset.i;
-      const r = rows[i];
-      const act = a.dataset.act;
-      if(act==="del"){
-        confirmBox('⚠️ 删除 listing 确认',
-          `确认立即删除该 listing？此操作不可恢复。<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b>`,
-          ()=>{ r.status="todel"; r.upd="刚刚"; render(); toast('已提交删除，状态更新为「待删除listing」'); });
-      } else if(act==="edit"){
-        openEdit(i);
-      } else if(act==="keep"){
-        confirmBox('保留确认',
-          `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、')}</b>`,
-          ()=>{ r.status="keep"; r.upd="刚刚"; render(); toast('已保留，状态更新为「保留」'); });
-      }
+  document.querySelectorAll('#tbody [data-trigger]').forEach(t=>{
+    t.onclick = (e)=>{
+      e.stopPropagation();
+      const i = +t.dataset.trigger;
+      if(opMenu.classList.contains('show') && opMenuRow===i){ hideOpMenu(); return; }
+      opMenuRow = i;
+      opMenu.innerHTML = buildOpMenu(rows[i]);
+      opMenu.classList.add('show');
+      const rect = t.getBoundingClientRect();
+      let top = rect.bottom + 4, left = rect.left;
+      if(top + opMenu.offsetHeight > window.innerHeight) top = rect.top - opMenu.offsetHeight - 4;
+      if(left + opMenu.offsetWidth > window.innerWidth) left = window.innerWidth - opMenu.offsetWidth - 8;
+      opMenu.style.top = top + 'px'; opMenu.style.left = left + 'px';
+      opMenu.querySelectorAll('.op-mi[data-act]').forEach(a=>{
+        a.onclick = (ev)=>{ ev.stopPropagation(); const act = a.dataset.act; hideOpMenu(); doAct(opMenuRow, act); };
+      });
     };
   });
 }
+document.addEventListener('click', hideOpMenu);
+window.addEventListener('scroll', hideOpMenu, true);
 
 /* 全选 / 批量 */
 const checkAll = document.getElementById('checkAll');
