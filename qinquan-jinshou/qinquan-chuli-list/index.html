@@ -117,7 +117,8 @@
   .st-wordfail{ background:#fff1f0; color:#f5455c; }
   .st-keep{ background:#f0f9f3; color:#16b364; }
 
-  .op-trigger{ color:var(--link); cursor:pointer; user-select:none; display:inline-flex; align-items:center; gap:3px; font-size:12px; }
+  .ck-op{ display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
+  .op-trigger{ color:var(--link); cursor:pointer; user-select:none; display:inline-flex; align-items:center; gap:3px; font-size:12px; white-space:nowrap; }
   .op-trigger:hover{ text-decoration:underline; }
   .op-trigger .caret{ font-size:9px; }
   .op-menu{ position:fixed; display:none; background:#fff; border:1px solid var(--border); border-radius:6px;
@@ -232,7 +233,7 @@
     <table>
       <thead>
         <tr>
-          <th style="width:34px"><input type="checkbox" id="checkAll" /></th>
+          <th style="width:56px"><input type="checkbox" id="checkAll" /></th>
           <th>listing 信息</th>
           <th>店铺信息</th>
           <th>销量信息 <span class="sort">↕</span></th>
@@ -242,7 +243,6 @@
           <th>敏感词及类型</th>
           <th>处理状态</th>
           <th>添加时间/更新时间 <span class="sort">↕</span></th>
-          <th style="width:84px">操作</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -462,7 +462,10 @@ function buildOpMenu(r){
 function render(){
   document.getElementById('tbody').innerHTML = rows.map((r,i)=>`
     <tr data-i="${i}">
-      <td><input type="checkbox" class="rowck" ${ (r.status==="wait"||r.status==="keep") ? "" : "disabled title='仅待处理/保留可批量删除'" } /></td>
+      <td><div class="ck-op">
+        <input type="checkbox" class="rowck" ${ (r.status==="wait"||r.status==="keep") ? "" : "disabled title='仅待处理/保留可批量删除'" } />
+        <span class="op-trigger" data-trigger="${i}">操作 <span class="caret">▾</span></span>
+      </div></td>
       <td>
         <div class="listing">
           <div class="thumb">${r.img}</div>
@@ -496,7 +499,6 @@ function render(){
       <td>${kwCell(r)}</td>
       <td><span class="pill ${STATUS[r.status].c}">${STATUS[r.status].t}</span></td>
       <td><div class="time">${r.add}<br>${r.upd}</div></td>
-      <td><span class="op-trigger" data-trigger="${i}">操作 <span class="caret">▾</span></span></td>
     </tr>
   `).join('');
   bindRowActions();
