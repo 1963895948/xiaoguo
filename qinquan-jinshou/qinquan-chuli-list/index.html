@@ -35,6 +35,15 @@
   select.ctrl{ appearance:none; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%2397a0b0' fill='none' stroke-width='1.4'/></svg>") no-repeat right 9px center; padding-right:26px; cursor:pointer; }
   .multi{ position:relative; }
   .multi::after{ content:"多选"; position:absolute; right:24px; top:9px; font-size:10px; color:var(--text-3); pointer-events:none; }
+  .status-multi{ display:inline-block; min-width:140px; }
+  .status-multi-trigger{ width:100%; min-width:140px; text-align:left; cursor:pointer; font-family:inherit; }
+  .status-multi-panel{ display:none; position:absolute; top:100%; left:0; margin-top:4px; min-width:176px;
+    background:#fff; border:1px solid var(--border); border-radius:6px; box-shadow:0 6px 20px rgba(0,0,0,.14);
+    padding:6px 0; z-index:60; max-height:280px; overflow:auto; }
+  .status-multi-panel.show{ display:block; }
+  .status-multi-opt{ display:flex; align-items:center; gap:8px; padding:7px 14px; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .status-multi-opt:hover{ background:#f3f6fb; }
+  .status-multi-opt input{ cursor:pointer; margin:0; }
   .num-range{ display:flex; align-items:center; gap:4px; }
   .num-range .lbl2{ font-size:11px; color:var(--text-2); white-space:nowrap; margin-right:2px; }
   .num-range .ctrl{ width:62px; min-width:62px; text-align:center; padding:0 4px; }
@@ -269,11 +278,24 @@
         <select class="ctrl" style="min-width:100px"><option>创建日期</option><option>更新日期</option></select>
         <input class="ctrl" type="date" /><span class="muted">-</span><input class="ctrl" type="date" />
       </div>
-      <select class="ctrl"><option>处理状态</option><option>待处理</option><option>待删除listing</option><option>删除listing中</option><option>删除listing失败</option><option>待删词</option><option>删词失败</option><option>保留</option></select>
+      <div class="status-multi multi" id="filterStatusWrap">
+        <button type="button" class="ctrl status-multi-trigger" id="filterStatusTrigger">
+          <span id="filterStatusLabel">处理状态</span>
+        </button>
+        <div class="status-multi-panel" id="filterStatusPanel">
+          <label class="status-multi-opt"><input type="checkbox" value="wait" />待处理</label>
+          <label class="status-multi-opt"><input type="checkbox" value="todel" />待删除listing</label>
+          <label class="status-multi-opt"><input type="checkbox" value="deling" />删除listing中</label>
+          <label class="status-multi-opt"><input type="checkbox" value="delfail" />删除listing失败</label>
+          <label class="status-multi-opt"><input type="checkbox" value="toword" />待删词</label>
+          <label class="status-multi-opt"><input type="checkbox" value="wordfail" />删词失败</label>
+          <label class="status-multi-opt"><input type="checkbox" value="keep" />保留</label>
+        </div>
+      </div>
       <select class="ctrl multi"><option>全部销售人员</option><option>（组织架构）</option></select>
       <select class="ctrl multi"><option>全部 FBA/FBM 业务员</option><option>（组织架构）</option></select>
-      <button class="btn btn-primary">搜索</button>
-      <button class="btn">重置</button>
+      <button class="btn btn-primary" id="btnSearch" type="button">搜索</button>
+      <button class="btn" id="btnResetFilter" type="button">重置</button>
       <button class="btn">保存快捷键</button>
     </div>
   </div>
@@ -680,6 +702,35 @@ const STATUS = {
   keep:{ t:"保留", c:"st-keep" }
 };
 const LOCKED_STATUSES = new Set(["todel","deling","delfail","toword","wordfail"]);
+let statusFilters = new Set();
+
+function readStatusFilterChecks(){
+  return new Set(
+    [...document.querySelectorAll('#filterStatusPanel input[type=checkbox]:checked')].map(el => el.value)
+  );
+}
+function syncStatusFilterChecks(){
+  document.querySelectorAll('#filterStatusPanel input[type=checkbox]').forEach(el => {
+    el.checked = statusFilters.has(el.value);
+  });
+}
+function updateStatusFilterLabel(){
+  const el = document.getElementById('filterStatusLabel');
+  if(!statusFilters.size){
+    el.textContent = '处理状态';
+    return;
+  }
+  const names = [...statusFilters].map(k => STATUS[k].t);
+  el.textContent = names.length <= 2 ? names.join('、') : `处理状态（${names.length}）`;
+}
+function hideStatusFilterPanel(){
+  document.getElementById('filterStatusPanel')?.classList.remove('show');
+}
+
+function getVisibleRows(){
+  if(!statusFilters.size) return rows.map((r, i) => ({ r, i }));
+  return rows.map((r, i) => ({ r, i })).filter(x => statusFilters.has(x.r.status));
+}
 
 function statusPill(r){
   const s = STATUS[r.status];
@@ -750,7 +801,8 @@ function renderImportTpl(){
 }
 
 function render(){
-  document.getElementById('tbody').innerHTML = rows.map((r,i)=>`
+  const visible = getVisibleRows();
+  document.getElementById('tbody').innerHTML = visible.map(({ r, i })=>`
     <tr data-i="${i}">
       <td><div class="ck-op">
         <input type="checkbox" class="rowck" ${ (r.status==="wait"||r.status==="keep") ? "" : "disabled title='仅待处理/保留可批量删除'" } />
@@ -794,7 +846,7 @@ function render(){
   bindRowActions();
   bindRowLogActions();
   updateSel();
-  document.getElementById('totalCount').textContent = rows.length;
+  document.getElementById('totalCount').textContent = visible.length;
   renderImportTpl();
 }
 const overlay = document.getElementById('confirmOverlay');
@@ -1057,8 +1109,20 @@ batchOpMenu.querySelectorAll('[data-batch]').forEach(mi=>{
     else batchKeepListing();
   };
 });
-document.addEventListener('click', ()=>{ hideBatchOpMenu(); hideExportMenu(); hideOpMenu(); });
-window.addEventListener('scroll', ()=>{ hideBatchOpMenu(); hideExportMenu(); hideOpMenu(); }, true);
+document.addEventListener('click', ()=>{ hideBatchOpMenu(); hideExportMenu(); hideOpMenu(); hideStatusFilterPanel(); });
+window.addEventListener('scroll', ()=>{ hideBatchOpMenu(); hideExportMenu(); hideOpMenu(); hideStatusFilterPanel(); }, true);
+
+const filterStatusTrigger = document.getElementById('filterStatusTrigger');
+const filterStatusPanel = document.getElementById('filterStatusPanel');
+filterStatusTrigger.onclick = (e)=>{
+  e.stopPropagation();
+  hideBatchOpMenu();
+  hideExportMenu();
+  hideOpMenu();
+  syncStatusFilterChecks();
+  filterStatusPanel.classList.toggle('show');
+};
+filterStatusPanel.onclick = (e)=> e.stopPropagation();
 
 const exportMenu = document.getElementById('exportMenu');
 function hideExportMenu(){ exportMenu.classList.remove('show'); }
@@ -1082,9 +1146,31 @@ exportMenu.querySelectorAll('[data-export]').forEach(mi=>{
       return;
     }
     rows.forEach((r,i)=>{ if(r.status === 'todel') addRowLog(i, '导出待删除listing', ''); });
-    toast(`已按当前条件导出 ${rows.length} 条数据`);
+    const n = getVisibleRows().length;
+    toast(`已按当前条件导出 ${n} 条数据`);
   };
 });
+
+document.getElementById('btnSearch').onclick = ()=>{
+  statusFilters = readStatusFilterChecks();
+  updateStatusFilterLabel();
+  hideStatusFilterPanel();
+  render();
+  if(statusFilters.size){
+    const names = [...statusFilters].map(k => STATUS[k].t).join('、');
+    toast(`已筛选：${names}，共 ${getVisibleRows().length} 条`);
+  } else {
+    toast('已显示全部处理状态');
+  }
+};
+document.getElementById('btnResetFilter').onclick = ()=>{
+  statusFilters = new Set();
+  document.querySelectorAll('#filterStatusPanel input[type=checkbox]').forEach(el => { el.checked = false; });
+  updateStatusFilterLabel();
+  hideStatusFilterPanel();
+  render();
+  toast('已重置筛选');
+};
 
 document.getElementById('btnBatchExtract').onclick = ()=>{
   const n = getCheckedRows().length;
