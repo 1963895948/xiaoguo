@@ -326,9 +326,9 @@
     <div class="modal-body">
       <div class="legend">说明：标题 / 亮点 / 关键词 / 描述 中的 <span style="color:#f5455c;font-weight:600">敏感词</span> 已标红。保存时将调用「商标词和禁用词合并检测接口」（<b>含 SKU 参数</b>），仅当四项文案均不含商标词与禁用词时才能保存；保存成功后调用 listingV2 编辑接口，并写入操作日志。</div>
       <div class="form-item"><label>系统 SKU（检测接口参数，只读）</label><div class="readonly" id="editSku"></div></div>
-      <div class="form-item" id="editRemarkWrap" style="display:none">
-        <label>操作备注（来自确认弹窗）</label>
-        <div class="readonly" id="editRemarkPreview"></div>
+      <div class="form-item">
+        <label for="editRemark">备注</label>
+        <textarea class="ctrl cf-remark" id="editRemark" placeholder="选填，保存后写入操作日志"></textarea>
       </div>
       <div class="form-item"><label>标题</label><div class="editor" contenteditable="true" data-field="title"></div></div>
       <div class="form-item"><label>亮点</label><div class="editor" contenteditable="true" data-field="bullet"></div></div>
@@ -683,7 +683,6 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 const editOverlay = document.getElementById('editOverlay');
 const detectTip = document.getElementById('detectTip');
 let editingIndex = -1;
-let pendingEditRemark = "";
 const SENSITIVE = [...new Set(rows.flatMap(r=>r.kw.map(k=>k.w)))]; // 模拟检测词库
 
 function highlight(text){
@@ -697,22 +696,14 @@ function highlight(text){
 function openEdit(i){
   editingIndex = i; const c = rows[i].copy;
   document.getElementById("editSku").textContent = rows[i].sku;
-  const remarkWrap = document.getElementById("editRemarkWrap");
-  const remarkPreview = document.getElementById("editRemarkPreview");
-  if(pendingEditRemark){
-    remarkWrap.style.display = "";
-    remarkPreview.textContent = pendingEditRemark;
-  } else {
-    remarkWrap.style.display = "none";
-    remarkPreview.textContent = "";
-  }
+  document.getElementById("editRemark").value = "";
   detectTip.className='detect-tip';
   editOverlay.querySelectorAll('.editor').forEach(ed=>{
     ed.innerHTML = highlight(c[ed.dataset.field] || '');
   });
   editOverlay.classList.add('show');
 }
-editOverlay.querySelectorAll('[data-close-edit]').forEach(b=> b.onclick=()=>{ pendingEditRemark=""; editOverlay.classList.remove('show'); });
+editOverlay.querySelectorAll('[data-close-edit]').forEach(b=> b.onclick=()=> editOverlay.classList.remove('show'));
 document.getElementById('editSave').onclick = ()=>{
   // 模拟「商标词和禁用词合并检测接口」
   let hits=[];
@@ -728,14 +719,13 @@ document.getElementById('editSave').onclick = ()=>{
   } else {
     detectTip.className='detect-tip ok';
     detectTip.textContent = '检测通过，正在调用 listingV2 编辑接口保存…';
-    const savedRemark = pendingEditRemark;
+    const savedRemark = document.getElementById("editRemark").value.trim();
     const savedIndex = editingIndex;
     setTimeout(()=>{
       editOverlay.classList.remove('show');
       rows[savedIndex].status = "toword";
       rows[savedIndex].upd = "刚刚";
       addRowLog(savedIndex, "修改文案", savedRemark);
-      pendingEditRemark = "";
       render(); toast('文案已提交修改，状态更新为「待删词」，已写入操作日志');
     }, 700);
   }
@@ -756,13 +746,7 @@ function doAct(i, act){
         render(); toast('已提交，状态更新为「待删除listing」，已写入操作日志');
       });
   } else if(act==="edit"){
-    confirmBox('修改文案确认',
-      `确认打开文案编辑？<br><br>ASIN：<b>${r.asin}</b><br>系统SKU：<b>${r.sku}</b><br><span style="color:#97a0b0;font-size:12px">请先删除标红敏感词再保存；备注将在保存成功后写入操作日志。</span>`,
-      (remark)=>{
-        pendingEditRemark = remark;
-        setTimeout(()=> openEdit(i), 0);
-      },
-      { okClass:'btn btn-primary' });
+    openEdit(i);
   } else if(act==="keep"){
     confirmBox('保留确认',
       `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、') || '—'}</b>`,
