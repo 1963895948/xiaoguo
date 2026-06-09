@@ -196,6 +196,9 @@
   .modal.log-modal .modal-head{ padding:12px 16px; font-size:14px; }
   .modal.log-modal .modal-body{ max-height:none; overflow:visible; padding:0 12px 4px; }
   .modal.log-modal .modal-foot{ padding:8px 16px 12px; }
+  .cf-remark-wrap{ margin-top:14px; }
+  .cf-remark-wrap label{ display:block; font-size:12px; font-weight:600; color:var(--text); margin-bottom:5px; }
+  .cf-remark{ width:100%; min-height:56px; height:auto; padding:8px 10px; resize:vertical; line-height:1.5; }
 
   /* toast */
   .toast{ position:fixed; top:24px; left:50%; transform:translateX(-50%); background:#1f2733; color:#fff;
@@ -642,11 +645,28 @@ const cfTitle = document.getElementById('cfTitle');
 const cfBody = document.getElementById('cfBody');
 const cfOk = document.getElementById('cfOk');
 let okHandler = null;
-function confirmBox(title, html, onOk){
-  cfTitle.innerHTML = title; cfBody.innerHTML = html; okHandler = onOk;
-  cfOk.textContent = '确认';
-  cfOk.className = 'btn btn-danger';
-  cfOk.onclick = ()=>{ if(okHandler) okHandler(); overlay.classList.remove('show'); };
+function confirmRemarkHtml(){
+  return `<div class="cf-remark-wrap">
+    <label for="cfRemark">备注</label>
+    <textarea class="ctrl cf-remark" id="cfRemark" placeholder="选填，将写入该行操作日志"></textarea>
+  </div>`;
+}
+function getConfirmRemark(){
+  const el = document.getElementById('cfRemark');
+  return el ? el.value.trim() : '';
+}
+function confirmBox(title, html, onOk, options={}){
+  const showRemark = options.showRemark !== false;
+  cfTitle.innerHTML = title;
+  cfBody.innerHTML = html + (showRemark ? confirmRemarkHtml() : '');
+  okHandler = onOk;
+  cfOk.textContent = options.okText || '确认';
+  cfOk.className = options.okClass || 'btn btn-danger';
+  cfOk.onclick = ()=>{
+    const remark = showRemark ? getConfirmRemark() : '';
+    if(okHandler) okHandler(remark);
+    overlay.classList.remove('show');
+  };
   overlay.classList.add('show');
 }
 overlay.querySelectorAll('[data-close]').forEach(b=> b.onclick=()=> overlay.classList.remove('show'));
@@ -711,9 +731,9 @@ function doAct(i, act){
   if(act==="del"){
     confirmBox('⚠️ 删除 listing 确认',
       `确认提交删除该 listing？<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b><br><br>状态将变更为「<b>待删除listing</b>」。需定期导出待删除数据供业务确认，审核通过后通过「导入」推进为「删除listing中」执行删除。`,
-      ()=>{
+      (remark)=>{
         r.status="todel"; r.upd="刚刚";
-        addRowLog(i, "删listing", "");
+        addRowLog(i, "删listing", remark);
         render(); toast('已提交，状态更新为「待删除listing」，已写入操作日志');
       });
   } else if(act==="edit"){
@@ -721,9 +741,9 @@ function doAct(i, act){
   } else if(act==="keep"){
     confirmBox('保留确认',
       `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、')}</b>`,
-      ()=>{
+      (remark)=>{
         r.status="keep"; r.upd="刚刚";
-        addRowLog(i, "保留", "");
+        addRowLog(i, "保留", remark);
         render(); toast('已保留，状态更新为「保留」，已写入操作日志');
       });
   }
@@ -777,11 +797,11 @@ function batchDeleteListing(){
   if(!n){ toast('请先勾选待操作的 listing'); return; }
   confirmBox('⚠️ 批量删 listing 确认',
     `确认对已勾选的 <b>${n}</b> 条 listing 提交删除？<br><span style="color:#97a0b0;font-size:12px">状态将变更为「待删除listing」，仅待处理 / 保留状态可勾选。</span>`,
-    ()=>{
+    (remark)=>{
       checked.forEach(c=>{
         const i=+c.closest('tr').dataset.i;
         rows[i].status="todel"; rows[i].upd="刚刚";
-        addRowLog(i, "删listing", "批量操作");
+        addRowLog(i, "删listing", remark);
       });
       checkAll.checked=false; render(); toast(`已提交批量删 listing ${n} 条`);
     });
@@ -796,11 +816,11 @@ function batchKeepListing(){
   }
   confirmBox('批量保留确认',
     `确认对 <b>${eligible.length}</b> 条符合条件的 listing 标记为「保留」？`,
-    ()=>{
+    (remark)=>{
       eligible.forEach(c=>{
         const i=+c.closest('tr').dataset.i;
         rows[i].status="keep"; rows[i].upd="刚刚";
-        addRowLog(i, "保留", "批量操作");
+        addRowLog(i, "保留", remark);
       });
       checkAll.checked=false; render(); toast(`已批量保留 ${eligible.length} 条`);
     });
