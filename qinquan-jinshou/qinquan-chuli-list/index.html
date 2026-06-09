@@ -131,13 +131,6 @@
   .st-toword{ background:#f0f5ff; color:#597ef7; }
   .st-wordfail{ background:#fff1f0; color:#f5455c; }
   .st-keep{ background:#f0f9f3; color:#16b364; }
-  .st-deldone{ background:#f6ffed; color:#389e0d; }
-
-  .flow-bar{ padding:8px 20px; background:#f0f5ff; border-bottom:1px solid #d6e4ff; font-size:12px; color:var(--text-2);
-    display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
-  .flow-bar b{ color:var(--text); }
-  .flow-bar .sep{ color:#d9d9d9; }
-  .flow-demo{ margin-left:auto; display:flex; gap:12px; align-items:center; }
 
   .ck-op{ display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
   .op-trigger{ color:var(--link); cursor:pointer; user-select:none; display:inline-flex; align-items:center; gap:3px; font-size:12px; white-space:nowrap; }
@@ -168,7 +161,7 @@
   /* ===== 弹窗 ===== */
   .overlay{ position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:100; }
   .overlay.show{ display:flex; }
-  .modal{ background:#fff; border-radius:10px; width:440px; max-width:92vw; box-shadow:0 12px 40px rgba(0,0,0,.18); overflow:hidden; }
+  .modal{ background:#fff; border-radius:10px; width:440px; max-width:92vw; box-shadow:0 12px 40px rgba(0,0,0,.18); overflow:hidden; position:relative; }
   .modal.lg{ width:720px; }
   .modal-head{ padding:16px 20px; font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
   .modal-head .x{ margin-left:auto; cursor:pointer; color:var(--text-3); font-size:18px; }
@@ -215,8 +208,9 @@
   .import-result-summary.err{ color:var(--danger); }
   .import-result-summary.ok{ color:var(--success); }
   .err-table td.reason{ color:var(--danger); }
-  .import-demo-active{ color:var(--primary); font-weight:600; }
   .import-foot-note{ font-size:11px; color:var(--text-3); margin-right:auto; align-self:center; }
+  .import-examples{ font-size:12px; color:var(--text-2); margin-top:8px; }
+  .import-examples .eg-active{ color:var(--primary); font-weight:600; }
   .log-table{ width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
   .log-table th,.log-table td{ border-bottom:1px solid var(--border); padding:5px 8px; text-align:left; line-height:1.45; word-break:break-all; }
   .log-table th{ background:#f6f8fb; color:var(--text-2); font-weight:600; }
@@ -235,6 +229,58 @@
   .toast{ position:fixed; top:24px; left:50%; transform:translateX(-50%); background:#1f2733; color:#fff;
     padding:10px 18px; border-radius:8px; font-size:13px; z-index:200; opacity:0; transition:.25s; pointer-events:none; }
   .toast.show{ opacity:1; top:34px; }
+
+  /* 原型标注 */
+  body.anno-mode{ cursor:crosshair; }
+  body.anno-mode .app{ user-select:none; }
+  .anno-ui{ z-index:500; }
+  .anno-bar{ position:fixed; right:20px; bottom:20px; display:flex; gap:8px; align-items:center;
+    background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12); font-size:12px; }
+  .anno-bar .btn-anno{ height:28px; padding:0 12px; border-radius:6px; border:1px solid var(--border);
+    background:#fff; cursor:pointer; font-size:12px; }
+  .anno-bar .btn-anno:hover{ border-color:var(--primary); color:var(--primary); }
+  .anno-bar .btn-anno.on{ background:var(--primary); border-color:var(--primary); color:#fff; }
+  .anno-bar .anno-count{ color:var(--text-3); font-size:11px; }
+  .anno-pins{ position:absolute; top:0; left:0; width:0; height:0; z-index:240; pointer-events:none; }
+  .anno-scope-pins{ position:absolute; inset:0; pointer-events:none; z-index:20; overflow:visible; }
+  .anno-pin{ position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; }
+  .anno-pin .dot{ width:26px; height:26px; border-radius:50%; background:#ff4d4f; color:#fff;
+    font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 8px rgba(255,77,79,.45); border:2px solid #fff; }
+  .anno-pin .tip{ display:none; position:absolute; left:50%; top:-6px; transform:translate(-50%,-100%);
+    min-width:160px; max-width:240px; background:#1f2733; color:#fff; font-size:11px; line-height:1.5;
+    padding:8px 10px; border-radius:6px; white-space:pre-wrap; word-break:break-word; }
+  .anno-pin:hover .tip, .anno-pin.active .tip{ display:block; }
+  .anno-pin.active .dot{ background:#2f6bff; box-shadow:0 2px 8px rgba(47,107,255,.45); }
+  .anno-panel{ position:fixed; top:0; right:0; width:300px; height:100vh; background:#fff;
+    border-left:1px solid var(--border); box-shadow:-8px 0 24px rgba(0,0,0,.08); z-index:490;
+    transform:translateX(100%); transition:.25s; display:flex; flex-direction:column; }
+  .anno-panel.show{ transform:translateX(0); }
+  .anno-panel-head{ padding:14px 16px; font-size:14px; font-weight:600; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; }
+  .anno-panel-body{ flex:1; overflow:auto; padding:10px 12px; }
+  .anno-item{ border:1px solid var(--border); border-radius:6px; padding:10px; margin-bottom:8px; cursor:pointer; }
+  .anno-item:hover, .anno-item.active{ border-color:#91caff; background:#f6f9ff; }
+  .anno-item .no{ display:inline-block; width:20px; height:20px; border-radius:50%; background:#ff4d4f;
+    color:#fff; font-size:11px; font-weight:700; text-align:center; line-height:20px; margin-right:6px; }
+  .anno-item .txt{ font-size:12px; color:var(--text); line-height:1.55; margin-top:6px; }
+  .anno-item .meta{ font-size:10px; color:var(--text-3); margin-top:6px; }
+  .anno-item .del{ float:right; color:var(--text-3); font-size:11px; cursor:pointer; }
+  .anno-item .del:hover{ color:var(--danger); }
+  .anno-empty{ font-size:12px; color:var(--text-3); text-align:center; padding:24px 12px; }
+  .anno-editor{ position:fixed; z-index:510; width:280px; background:#fff; border:1px solid var(--border);
+    border-radius:8px; box-shadow:0 12px 32px rgba(0,0,0,.16); padding:12px; display:none; }
+  .anno-editor.show{ display:block; }
+  .anno-editor label{ display:block; font-size:12px; font-weight:600; margin-bottom:6px; }
+  .anno-editor textarea{ width:100%; min-height:72px; resize:vertical; border:1px solid var(--border);
+    border-radius:6px; padding:8px; font-size:12px; font-family:inherit; outline:none; }
+  .anno-editor textarea:focus{ border-color:var(--primary); }
+  .anno-editor-foot{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
+  .anno-hint{ position:fixed; top:12px; left:50%; transform:translateX(-50%); background:#fff7e6;
+    border:1px solid #ffd591; color:#d46b08; font-size:12px; padding:6px 14px; border-radius:6px;
+    z-index:480; display:none; box-shadow:0 4px 12px rgba(0,0,0,.08); }
+  body.anno-mode .anno-hint{ display:block; }
 </style>
 </head>
 <body>
@@ -274,7 +320,7 @@
         <select class="ctrl" style="min-width:100px"><option>创建日期</option><option>更新日期</option></select>
         <input class="ctrl" type="date" /><span class="muted">-</span><input class="ctrl" type="date" />
       </div>
-      <select class="ctrl"><option>处理状态</option><option>待处理</option><option>待删除listing</option><option>删除listing中</option><option>已删除</option><option>删除listing失败</option><option>待删词</option><option>删词失败</option><option>保留</option></select>
+      <select class="ctrl"><option>处理状态</option><option>待处理</option><option>待删除listing</option><option>删除listing中</option><option>删除listing失败</option><option>待删词</option><option>删词失败</option><option>保留</option></select>
       <select class="ctrl multi"><option>全部销售人员</option><option>（组织架构）</option></select>
       <select class="ctrl multi"><option>全部 FBA/FBM 业务员</option><option>（组织架构）</option></select>
       <button class="btn btn-primary">搜索</button>
@@ -293,22 +339,14 @@
         <div class="toolbar-mi" data-batch="keep">保留</div>
       </div>
     </div>
-    <button class="btn btn-primary" id="btnExport">导出</button>
-    <button class="btn btn-primary btn-import-audit" id="btnImport">已审核listing删除导入</button>
-    <span class="muted" id="toolbarTodelHint"></span>
-  </div>
-
-  <div class="flow-bar" id="flowBar">
-    <span>待删除 listing：<b id="statTodel">0</b></span>
-    <span class="sep">|</span>
-    <span>删除 listing 中：<b id="statDeling">0</b></span>
-    <span class="sep">|</span>
-    <span>流程：导出待删 → 业务审核 → 导入校验 → 定时入队 → 队列回写</span>
-    <div class="flow-demo">
-      <span class="muted">后台演示：</span>
-      <span class="link" id="demoEnqueue">模拟定时入队</span>
-      <span class="link" id="demoQueueCallback">模拟队列回写</span>
+    <div class="toolbar-dropdown" id="exportDropdown">
+      <button class="btn btn-primary" id="btnExportToggle" type="button">导出 <span style="font-size:10px">▾</span></button>
+      <div class="toolbar-menu" id="exportMenu">
+        <div class="toolbar-mi" data-export="selected">选中数据导出</div>
+        <div class="toolbar-mi" data-export="filtered">当前条件导出</div>
+      </div>
     </div>
+    <button class="btn btn-primary btn-import-audit" id="btnImport">已审核listing删除导入</button>
   </div>
 
   <div class="group-bar">
@@ -360,6 +398,7 @@
       <button class="btn" data-close>取消</button>
       <button class="btn btn-danger" id="cfOk">确认</button>
     </div>
+    <div class="anno-scope-pins" data-anno-scope="confirmOverlay"></div>
   </div>
 </div>
 
@@ -414,6 +453,7 @@
       <button class="btn" data-close-edit>关闭</button>
       <button class="btn btn-primary" id="editSave">保存</button>
     </div>
+    <div class="anno-scope-pins" data-anno-scope="editOverlay"></div>
   </div>
 </div>
 
@@ -435,23 +475,23 @@
         </ol>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
-        <span class="muted">模板字段（MSKU + 店铺必填）</span>
+        <span class="muted">模板字段如下，校验以 MSKU + 店铺为准</span>
         <span class="link" id="btnDownloadTpl">下载导入模板</span>
       </div>
       <table class="tpl-table">
-        <thead><tr><th>MSKU</th><th>店铺</th><th>ASIN（选填）</th><th>系统 SKU（选填）</th></tr></thead>
+        <thead><tr><th>ASIN</th><th>SKU</th><th>MSKU</th><th>店铺</th><th>审核结果</th></tr></thead>
         <tbody>
-          <tr><td>BOX12OFFICE…</td><td>Amazon-Z011512-FR</td><td>B0CR2MK8PL</td><td>19660102</td></tr>
-          <tr><td>DESKBOX88…</td><td>Amazon-Z011520-FR</td><td>B0CR9XK1MN</td><td>19660188</td></tr>
+          <tr><td>B0CR2MK8PL</td><td>19660102</td><td>BOX12OFFICE…</td><td>Amazon-Z011512-FR</td><td>通过</td></tr>
+          <tr><td>B0CR9XK1MN</td><td>19660188</td><td>DESKBOX88…</td><td>Amazon-Z011520-FR</td><td>通过</td></tr>
         </tbody>
       </table>
       <div class="upload-box" id="importUpload">点击或拖拽上传 Excel / CSV</div>
       <div class="muted" id="importFileHint" style="margin-top:-6px">未选择文件</div>
-      <div class="muted" style="margin-top:8px">
-        原型演示：
-        <span class="link import-demo-opt" data-demo="success" id="demoImportOk">校验成功（2 条）</span> ·
-        <span class="link import-demo-opt" data-demo="fail" id="demoImportFail">校验失败（含不存在行）</span> ·
-        <span class="link import-demo-opt" data-demo="wrongStatus" id="demoImportWrong">校验失败（状态错误）</span>
+      <div class="import-examples">
+        示例（二选一）：
+        <span class="link import-eg" data-eg="success">导入成功示例</span>
+        ·
+        <span class="link import-eg" data-eg="fail">导入失败示例</span>
       </div>
     </div>
     <div class="modal-foot">
@@ -459,6 +499,7 @@
       <button class="btn" data-close-import>取消</button>
       <button class="btn btn-primary" id="importConfirm">确认导入</button>
     </div>
+    <div class="anno-scope-pins" data-anno-scope="importOverlay"></div>
   </div>
 </div>
 
@@ -470,6 +511,7 @@
     <div class="modal-foot">
       <button class="btn btn-primary" data-close-import-result>知道了</button>
     </div>
+    <div class="anno-scope-pins" data-anno-scope="importResultOverlay"></div>
   </div>
 </div>
 
@@ -486,10 +528,37 @@
     <div class="modal-foot">
       <button class="btn" data-close-log>关闭</button>
     </div>
+    <div class="anno-scope-pins" data-anno-scope="logOverlay"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 原型标注 -->
+<div class="anno-hint anno-ui">标注模式已开启：点击页面任意位置添加标注（不影响已保存的标注点）</div>
+<div class="anno-pins anno-ui" id="annoPins"></div>
+<div class="anno-bar anno-ui">
+  <span class="anno-count" id="annoCount">标注 0</span>
+  <button class="btn-anno" id="annoModeBtn" type="button">标注模式</button>
+  <button class="btn-anno" id="annoPanelBtn" type="button">标注列表</button>
+  <button class="btn-anno" id="annoExportBtn" type="button">导出</button>
+  <button class="btn-anno" id="annoClearBtn" type="button">清空</button>
+</div>
+<div class="anno-panel anno-ui" id="annoPanel">
+  <div class="anno-panel-head">
+    <span>标注列表</span>
+    <span class="link" id="annoPanelClose">关闭</span>
+  </div>
+  <div class="anno-panel-body" id="annoList"></div>
+</div>
+<div class="anno-editor anno-ui" id="annoEditor">
+  <label id="annoEditorLabel">标注 #1</label>
+  <textarea id="annoEditorText" placeholder="填写说明，如：此处需二次确认、字段含义等"></textarea>
+  <div class="anno-editor-foot">
+    <button class="btn btn-sm" id="annoEditorCancel">取消</button>
+    <button class="btn btn-primary btn-sm" id="annoEditorSave">保存</button>
+  </div>
+</div>
 
 <script>
 /* 敏感词类型：tm=商标词, high=高危禁用词, normal=普通禁用词 */
@@ -598,24 +667,6 @@ const rows = [
     ]
   },
   {
-    img:"✅", title:"Miroir mural décoratif（已删除·队列回写终态）",
-    asin:"B0CT1MR8PL", sku:"19880101", msku:"MIRRORDECO…",
-    store:"Amazon-Z011701-FR", normalStore:true, gold:"陈桌然", fbm:"-",
-    s30:"0 (0)", s365:"0 (0)", sale90:0,
-    ship:"fba", bind:false, fba:"0", transit:"0", whWait:"0", whAll:"0",
-    tag:"—", festival:null,
-    kw:[{w:"SWAROVSKI", type:"tm", pos:["标题"]}],
-    status:"deldone",
-    copy:{ title:"Miroir mural décoratif", bullet:"décoration maison", keywords:"miroir; mural", desc:"Miroir design" },
-    add:"2025-10-27 22:19:48", upd:"2025-08-11 09:00:00",
-    logs:[
-      { time:"2025-08-10 01:00:00", user:"袁效国", action:"删除listing", note:"" },
-      { time:"2025-08-10 02:00:00", user:"系统", action:"导入删除listing", note:"校验通过，已提交删除" },
-      { time:"2025-08-10 02:05:00", user:"系统", action:"已加入删除listing队列", note:"定时任务入队" },
-      { time:"2025-08-11 09:00:00", user:"系统", action:"队列执行完成", note:"已删除" }
-    ]
-  },
-  {
     img:"📋", title:"Coffret rangement bureau（待删除listing·待导入确认）",
     asin:"B0CR2MK8PL", sku:"19660102", msku:"BOX12OFFICE…",
     store:"Amazon-Z011512-FR", normalStore:true, gold:"陈桌然", fbm:"-",
@@ -690,26 +741,18 @@ const STATUS = {
   wait:{ t:"待处理", c:"st-wait" },
   todel:{ t:"待删除listing", c:"st-todel", tip:"已提交删 listing，待业务审核后导入" },
   deling:{ t:"删除listing中", c:"st-deling", tip:"已提交删除任务，等待队列执行；最终结果以后台处理为准" },
-  deldone:{ t:"已删除", c:"st-deldone", tip:"队列执行成功，listing 已删除" },
   delfail:{ t:"删除listing失败", c:"st-delfail", tip:"队列执行或对账失败，详见操作日志" },
   toword:{ t:"待删词", c:"st-toword" },
   wordfail:{ t:"删词失败", c:"st-wordfail" },
   keep:{ t:"保留", c:"st-keep" }
 };
-const LOCKED_STATUSES = new Set(["todel","deling","delfail","deldone","toword","wordfail"]);
+const LOCKED_STATUSES = new Set(["todel","deling","delfail","toword","wordfail"]);
 
 function statusPill(r){
   const s = STATUS[r.status];
   const tip = s.tip ? ` title="${s.tip}"` : "";
   return `<span class="pill ${s.c}"${tip}>${s.t}</span>`;
 }
-function updateFlowStats(){
-  document.getElementById("statTodel").textContent = rows.filter(r=>r.status==="todel").length;
-  document.getElementById("statDeling").textContent = rows.filter(r=>r.status==="deling").length;
-  const n = rows.filter(r=>r.status==="todel").length;
-  document.getElementById("toolbarTodelHint").textContent = n ? `当前 ${n} 条待删除 listing 可导出审核` : "";
-}
-
 function shipCell(r){
   const badge = r.ship==="fba" ? '<span class="tag tag-fba">FBA</span>' : '<span class="tag tag-ship-self">自发</span>';
   const bind = r.bind ? '<span class="bind">绑定 BMlist</span>' : '';
@@ -737,7 +780,6 @@ function delReason(r){
   if(r.sale90!==0) return "近90天销量≠0，不可删listing";
   if(r.status==="todel") return "已在待删除 listing，请导出审核后导入";
   if(r.status==="deling") return "删除 listing 中，不可操作";
-  if(r.status==="deldone") return "已删除，不可操作";
   if(r.status==="delfail") return "删除 listing 失败，不可操作";
   if(!(r.status==="wait"||r.status==="keep")) return "仅待处理/保留状态可删listing";
   return "";
@@ -812,7 +854,6 @@ function render(){
   bindRowLogActions();
   updateSel();
   document.getElementById('totalCount').textContent = rows.length;
-  updateFlowStats();
 }
 const overlay = document.getElementById('confirmOverlay');
 const cfTitle = document.getElementById('cfTitle');
@@ -1074,8 +1115,34 @@ batchOpMenu.querySelectorAll('[data-batch]').forEach(mi=>{
     else batchKeepListing();
   };
 });
-document.addEventListener('click', ()=>{ hideBatchOpMenu(); hideOpMenu(); });
-window.addEventListener('scroll', ()=>{ hideBatchOpMenu(); hideOpMenu(); }, true);
+document.addEventListener('click', ()=>{ hideBatchOpMenu(); hideExportMenu(); hideOpMenu(); });
+window.addEventListener('scroll', ()=>{ hideBatchOpMenu(); hideExportMenu(); hideOpMenu(); }, true);
+
+const exportMenu = document.getElementById('exportMenu');
+function hideExportMenu(){ exportMenu.classList.remove('show'); }
+document.getElementById('btnExportToggle').onclick = (e)=>{
+  e.stopPropagation();
+  hideBatchOpMenu();
+  exportMenu.classList.toggle('show');
+};
+exportMenu.querySelectorAll('[data-export]').forEach(mi=>{
+  mi.onclick = (e)=>{
+    e.stopPropagation();
+    hideExportMenu();
+    if(mi.dataset.export === 'selected'){
+      const checked = getCheckedRows();
+      if(!checked.length){ toast('请先勾选需要导出的数据'); return; }
+      checked.forEach(c=>{
+        const i = +c.closest('tr').dataset.i;
+        if(rows[i].status === 'todel') addRowLog(i, '导出待删除listing', '');
+      });
+      toast(`已导出选中 ${checked.length} 条数据`);
+      return;
+    }
+    rows.forEach((r,i)=>{ if(r.status === 'todel') addRowLog(i, '导出待删除listing', ''); });
+    toast(`已按当前条件导出 ${rows.length} 条数据`);
+  };
+});
 
 document.getElementById('btnBatchExtract').onclick = ()=>{
   const n = getCheckedRows().length;
@@ -1083,46 +1150,33 @@ document.getElementById('btnBatchExtract').onclick = ()=>{
   toast(`已批量提取 ${n} 条（原型演示）`);
 };
 
-document.getElementById('btnExport').onclick = ()=>{
-  const pending = rows.map((r,i)=>({r,i})).filter(x=>x.r.status==="todel");
-  if(!pending.length){ toast('当前无「待删除 listing」数据可导出'); return; }
-  confirmBox('导出待删除 listing',
-    `将导出 <b>${pending.length}</b> 条「待删除 listing」数据（MSKU + 店铺等字段），供业务线下审核。<br><span style="color:#97a0b0;font-size:12px">审核通过后，通过「已审核 listing 删除导入」提交。</span>`,
-    (remark)=>{
-      pending.forEach(x=> addRowLog(x.i, "导出待删除listing", remark));
-      toast(`已导出 ${pending.length} 条（原型演示）`);
-    },
-    { okText:"确认导出", okClass:"btn btn-primary", showRemark:false }
-  );
-};
-
 const importOverlay = document.getElementById('importOverlay');
 const importResultOverlay = document.getElementById('importResultOverlay');
 const importUpload = document.getElementById('importUpload');
 const importFileHint = document.getElementById('importFileHint');
 let importFileSelected = false;
-let importDemoMode = 'success';
+let importExampleMode = '';
 
 function resetImportOverlay(){
   importFileSelected = false;
-  importDemoMode = 'success';
+  importExampleMode = '';
   importUpload.classList.remove('has-file');
   importFileHint.textContent = '未选择文件';
-  document.querySelectorAll('.import-demo-opt').forEach(el=> el.classList.remove('import-demo-active'));
+  document.querySelectorAll('.import-eg').forEach(el=> el.classList.remove('eg-active'));
 }
-function markImportDemo(mode){
-  importDemoMode = mode;
+function selectImportExample(mode){
+  importExampleMode = mode;
   importFileSelected = true;
   importUpload.classList.add('has-file');
-  document.querySelectorAll('.import-demo-opt').forEach(el=>{
-    el.classList.toggle('import-demo-active', el.dataset.demo === mode);
+  document.querySelectorAll('.import-eg').forEach(el=>{
+    el.classList.toggle('eg-active', el.dataset.eg === mode);
   });
-  const names = {
-    success:'删除导入_demo_校验通过_2条.xlsx',
-    fail:'删除导入_demo_含不存在行.xlsx',
-    wrongStatus:'删除导入_demo_状态错误.xlsx'
-  };
-  importFileHint.textContent = `已选择：${names[mode] || '导入文件.xlsx'}`;
+  importFileHint.textContent = mode === 'fail'
+    ? '已选择：listing删除导入_失败示例.xlsx'
+    : '已选择：listing删除导入_成功示例.xlsx';
+}
+function selectImportFile(){
+  selectImportExample('success');
 }
 function findListingByMskuStore(msku, store){
   const key = String(msku).trim();
@@ -1131,29 +1185,41 @@ function findListingByMskuStore(msku, store){
     return r.msku === key || r.msku.startsWith(key.replace(/…$/,'')) || key.startsWith(r.msku.replace(/…$/,''));
   });
 }
-function getMockImportRows(mode){
-  if(mode === 'fail'){
+function buildImportRowsFromFile(){
+  if(importExampleMode === 'fail'){
     return [
-      { line:2, msku:'BOX12OFFICE…', store:'Amazon-Z011512-FR' },
-      { line:3, msku:'NOTEXIST999', store:'Amazon-Z011512-FR' }
+      { line:2, asin:'B0CR2MK8PL', sku:'19660102', msku:'BOX12OFFICE…', store:'Amazon-Z011512-FR', audit:'通过' },
+      { line:3, asin:'B0XXXXXXX', sku:'00000000', msku:'NOTEXIST999', store:'Amazon-Z011512-FR', audit:'通过' }
     ];
   }
-  if(mode === 'wrongStatus'){
-    return [{ line:2, msku:'CARPHNSTD…', store:'Amazon-Z011633-DE' }];
-  }
-  return [
-    { line:2, msku:'BOX12OFFICE…', store:'Amazon-Z011512-FR' },
-    { line:3, msku:'DESKBOX88…', store:'Amazon-Z011520-FR' }
-  ];
+  return rows
+    .map((r,i)=>({ r, i }))
+    .filter(x=>x.r.status==='todel')
+    .map((x,idx)=>({
+      line:idx+2,
+      asin:x.r.asin,
+      sku:x.r.sku,
+      msku:x.r.msku,
+      store:x.r.store,
+      audit:'通过'
+    }));
 }
 function validateImportBatch(fileRows){
+  if(!fileRows.length){
+    return [{ line:'—', asin:'—', msku:'—', store:'—', reason:'文件无有效数据' }];
+  }
   const errors = [];
   fileRows.forEach(fr=>{
+    const audit = String(fr.audit || '').trim();
+    if(audit !== '通过'){
+      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:`审核结果须为「通过」，当前为「${audit || '空'}」` });
+      return;
+    }
     const listing = findListingByMskuStore(fr.msku, fr.store);
     if(!listing){
-      errors.push({ line:fr.line, msku:fr.msku, store:fr.store, reason:'listing 不存在（MSKU+店铺不匹配）' });
+      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:'listing 不存在（MSKU+店铺不匹配）' });
     } else if(listing.status !== 'todel'){
-      errors.push({ line:fr.line, msku:fr.msku, store:fr.store, reason:`listing 状态为「${STATUS[listing.status].t}」，非待删除 listing` });
+      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:`listing 状态为「${STATUS[listing.status].t}」，非待删除 listing` });
     }
   });
   return errors;
@@ -1171,58 +1237,30 @@ function applyImportSuccess(fileRows){
     const i = rows.indexOf(listing);
     if(i < 0) return;
     rows[i].status = 'deling';
-    rows[i].queued = false;
     rows[i].upd = '刚刚';
     addRowLog(i, '导入删除listing', '校验通过，已提交删除');
     matched.push({ listing, index:i });
   });
   return matched;
 }
-function simulateScheduledEnqueue(){
-  const pending = rows.map((r,i)=>({r,i})).filter(x=>x.r.status==='deling' && !x.r.queued);
-  if(!pending.length){ toast('当前无待入队的「删除 listing 中」数据'); return; }
-  pending.forEach(x=>{
-    rows[x.i].queued = true;
-    addRowLog(x.i, '已加入删除listing队列', '定时任务入队');
-    rows[x.i].upd = '刚刚';
-  });
-  render();
-  toast(`定时任务：${pending.length} 条已加入删除 listing 队列（原型演示）`);
-}
-function simulateQueueCallback(){
-  const pending = rows.map((r,i)=>({r,i})).filter(x=>x.r.status==='deling' && x.r.queued);
-  if(!pending.length){ toast('请先执行「模拟定时入队」，或当前无队列中的数据'); return; }
-  let ok = 0, fail = 0;
-  pending.forEach(x=>{
-    const success = x.i % 2 === 0;
-    rows[x.i].status = success ? 'deldone' : 'delfail';
-    rows[x.i].upd = '刚刚';
-    addRowLog(x.i, '队列执行完成', success ? '已删除' : '删除失败：平台限制不可删（原型演示）');
-    success ? ok++ : fail++;
-  });
-  render();
-  toast(`队列回写完成：已删除 ${ok} 条，失败 ${fail} 条（原型演示）`);
-}
 importOverlay.querySelectorAll('[data-close-import]').forEach(b=> b.onclick=()=> importOverlay.classList.remove('show'));
 importResultOverlay.querySelectorAll('[data-close-import-result]').forEach(b=> b.onclick=()=> importResultOverlay.classList.remove('show'));
 document.getElementById('btnImport').onclick = ()=>{ resetImportOverlay(); importOverlay.classList.add('show'); };
-document.getElementById('btnDownloadTpl').onclick = ()=> toast('已下载导入模板（MSKU + 店铺，原型演示）');
-importUpload.onclick = ()=> markImportDemo('success');
-document.querySelectorAll('.import-demo-opt').forEach(el=> el.onclick = ()=> markImportDemo(el.dataset.demo));
-document.getElementById('demoEnqueue').onclick = simulateScheduledEnqueue;
-document.getElementById('demoQueueCallback').onclick = simulateQueueCallback;
+document.getElementById('btnDownloadTpl').onclick = ()=> toast('已下载导入模板（ASIN / SKU / MSKU / 店铺 / 审核结果）');
+importUpload.onclick = selectImportFile;
+document.querySelectorAll('.import-eg').forEach(el=> el.onclick = ()=> selectImportExample(el.dataset.eg));
 document.getElementById('importConfirm').onclick = ()=>{
   if(!importFileSelected){
     toast('请先上传导入文件');
     return;
   }
-  const fileRows = getMockImportRows(importDemoMode);
+  const fileRows = buildImportRowsFromFile();
   const errors = validateImportBatch(fileRows);
   importOverlay.classList.remove('show');
   if(errors.length){
     const summary = `<div class="import-result-summary err">导入失败：共 ${fileRows.length} 条，${errors.length} 条校验不通过。<b>本批未做任何状态变更、未入队。</b></div>`;
-    const table = `<table class="tpl-table err-table"><thead><tr><th>行号</th><th>MSKU</th><th>店铺</th><th>失败原因</th></tr></thead><tbody>${
-      errors.map(e=>`<tr><td>${e.line}</td><td>${e.msku}</td><td>${e.store}</td><td class="reason">${e.reason}</td></tr>`).join('')
+    const table = `<table class="tpl-table err-table"><thead><tr><th>行号</th><th>ASIN</th><th>MSKU</th><th>店铺</th><th>失败原因</th></tr></thead><tbody>${
+      errors.map(e=>`<tr><td>${e.line}</td><td>${e.asin||'—'}</td><td>${e.msku}</td><td>${e.store}</td><td class="reason">${e.reason}</td></tr>`).join('')
     }</tbody></table>`;
     showImportResult('导入失败', summary + table);
     toast('导入校验失败，请修正后重新导入');
@@ -1231,16 +1269,15 @@ document.getElementById('importConfirm').onclick = ()=>{
   const matched = applyImportSuccess(fileRows);
   render();
   const n = matched.length;
-  const okTable = `<table class="tpl-table" style="margin-top:10px"><thead><tr><th>MSKU</th><th>店铺</th><th>结果</th></tr></thead><tbody>${
-    matched.map(x=>`<tr><td>${x.listing.msku}</td><td>${x.listing.store}</td><td style="color:var(--success)">状态 → 删除 listing 中</td></tr>`).join('')
+  const okTable = `<table class="tpl-table" style="margin-top:10px"><thead><tr><th>ASIN</th><th>SKU</th><th>MSKU</th><th>店铺</th><th>审核结果</th><th>结果</th></tr></thead><tbody>${
+    matched.map(x=>`<tr><td>${x.listing.asin}</td><td>${x.listing.sku}</td><td>${x.listing.msku}</td><td>${x.listing.store}</td><td>通过</td><td style="color:var(--success)">状态 → 删除 listing 中</td></tr>`).join('')
   }</tbody></table>`;
   showImportResult('导入成功',
     `<div class="import-result-summary ok">校验通过，已提交删除 <b>${n}</b> 条。</div>
      <p style="font-size:12px;line-height:1.7;color:var(--text-2)">
        状态已更新为「<b>删除 listing 中</b>」，系统将<b>定时</b>加入删除 listing 队列。<br>
-       实际删除完成以后台队列执行及对账为准，终态将回写为「<b>已删除</b>」或「<b>删除 listing 失败</b>」，并写入操作日志。
-     </p>${okTable}
-     <p style="font-size:11px;color:var(--text-3);margin-top:10px">原型可继续点击顶部「模拟定时入队」→「模拟队列回写」体验完整流程。</p>`
+       删除成功数据不在本列表展示；若失败将回写为「<b>删除 listing 失败</b>」并写入操作日志。
+     </p>${okTable}`
   );
   toast(`校验通过，${n} 条已提交删除，系统将加入删除 listing 队列`);
 };
@@ -1257,6 +1294,293 @@ document.querySelectorAll('.page-btn').forEach(b=>{
 });
 
 render();
+
+/* ===== 原型标注 ===== */
+const ANNO_KEY = 'qinquan-chuli-list-annotations';
+const BUILTIN_ANNOTATIONS = [
+  {
+    id: 10001,
+    no: 1,
+    scope: 'importOverlay',
+    x: 380,
+    y: 248,
+    text: '展示例子，实际不显示这个导入示例',
+    time: '2026-06-08'
+  },
+  {
+    id: 10002,
+    no: 2,
+    scope: 'importOverlay',
+    x: 210,
+    y: 462,
+    text: '展示例子，实际不展示「示例（二选一）」',
+    time: '2026-06-08'
+  }
+];
+const ANNO_SCOPE_LABEL = {
+  page:'页面',
+  confirmOverlay:'确认弹窗',
+  editOverlay:'listing文案编辑',
+  importOverlay:'已审核 listing 删除导入',
+  importResultOverlay:'导入结果',
+  logOverlay:'操作日志'
+};
+let annotations = [];
+let annoMode = false;
+let annoEditingId = null;
+let annoPendingCtx = null;
+
+function normalizeAnnotations(){
+  annotations.forEach(a=>{ if(!a.scope) a.scope = 'page'; });
+}
+function loadAnnotations(){
+  try{
+    const raw = localStorage.getItem(ANNO_KEY);
+    const saved = raw ? JSON.parse(raw) : [];
+    const builtinIds = new Set(BUILTIN_ANNOTATIONS.map(b=>b.id));
+    const extra = (Array.isArray(saved) ? saved : []).filter(a=>!builtinIds.has(a.id));
+    annotations = [...BUILTIN_ANNOTATIONS.map(a=>({ ...a })), ...extra];
+    annotations.forEach((a,i)=>{ a.no = i + 1; });
+    normalizeAnnotations();
+  }catch{
+    annotations = BUILTIN_ANNOTATIONS.map(a=>({ ...a }));
+  }
+}
+function saveAnnotations(){
+  localStorage.setItem(ANNO_KEY, JSON.stringify(annotations));
+}
+function updateAnnoCount(){
+  document.getElementById('annoCount').textContent = `标注 ${annotations.length}`;
+}
+function getAnnoContextFromClick(e){
+  const overlay = e.target.closest('.overlay.show');
+  if(overlay){
+    const modal = overlay.querySelector('.modal');
+    const rect = modal.getBoundingClientRect();
+    return {
+      scope: overlay.id,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      editorX: e.pageX,
+      editorY: e.pageY
+    };
+  }
+  return { scope:'page', x:e.pageX, y:e.pageY, editorX:e.pageX, editorY:e.pageY };
+}
+function getPagePosFromAnno(a){
+  if(!a.scope || a.scope === 'page') return { x:a.x, y:a.y };
+  const overlay = document.getElementById(a.scope);
+  if(!overlay) return { x:a.x, y:a.y };
+  const modal = overlay.querySelector('.modal');
+  if(!modal) return { x:a.x, y:a.y };
+  const rect = modal.getBoundingClientRect();
+  return { x: rect.left + a.x, y: rect.top + a.y };
+}
+function getAnnoPinContainer(a){
+  if(!a.scope || a.scope === 'page') return document.getElementById('annoPins');
+  const overlay = document.getElementById(a.scope);
+  return overlay ? overlay.querySelector('.anno-scope-pins') : null;
+}
+function bindAnnoPinEvents(pin, id){
+  pin.onclick = (e)=>{
+    e.stopPropagation();
+    if(annoMode) return;
+    highlightAnno(id);
+  };
+  pin.ondblclick = (e)=>{
+    e.stopPropagation();
+    const a = annotations.find(x=>x.id===id);
+    if(a){
+      const pos = getPagePosFromAnno(a);
+      openAnnoEditor(pos.x, pos.y, id);
+    }
+  };
+}
+function createAnnoPinElement(a){
+  const pin = document.createElement('div');
+  pin.className = 'anno-pin';
+  pin.dataset.id = a.id;
+  pin.style.left = a.x + 'px';
+  pin.style.top = a.y + 'px';
+  pin.innerHTML = `<div class="dot">${a.no}</div><div class="tip">${escapeAnno(a.text)}</div>`;
+  bindAnnoPinEvents(pin, a.id);
+  return pin;
+}
+function renderAnnoPins(){
+  document.getElementById('annoPins').innerHTML = '';
+  document.querySelectorAll('.anno-scope-pins').forEach(el=> el.innerHTML = '');
+  annotations.forEach(a=>{
+    if(a.scope && a.scope !== 'page'){
+      const overlay = document.getElementById(a.scope);
+      if(!overlay || !overlay.classList.contains('show')) return;
+    }
+    const container = getAnnoPinContainer(a);
+    if(container) container.appendChild(createAnnoPinElement(a));
+  });
+}
+function escapeAnno(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function renderAnnoList(){
+  const box = document.getElementById('annoList');
+  if(!annotations.length){
+    box.innerHTML = '<div class="anno-empty">暂无标注<br>开启标注模式后点击页面添加</div>';
+    return;
+  }
+  box.innerHTML = annotations.map(a=>`
+    <div class="anno-item" data-id="${a.id}">
+      <span class="del" data-del="${a.id}">删除</span>
+      <span class="no">${a.no}</span>
+      <div class="txt">${escapeAnno(a.text)}</div>
+      <div class="meta">${ANNO_SCOPE_LABEL[a.scope] || a.scope || '页面'}${a.time ? ' · ' + a.time : ''}</div>
+    </div>
+  `).join('');
+  box.querySelectorAll('.anno-item').forEach(item=>{
+    item.onclick = ()=> highlightAnno(+item.dataset.id, true);
+  });
+  box.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      deleteAnno(+btn.dataset.del);
+    };
+  });
+}
+function clearAnnoHighlight(){
+  document.querySelectorAll('.anno-pin.active, .anno-item.active').forEach(el=> el.classList.remove('active'));
+}
+function highlightAnno(id, scroll){
+  clearAnnoHighlight();
+  const a = annotations.find(x=>x.id===id);
+  if(!a) return;
+  if(a.scope && a.scope !== 'page'){
+    const overlay = document.getElementById(a.scope);
+    if(overlay) overlay.classList.add('show');
+    renderAnnoPins();
+  }
+  const pin = document.querySelector(`.anno-pin[data-id="${id}"]`);
+  const item = document.querySelector(`.anno-item[data-id="${id}"]`);
+  if(pin) pin.classList.add('active');
+  if(item) item.classList.add('active');
+  document.getElementById('annoPanel').classList.add('show');
+  if(scroll && (!a.scope || a.scope === 'page')){
+    window.scrollTo({ top: Math.max(0, a.y - window.innerHeight/3), behavior:'smooth' });
+  }
+}
+function openAnnoEditor(x, y, id, ctx){
+  const editor = document.getElementById('annoEditor');
+  annoEditingId = id || null;
+  annoPendingCtx = id ? null : (ctx || null);
+  const a = id ? annotations.find(item=>item.id===id) : null;
+  document.getElementById('annoEditorLabel').textContent = a ? `编辑标注 #${a.no}` : `新建标注 #${annotations.length + 1}`;
+  document.getElementById('annoEditorText').value = a ? a.text : '';
+  let left = x + 12, top = y + 12;
+  if(left + 300 > window.innerWidth) left = x - 292;
+  if(top + 180 > window.innerHeight) top = y - 180;
+  editor.style.left = Math.max(8, left) + 'px';
+  editor.style.top = Math.max(8, top) + 'px';
+  editor.classList.add('show');
+  document.getElementById('annoEditorText').focus();
+}
+function closeAnnoEditor(){
+  document.getElementById('annoEditor').classList.remove('show');
+  annoEditingId = null;
+  annoPendingCtx = null;
+}
+function saveAnnoEditor(){
+  const text = document.getElementById('annoEditorText').value.trim();
+  if(!text){ toast('请填写标注内容'); return; }
+  const time = nowStr();
+  if(annoEditingId){
+    const a = annotations.find(x=>x.id===annoEditingId);
+    if(a){ a.text = text; a.time = time; }
+  } else if(annoPendingCtx){
+    annotations.push({
+      id:Date.now(),
+      no:annotations.length + 1,
+      scope:annoPendingCtx.scope || 'page',
+      x:annoPendingCtx.x,
+      y:annoPendingCtx.y,
+      text,
+      time
+    });
+  }
+  saveAnnotations();
+  closeAnnoEditor();
+  renderAnnoPins();
+  renderAnnoList();
+  updateAnnoCount();
+  toast('标注已保存');
+}
+function deleteAnno(id){
+  annotations = annotations.filter(a=>a.id!==id);
+  annotations.forEach((a,i)=> a.no = i + 1);
+  saveAnnotations();
+  renderAnnoPins();
+  renderAnnoList();
+  updateAnnoCount();
+}
+function setAnnoMode(on){
+  annoMode = on;
+  document.body.classList.toggle('anno-mode', on);
+  document.getElementById('annoModeBtn').classList.toggle('on', on);
+  if(!on) closeAnnoEditor();
+}
+function exportAnnotations(){
+  if(!annotations.length){ toast('暂无标注可导出'); return; }
+  const lines = ['# 删词处理列表 · 原型标注', '', ...annotations.map(a=>{
+    const scope = ANNO_SCOPE_LABEL[a.scope] || a.scope || '页面';
+    return `## ${a.no}. ${a.text}\n- 归属：${scope}\n- 位置：(${Math.round(a.x)}, ${Math.round(a.y)})\n- 时间：${a.time || '—'}`;
+  })];
+  const blob = new Blob([lines.join('\n')], { type:'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '删词处理列表-原型标注.md';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('标注已导出');
+}
+function bindOverlayAnnoWatch(){
+  document.querySelectorAll('.overlay').forEach(overlay=>{
+    const observer = new MutationObserver(()=>{
+      if(overlay.classList.contains('show')){
+        renderAnnoPins();
+      } else {
+        clearAnnoHighlight();
+        closeAnnoEditor();
+        renderAnnoPins();
+      }
+    });
+    observer.observe(overlay, { attributes:true, attributeFilter:['class'] });
+  });
+}
+
+loadAnnotations();
+renderAnnoPins();
+renderAnnoList();
+updateAnnoCount();
+bindOverlayAnnoWatch();
+
+document.getElementById('annoModeBtn').onclick = ()=> setAnnoMode(!annoMode);
+document.getElementById('annoPanelBtn').onclick = ()=> document.getElementById('annoPanel').classList.toggle('show');
+document.getElementById('annoPanelClose').onclick = ()=> document.getElementById('annoPanel').classList.remove('show');
+document.getElementById('annoExportBtn').onclick = exportAnnotations;
+document.getElementById('annoClearBtn').onclick = ()=>{
+  if(!annotations.length) return;
+  if(confirm('确认清空全部标注？')){ annotations = []; saveAnnotations(); renderAnnoPins(); renderAnnoList(); updateAnnoCount(); toast('已清空标注'); }
+};
+document.getElementById('annoEditorSave').onclick = saveAnnoEditor;
+document.getElementById('annoEditorCancel').onclick = closeAnnoEditor;
+document.addEventListener('click', (e)=>{
+  if(!annoMode) return;
+  if(e.target.closest('.anno-ui')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const ctx = getAnnoContextFromClick(e);
+  openAnnoEditor(ctx.editorX, ctx.editorY, null, ctx);
+}, true);
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){ closeAnnoEditor(); setAnnoMode(false); }
+});
 </script>
 </body>
 </html>
