@@ -8,13 +8,45 @@
 
 ```
 原型生成/  (= 仓库 xiaoguo)
+├── import/               # 共享资源（标注 CSS/JS）
 ├── qinquan-jinshou/      # 分类：侵权禁售
 │   └── qinquan-chuli-list/   # 具体原型：删词处理列表
 │       └── index.html
 ├── hegui/               # 分类：合规
 ├── gongju/              # 分类：工具类
-└── _template/           # 原型封面 / 导航页模板，复用用
+└── _template/           # 带标注的最小原型模板
 ```
+
+## 原型标注（所有 HTML 原型必接）
+
+右下角 **标注工具栏**：标注模式、列表、导出、清空。弹窗内标注绑定 `scope`，关弹窗后标注随隐。
+
+| 文件 | 说明 |
+|------|------|
+| `import/prototype-annotate.css` | 标注样式 |
+| `import/prototype-annotate.js` | `PrototypeAnnotate.init()` |
+| `_template/index.html` | 可复制的新原型起点 |
+
+**新建原型**：复制 `_template/index.html` 到 `<分类>/<原型>/`，改业务内容与 `init` 配置（`storageKey`、`exportTitle`、`scopeLabels`、`builtins`）。
+
+**接入示例**（原型在 `<分类>/<原型>/index.html` 时路径为 `../../import/`）：
+
+```html
+<link rel="stylesheet" href="../../import/prototype-annotate.css" />
+<!-- ... 页面脚本 ... -->
+<script src="../../import/prototype-annotate.js"></script>
+<script>
+PrototypeAnnotate.init({
+  storageKey: 'my-prototype-annotations',
+  exportTitle: '页面标题',
+  scopeLabels: { page: '页面', myOverlayId: '弹窗名称' },
+  builtins: [],
+  toast
+});
+</script>
+```
+
+Cursor 规则 `.cursor/rules/prototype-annotate.mdc` 会对 `原型生成/**/*.html` 强制要求接入标注。
 
 ## 分类目录对照（拼音 ↔ 中文）
 

@@ -229,59 +229,8 @@
   .toast{ position:fixed; top:24px; left:50%; transform:translateX(-50%); background:#1f2733; color:#fff;
     padding:10px 18px; border-radius:8px; font-size:13px; z-index:200; opacity:0; transition:.25s; pointer-events:none; }
   .toast.show{ opacity:1; top:34px; }
-
-  /* 原型标注 */
-  body.anno-mode{ cursor:crosshair; }
-  body.anno-mode .app{ user-select:none; }
-  .anno-ui{ z-index:500; }
-  .anno-bar{ position:fixed; right:20px; bottom:20px; display:flex; gap:8px; align-items:center;
-    background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 10px;
-    box-shadow:0 8px 24px rgba(0,0,0,.12); font-size:12px; }
-  .anno-bar .btn-anno{ height:28px; padding:0 12px; border-radius:6px; border:1px solid var(--border);
-    background:#fff; cursor:pointer; font-size:12px; }
-  .anno-bar .btn-anno:hover{ border-color:var(--primary); color:var(--primary); }
-  .anno-bar .btn-anno.on{ background:var(--primary); border-color:var(--primary); color:#fff; }
-  .anno-bar .anno-count{ color:var(--text-3); font-size:11px; }
-  .anno-pins{ position:absolute; top:0; left:0; width:0; height:0; z-index:240; pointer-events:none; }
-  .anno-scope-pins{ position:absolute; inset:0; pointer-events:none; z-index:20; overflow:visible; }
-  .anno-pin{ position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; }
-  .anno-pin .dot{ width:26px; height:26px; border-radius:50%; background:#ff4d4f; color:#fff;
-    font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
-    box-shadow:0 2px 8px rgba(255,77,79,.45); border:2px solid #fff; }
-  .anno-pin .tip{ display:none; position:absolute; left:50%; top:-6px; transform:translate(-50%,-100%);
-    min-width:160px; max-width:240px; background:#1f2733; color:#fff; font-size:11px; line-height:1.5;
-    padding:8px 10px; border-radius:6px; white-space:pre-wrap; word-break:break-word; }
-  .anno-pin:hover .tip, .anno-pin.active .tip{ display:block; }
-  .anno-pin.active .dot{ background:#2f6bff; box-shadow:0 2px 8px rgba(47,107,255,.45); }
-  .anno-panel{ position:fixed; top:0; right:0; width:300px; height:100vh; background:#fff;
-    border-left:1px solid var(--border); box-shadow:-8px 0 24px rgba(0,0,0,.08); z-index:490;
-    transform:translateX(100%); transition:.25s; display:flex; flex-direction:column; }
-  .anno-panel.show{ transform:translateX(0); }
-  .anno-panel-head{ padding:14px 16px; font-size:14px; font-weight:600; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; justify-content:space-between; }
-  .anno-panel-body{ flex:1; overflow:auto; padding:10px 12px; }
-  .anno-item{ border:1px solid var(--border); border-radius:6px; padding:10px; margin-bottom:8px; cursor:pointer; }
-  .anno-item:hover, .anno-item.active{ border-color:#91caff; background:#f6f9ff; }
-  .anno-item .no{ display:inline-block; width:20px; height:20px; border-radius:50%; background:#ff4d4f;
-    color:#fff; font-size:11px; font-weight:700; text-align:center; line-height:20px; margin-right:6px; }
-  .anno-item .txt{ font-size:12px; color:var(--text); line-height:1.55; margin-top:6px; }
-  .anno-item .meta{ font-size:10px; color:var(--text-3); margin-top:6px; }
-  .anno-item .del{ float:right; color:var(--text-3); font-size:11px; cursor:pointer; }
-  .anno-item .del:hover{ color:var(--danger); }
-  .anno-empty{ font-size:12px; color:var(--text-3); text-align:center; padding:24px 12px; }
-  .anno-editor{ position:fixed; z-index:510; width:280px; background:#fff; border:1px solid var(--border);
-    border-radius:8px; box-shadow:0 12px 32px rgba(0,0,0,.16); padding:12px; display:none; }
-  .anno-editor.show{ display:block; }
-  .anno-editor label{ display:block; font-size:12px; font-weight:600; margin-bottom:6px; }
-  .anno-editor textarea{ width:100%; min-height:72px; resize:vertical; border:1px solid var(--border);
-    border-radius:6px; padding:8px; font-size:12px; font-family:inherit; outline:none; }
-  .anno-editor textarea:focus{ border-color:var(--primary); }
-  .anno-editor-foot{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
-  .anno-hint{ position:fixed; top:12px; left:50%; transform:translateX(-50%); background:#fff7e6;
-    border:1px solid #ffd591; color:#d46b08; font-size:12px; padding:6px 14px; border-radius:6px;
-    z-index:480; display:none; box-shadow:0 4px 12px rgba(0,0,0,.08); }
-  body.anno-mode .anno-hint{ display:block; }
 </style>
+<link rel="stylesheet" href="../../import/prototype-annotate.css" />
 </head>
 <body>
 <div class="app">
@@ -398,7 +347,6 @@
       <button class="btn" data-close>取消</button>
       <button class="btn btn-danger" id="cfOk">确认</button>
     </div>
-    <div class="anno-scope-pins" data-anno-scope="confirmOverlay"></div>
   </div>
 </div>
 
@@ -453,7 +401,6 @@
       <button class="btn" data-close-edit>关闭</button>
       <button class="btn btn-primary" id="editSave">保存</button>
     </div>
-    <div class="anno-scope-pins" data-anno-scope="editOverlay"></div>
   </div>
 </div>
 
@@ -499,7 +446,6 @@
       <button class="btn" data-close-import>取消</button>
       <button class="btn btn-primary" id="importConfirm">确认导入</button>
     </div>
-    <div class="anno-scope-pins" data-anno-scope="importOverlay"></div>
   </div>
 </div>
 
@@ -511,7 +457,6 @@
     <div class="modal-foot">
       <button class="btn btn-primary" data-close-import-result>知道了</button>
     </div>
-    <div class="anno-scope-pins" data-anno-scope="importResultOverlay"></div>
   </div>
 </div>
 
@@ -528,37 +473,10 @@
     <div class="modal-foot">
       <button class="btn" data-close-log>关闭</button>
     </div>
-    <div class="anno-scope-pins" data-anno-scope="logOverlay"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
-
-<!-- 原型标注 -->
-<div class="anno-hint anno-ui">标注模式已开启：点击页面任意位置添加标注（不影响已保存的标注点）</div>
-<div class="anno-pins anno-ui" id="annoPins"></div>
-<div class="anno-bar anno-ui">
-  <span class="anno-count" id="annoCount">标注 0</span>
-  <button class="btn-anno" id="annoModeBtn" type="button">标注模式</button>
-  <button class="btn-anno" id="annoPanelBtn" type="button">标注列表</button>
-  <button class="btn-anno" id="annoExportBtn" type="button">导出</button>
-  <button class="btn-anno" id="annoClearBtn" type="button">清空</button>
-</div>
-<div class="anno-panel anno-ui" id="annoPanel">
-  <div class="anno-panel-head">
-    <span>标注列表</span>
-    <span class="link" id="annoPanelClose">关闭</span>
-  </div>
-  <div class="anno-panel-body" id="annoList"></div>
-</div>
-<div class="anno-editor anno-ui" id="annoEditor">
-  <label id="annoEditorLabel">标注 #1</label>
-  <textarea id="annoEditorText" placeholder="填写说明，如：此处需二次确认、字段含义等"></textarea>
-  <div class="anno-editor-foot">
-    <button class="btn btn-sm" id="annoEditorCancel">取消</button>
-    <button class="btn btn-primary btn-sm" id="annoEditorSave">保存</button>
-  </div>
-</div>
 
 <script>
 /* 敏感词类型：tm=商标词, high=高危禁用词, normal=普通禁用词 */
@@ -1269,15 +1187,12 @@ document.getElementById('importConfirm').onclick = ()=>{
   const matched = applyImportSuccess(fileRows);
   render();
   const n = matched.length;
-  const okTable = `<table class="tpl-table" style="margin-top:10px"><thead><tr><th>ASIN</th><th>SKU</th><th>MSKU</th><th>店铺</th><th>审核结果</th><th>结果</th></tr></thead><tbody>${
-    matched.map(x=>`<tr><td>${x.listing.asin}</td><td>${x.listing.sku}</td><td>${x.listing.msku}</td><td>${x.listing.store}</td><td>通过</td><td style="color:var(--success)">状态 → 删除 listing 中</td></tr>`).join('')
-  }</tbody></table>`;
   showImportResult('导入成功',
     `<div class="import-result-summary ok">校验通过，已提交删除 <b>${n}</b> 条。</div>
      <p style="font-size:12px;line-height:1.7;color:var(--text-2)">
        状态已更新为「<b>删除 listing 中</b>」，系统将<b>定时</b>加入删除 listing 队列。<br>
        删除成功数据不在本列表展示；若失败将回写为「<b>删除 listing 失败</b>」并写入操作日志。
-     </p>${okTable}`
+     </p>`
   );
   toast(`校验通过，${n} 条已提交删除，系统将加入删除 listing 队列`);
 };
@@ -1294,292 +1209,27 @@ document.querySelectorAll('.page-btn').forEach(b=>{
 });
 
 render();
-
-/* ===== 原型标注 ===== */
-const ANNO_KEY = 'qinquan-chuli-list-annotations';
-const BUILTIN_ANNOTATIONS = [
-  {
-    id: 10001,
-    no: 1,
-    scope: 'importOverlay',
-    x: 380,
-    y: 248,
-    text: '展示例子，实际不显示这个导入示例',
-    time: '2026-06-08'
+</script>
+<script src="../../import/prototype-annotate.js"></script>
+<script>
+PrototypeAnnotate.init({
+  storageKey: 'qinquan-chuli-list-annotations',
+  exportTitle: '删词处理列表',
+  exportFilename: '删词处理列表-原型标注.md',
+  scopeLabels: {
+    page: '页面',
+    confirmOverlay: '确认弹窗',
+    editOverlay: 'listing文案编辑',
+    importOverlay: '已审核 listing 删除导入',
+    importResultOverlay: '导入结果',
+    logOverlay: '操作日志'
   },
-  {
-    id: 10002,
-    no: 2,
-    scope: 'importOverlay',
-    x: 210,
-    y: 462,
-    text: '展示例子，实际不展示「示例（二选一）」',
-    time: '2026-06-08'
-  }
-];
-const ANNO_SCOPE_LABEL = {
-  page:'页面',
-  confirmOverlay:'确认弹窗',
-  editOverlay:'listing文案编辑',
-  importOverlay:'已审核 listing 删除导入',
-  importResultOverlay:'导入结果',
-  logOverlay:'操作日志'
-};
-let annotations = [];
-let annoMode = false;
-let annoEditingId = null;
-let annoPendingCtx = null;
-
-function normalizeAnnotations(){
-  annotations.forEach(a=>{ if(!a.scope) a.scope = 'page'; });
-}
-function loadAnnotations(){
-  try{
-    const raw = localStorage.getItem(ANNO_KEY);
-    const saved = raw ? JSON.parse(raw) : [];
-    const builtinIds = new Set(BUILTIN_ANNOTATIONS.map(b=>b.id));
-    const extra = (Array.isArray(saved) ? saved : []).filter(a=>!builtinIds.has(a.id));
-    annotations = [...BUILTIN_ANNOTATIONS.map(a=>({ ...a })), ...extra];
-    annotations.forEach((a,i)=>{ a.no = i + 1; });
-    normalizeAnnotations();
-  }catch{
-    annotations = BUILTIN_ANNOTATIONS.map(a=>({ ...a }));
-  }
-}
-function saveAnnotations(){
-  localStorage.setItem(ANNO_KEY, JSON.stringify(annotations));
-}
-function updateAnnoCount(){
-  document.getElementById('annoCount').textContent = `标注 ${annotations.length}`;
-}
-function getAnnoContextFromClick(e){
-  const overlay = e.target.closest('.overlay.show');
-  if(overlay){
-    const modal = overlay.querySelector('.modal');
-    const rect = modal.getBoundingClientRect();
-    return {
-      scope: overlay.id,
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-      editorX: e.pageX,
-      editorY: e.pageY
-    };
-  }
-  return { scope:'page', x:e.pageX, y:e.pageY, editorX:e.pageX, editorY:e.pageY };
-}
-function getPagePosFromAnno(a){
-  if(!a.scope || a.scope === 'page') return { x:a.x, y:a.y };
-  const overlay = document.getElementById(a.scope);
-  if(!overlay) return { x:a.x, y:a.y };
-  const modal = overlay.querySelector('.modal');
-  if(!modal) return { x:a.x, y:a.y };
-  const rect = modal.getBoundingClientRect();
-  return { x: rect.left + a.x, y: rect.top + a.y };
-}
-function getAnnoPinContainer(a){
-  if(!a.scope || a.scope === 'page') return document.getElementById('annoPins');
-  const overlay = document.getElementById(a.scope);
-  return overlay ? overlay.querySelector('.anno-scope-pins') : null;
-}
-function bindAnnoPinEvents(pin, id){
-  pin.onclick = (e)=>{
-    e.stopPropagation();
-    if(annoMode) return;
-    highlightAnno(id);
-  };
-  pin.ondblclick = (e)=>{
-    e.stopPropagation();
-    const a = annotations.find(x=>x.id===id);
-    if(a){
-      const pos = getPagePosFromAnno(a);
-      openAnnoEditor(pos.x, pos.y, id);
-    }
-  };
-}
-function createAnnoPinElement(a){
-  const pin = document.createElement('div');
-  pin.className = 'anno-pin';
-  pin.dataset.id = a.id;
-  pin.style.left = a.x + 'px';
-  pin.style.top = a.y + 'px';
-  pin.innerHTML = `<div class="dot">${a.no}</div><div class="tip">${escapeAnno(a.text)}</div>`;
-  bindAnnoPinEvents(pin, a.id);
-  return pin;
-}
-function renderAnnoPins(){
-  document.getElementById('annoPins').innerHTML = '';
-  document.querySelectorAll('.anno-scope-pins').forEach(el=> el.innerHTML = '');
-  annotations.forEach(a=>{
-    if(a.scope && a.scope !== 'page'){
-      const overlay = document.getElementById(a.scope);
-      if(!overlay || !overlay.classList.contains('show')) return;
-    }
-    const container = getAnnoPinContainer(a);
-    if(container) container.appendChild(createAnnoPinElement(a));
-  });
-}
-function escapeAnno(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function renderAnnoList(){
-  const box = document.getElementById('annoList');
-  if(!annotations.length){
-    box.innerHTML = '<div class="anno-empty">暂无标注<br>开启标注模式后点击页面添加</div>';
-    return;
-  }
-  box.innerHTML = annotations.map(a=>`
-    <div class="anno-item" data-id="${a.id}">
-      <span class="del" data-del="${a.id}">删除</span>
-      <span class="no">${a.no}</span>
-      <div class="txt">${escapeAnno(a.text)}</div>
-      <div class="meta">${ANNO_SCOPE_LABEL[a.scope] || a.scope || '页面'}${a.time ? ' · ' + a.time : ''}</div>
-    </div>
-  `).join('');
-  box.querySelectorAll('.anno-item').forEach(item=>{
-    item.onclick = ()=> highlightAnno(+item.dataset.id, true);
-  });
-  box.querySelectorAll('[data-del]').forEach(btn=>{
-    btn.onclick = (e)=>{
-      e.stopPropagation();
-      deleteAnno(+btn.dataset.del);
-    };
-  });
-}
-function clearAnnoHighlight(){
-  document.querySelectorAll('.anno-pin.active, .anno-item.active').forEach(el=> el.classList.remove('active'));
-}
-function highlightAnno(id, scroll){
-  clearAnnoHighlight();
-  const a = annotations.find(x=>x.id===id);
-  if(!a) return;
-  if(a.scope && a.scope !== 'page'){
-    const overlay = document.getElementById(a.scope);
-    if(overlay) overlay.classList.add('show');
-    renderAnnoPins();
-  }
-  const pin = document.querySelector(`.anno-pin[data-id="${id}"]`);
-  const item = document.querySelector(`.anno-item[data-id="${id}"]`);
-  if(pin) pin.classList.add('active');
-  if(item) item.classList.add('active');
-  document.getElementById('annoPanel').classList.add('show');
-  if(scroll && (!a.scope || a.scope === 'page')){
-    window.scrollTo({ top: Math.max(0, a.y - window.innerHeight/3), behavior:'smooth' });
-  }
-}
-function openAnnoEditor(x, y, id, ctx){
-  const editor = document.getElementById('annoEditor');
-  annoEditingId = id || null;
-  annoPendingCtx = id ? null : (ctx || null);
-  const a = id ? annotations.find(item=>item.id===id) : null;
-  document.getElementById('annoEditorLabel').textContent = a ? `编辑标注 #${a.no}` : `新建标注 #${annotations.length + 1}`;
-  document.getElementById('annoEditorText').value = a ? a.text : '';
-  let left = x + 12, top = y + 12;
-  if(left + 300 > window.innerWidth) left = x - 292;
-  if(top + 180 > window.innerHeight) top = y - 180;
-  editor.style.left = Math.max(8, left) + 'px';
-  editor.style.top = Math.max(8, top) + 'px';
-  editor.classList.add('show');
-  document.getElementById('annoEditorText').focus();
-}
-function closeAnnoEditor(){
-  document.getElementById('annoEditor').classList.remove('show');
-  annoEditingId = null;
-  annoPendingCtx = null;
-}
-function saveAnnoEditor(){
-  const text = document.getElementById('annoEditorText').value.trim();
-  if(!text){ toast('请填写标注内容'); return; }
-  const time = nowStr();
-  if(annoEditingId){
-    const a = annotations.find(x=>x.id===annoEditingId);
-    if(a){ a.text = text; a.time = time; }
-  } else if(annoPendingCtx){
-    annotations.push({
-      id:Date.now(),
-      no:annotations.length + 1,
-      scope:annoPendingCtx.scope || 'page',
-      x:annoPendingCtx.x,
-      y:annoPendingCtx.y,
-      text,
-      time
-    });
-  }
-  saveAnnotations();
-  closeAnnoEditor();
-  renderAnnoPins();
-  renderAnnoList();
-  updateAnnoCount();
-  toast('标注已保存');
-}
-function deleteAnno(id){
-  annotations = annotations.filter(a=>a.id!==id);
-  annotations.forEach((a,i)=> a.no = i + 1);
-  saveAnnotations();
-  renderAnnoPins();
-  renderAnnoList();
-  updateAnnoCount();
-}
-function setAnnoMode(on){
-  annoMode = on;
-  document.body.classList.toggle('anno-mode', on);
-  document.getElementById('annoModeBtn').classList.toggle('on', on);
-  if(!on) closeAnnoEditor();
-}
-function exportAnnotations(){
-  if(!annotations.length){ toast('暂无标注可导出'); return; }
-  const lines = ['# 删词处理列表 · 原型标注', '', ...annotations.map(a=>{
-    const scope = ANNO_SCOPE_LABEL[a.scope] || a.scope || '页面';
-    return `## ${a.no}. ${a.text}\n- 归属：${scope}\n- 位置：(${Math.round(a.x)}, ${Math.round(a.y)})\n- 时间：${a.time || '—'}`;
-  })];
-  const blob = new Blob([lines.join('\n')], { type:'text/markdown;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = '删词处理列表-原型标注.md';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('标注已导出');
-}
-function bindOverlayAnnoWatch(){
-  document.querySelectorAll('.overlay').forEach(overlay=>{
-    const observer = new MutationObserver(()=>{
-      if(overlay.classList.contains('show')){
-        renderAnnoPins();
-      } else {
-        clearAnnoHighlight();
-        closeAnnoEditor();
-        renderAnnoPins();
-      }
-    });
-    observer.observe(overlay, { attributes:true, attributeFilter:['class'] });
-  });
-}
-
-loadAnnotations();
-renderAnnoPins();
-renderAnnoList();
-updateAnnoCount();
-bindOverlayAnnoWatch();
-
-document.getElementById('annoModeBtn').onclick = ()=> setAnnoMode(!annoMode);
-document.getElementById('annoPanelBtn').onclick = ()=> document.getElementById('annoPanel').classList.toggle('show');
-document.getElementById('annoPanelClose').onclick = ()=> document.getElementById('annoPanel').classList.remove('show');
-document.getElementById('annoExportBtn').onclick = exportAnnotations;
-document.getElementById('annoClearBtn').onclick = ()=>{
-  if(!annotations.length) return;
-  if(confirm('确认清空全部标注？')){ annotations = []; saveAnnotations(); renderAnnoPins(); renderAnnoList(); updateAnnoCount(); toast('已清空标注'); }
-};
-document.getElementById('annoEditorSave').onclick = saveAnnoEditor;
-document.getElementById('annoEditorCancel').onclick = closeAnnoEditor;
-document.addEventListener('click', (e)=>{
-  if(!annoMode) return;
-  if(e.target.closest('.anno-ui')) return;
-  e.preventDefault();
-  e.stopPropagation();
-  const ctx = getAnnoContextFromClick(e);
-  openAnnoEditor(ctx.editorX, ctx.editorY, null, ctx);
-}, true);
-document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape'){ closeAnnoEditor(); setAnnoMode(false); }
+  builtins: [
+    { id: 10001, scope: 'importOverlay', x: 380, y: 248, text: '展示例子，实际不显示这个导入示例', time: '2026-06-08' },
+    { id: 10002, scope: 'importOverlay', x: 210, y: 462, text: '展示例子，实际不展示「示例（二选一）」', time: '2026-06-08' }
+  ],
+  toast,
+  nowStr
 });
 </script>
 </body>
