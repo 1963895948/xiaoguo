@@ -175,9 +175,16 @@
   .tpl-table th{ background:#f6f8fb; color:var(--text-2); font-weight:600; }
   .upload-box{ border:1px dashed var(--border); border-radius:8px; padding:18px; text-align:center; color:var(--text-3); font-size:12px; margin:12px 0; cursor:pointer; }
   .upload-box:hover{ border-color:var(--primary); color:var(--primary); }
-  .log-table{ width:100%; border-collapse:collapse; font-size:12px; }
-  .log-table th,.log-table td{ border-bottom:1px solid var(--border); padding:8px 6px; text-align:left; }
-  .log-table th{ background:#f6f8fb; color:var(--text-2); position:sticky; top:0; }
+  .log-table{ width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
+  .log-table th,.log-table td{ border-bottom:1px solid var(--border); padding:5px 8px; text-align:left; line-height:1.45; word-break:break-all; }
+  .log-table th{ background:#f6f8fb; color:var(--text-2); font-weight:600; }
+  .log-table th:nth-child(1){ width:132px; }
+  .log-table th:nth-child(2){ width:64px; }
+  .log-table th:nth-child(3){ width:96px; }
+  .modal.log-modal{ width:520px; }
+  .modal.log-modal .modal-head{ padding:12px 16px; font-size:14px; }
+  .modal.log-modal .modal-body{ max-height:none; overflow:visible; padding:0 12px 4px; }
+  .modal.log-modal .modal-foot{ padding:8px 16px 12px; }
 
   /* toast */
   .toast{ position:fixed; top:24px; left:50%; transform:translateX(-50%); background:#1f2733; color:#fff;
@@ -336,9 +343,9 @@
 
 <!-- 操作日志 -->
 <div class="overlay" id="logOverlay">
-  <div class="modal lg">
+  <div class="modal log-modal">
     <div class="modal-head"><span id="logModalTitle">操作日志</span><span class="x" data-close-log>×</span></div>
-    <div class="modal-body" style="padding:0">
+    <div class="modal-body">
       <table class="log-table">
         <thead><tr><th>操作时间</th><th>操作人</th><th>操作内容</th><th>备注</th></tr></thead>
         <tbody id="logBody"></tbody>
