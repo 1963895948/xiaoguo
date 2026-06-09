@@ -427,10 +427,7 @@
       </div>
       <table class="tpl-table">
         <thead><tr><th>ASIN</th><th>SKU</th><th>MSKU</th><th>店铺</th><th>审核结果</th></tr></thead>
-        <tbody>
-          <tr><td>B0CR2MK8PL</td><td>19660102</td><td>BOX12OFFICE…</td><td>Amazon-Z011512-FR</td><td>通过</td></tr>
-          <tr><td>B0CR9XK1MN</td><td>19660188</td><td>DESKBOX88…</td><td>Amazon-Z011520-FR</td><td>通过</td></tr>
-        </tbody>
+        <tbody id="importTplBody"></tbody>
       </table>
       <div class="upload-box" id="importUpload">点击或拖拽上传 Excel / CSV</div>
       <div class="muted" id="importFileHint" style="margin-top:-6px">未选择文件</div>
@@ -480,11 +477,38 @@
 
 <script>
 /* 敏感词类型：tm=商标词, high=高危禁用词, normal=普通禁用词 */
-const rows = [
+const CODE_CHARS = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+const STORE_SITES = ['FR', 'BE', 'DE'];
+function mkRng(seed){
+  let s = seed >>> 0;
+  return ()=>{ s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
+}
+function pickCode(rng, len, charset = CODE_CHARS){
+  let out = '';
+  for(let i = 0; i < len; i++) out += charset[Math.floor(rng() * charset.length)];
+  return out;
+}
+function genAsin(i){ return 'B0' + pickCode(mkRng(9100 + i), 8); }
+function genSku(i){ return pickCode(mkRng(8100 + i), 8, '0123456789'); }
+function genMsku(i){ return pickCode(mkRng(7100 + i), 12) + '…'; }
+function genStore(i){
+  const rng = mkRng(6100 + i);
+  return `Amazon-Z0${pickCode(rng, 5, '0123456789')}-${STORE_SITES[i % STORE_SITES.length]}`;
+}
+function attachCodes(scenarios){
+  return scenarios.map((row, i) => ({
+    ...row,
+    asin: genAsin(i),
+    sku: genSku(i),
+    msku: genMsku(i),
+    store: genStore(i)
+  }));
+}
+
+const rowScenarios = [
   {
     img:"🚗", title:"SOLLISTRE fournitures de stationnerie de voiture numér…",
-    asin:"B0CZT9R2KV", sku:"17324377", msku:"13PJ7J23LQVLA0…",
-    store:"Amazon-Z011097-FR", normalStore:true, gold:"需餐宴", fbm:"-",
+    normalStore:true, gold:"需餐宴", fbm:"-",
     s30:"0 (0)", s365:"0 (1)", sale90:0,
     ship:"self", bind:true, fba:"0", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:null,
@@ -496,8 +520,7 @@ const rows = [
   },
   {
     img:"🖼️", title:"Alipis Lot de 6 cadres photo en bois à bricoler - Cadre ph at",
-    asin:"B0C9M2X6TM", sku:"16419293", msku:"2756QQ09X5",
-    store:"Amazon-Z011896-BE", normalStore:true, gold:"陈桌然", fbm:"-",
+    normalStore:true, gold:"陈桌然", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"fba", bind:false, fba:"12", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:null,
@@ -508,8 +531,7 @@ const rows = [
   },
   {
     img:"🧤", title:"Mobestech Lot de 8 housses de poignée de porte de réfrig",
-    asin:"B0BFMQYBXN", sku:"14945233", msku:"X2614R9TDEKKF2…",
-    store:"Amazon-Z011621-BE", normalStore:true, gold:"王晓萌", fbm:"-",
+    normalStore:true, gold:"王晓萌", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"self", bind:false, fba:"0", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:"圣诞节",
@@ -520,8 +542,7 @@ const rows = [
   },
   {
     img:"🧤", title:"Mobestech Lot de 8 housses de poignée de porte (有销量)",
-    asin:"B0BF8K9LMN", sku:"14945240", msku:"X2614R9TDEK99…",
-    store:"Amazon-Z011622-BE", normalStore:true, gold:"陈桌然", fbm:"-",
+    normalStore:true, gold:"陈桌然", fbm:"-",
     s30:"1 (1)", s365:"3 (4)", sale90:8,
     ship:"fba", bind:true, fba:"36", transit:"10", whWait:"0", whAll:"5",
     tag:"—", festival:null,
@@ -532,8 +553,7 @@ const rows = [
   },
   {
     img:"🎨", title:"Wsmyp Kit de peinture diamant 5D - Bricolage（高危禁用词）",
-    asin:"B0CK3LQ7ZP", sku:"18002145", msku:"DMD5K2LQ77A…",
-    store:"Amazon-Z011905-DE", normalStore:true, gold:"王晓萌", fbm:"-",
+    normalStore:true, gold:"王晓萌", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"fba", bind:false, fba:"58", transit:"0", whWait:"0", whAll:"0",
     tag:"新品", festival:"圣诞节",
@@ -544,8 +564,7 @@ const rows = [
   },
   {
     img:"🔧", title:"Outils de réparation tournevis 24 en 1（异常店铺）",
-    asin:"B0CN8VR2QX", sku:"19120877", msku:"TLS24IN1QXA…",
-    store:"Amazon-Z011340-FR", normalStore:false, gold:"需餐宴", fbm:"绑定BMlist",
+    normalStore:false, gold:"需餐宴", fbm:"绑定BMlist",
     s30:"0 (0)", s365:"5 (6)", sale90:0,
     ship:"self", bind:true, fba:"0", transit:"0", whWait:"8", whAll:"8",
     tag:"—", festival:null,
@@ -556,8 +575,7 @@ const rows = [
   },
   {
     img:"📦", title:"Lot de rangement plastique（保留状态·普通禁用词）",
-    asin:"B0CP5MD2WL", sku:"19330021", msku:"RGT12PLSTA…",
-    store:"Amazon-Z011455-FR", normalStore:true, gold:"陈桌然", fbm:"-",
+    normalStore:true, gold:"陈桌然", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"fba", bind:false, fba:"20", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:null,
@@ -569,8 +587,7 @@ const rows = [
   },
   {
     img:"💡", title:"Guirlande lumineuse LED（删除失败）",
-    asin:"B0CQ8XL3RT", sku:"19551204", msku:"LED50MGRLA…",
-    store:"Amazon-Z011780-DE", normalStore:true, gold:"王晓萌", fbm:"-",
+    normalStore:true, gold:"王晓萌", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"self", bind:false, fba:"0", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:"圣诞节",
@@ -586,8 +603,7 @@ const rows = [
   },
   {
     img:"📋", title:"Coffret rangement bureau（待删除listing·待导入确认）",
-    asin:"B0CR2MK8PL", sku:"19660102", msku:"BOX12OFFICE…",
-    store:"Amazon-Z011512-FR", normalStore:true, gold:"陈桌然", fbm:"-",
+    normalStore:true, gold:"陈桌然", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"fba", bind:false, fba:"5", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:null,
@@ -595,12 +611,11 @@ const rows = [
     status:"todel",
     copy:{ title:"Coffret rangement bureau", bullet:"organisation", keywords:"boite; bureau", desc:"Set de rangement" },
     add:"2025-10-27 22:19:40", upd:"2025-10-28 09:55:00",
-    logs:[{ time:"2025-08-09 22:03:11", user:"袁效国", action:"删除listing", note:"" }]
+    logs:[{ time:"2025-08-09 22:03:11", user:"演示用户", action:"删除listing", note:"" }]
   },
   {
     img:"📋", title:"Boîte de rangement bureau XL（待删除listing·可批量导入）",
-    asin:"B0CR9XK1MN", sku:"19660188", msku:"DESKBOX88…",
-    store:"Amazon-Z011520-FR", normalStore:true, gold:"王晓萌", fbm:"-",
+    normalStore:true, gold:"王晓萌", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"fba", bind:false, fba:"3", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:null,
@@ -608,12 +623,11 @@ const rows = [
     status:"todel",
     copy:{ title:"Boîte de rangement bureau XL", bullet:"organisation bureau", keywords:"boite; bureau", desc:"Rangement XL" },
     add:"2025-10-27 22:19:35", upd:"2025-10-28 09:50:00",
-    logs:[{ time:"2025-08-09 22:03:11", user:"袁效国", action:"删除listing", note:"批量提交" }]
+    logs:[{ time:"2025-08-09 22:03:11", user:"演示用户", action:"删除listing", note:"批量提交" }]
   },
   {
     img:"⏳", title:"Support téléphone voiture（删除listing中·等待队列回写）",
-    asin:"B0CS3NP9QR", sku:"19771203", msku:"CARPHNSTD…",
-    store:"Amazon-Z011633-DE", normalStore:true, gold:"王晓萌", fbm:"-",
+    normalStore:true, gold:"王晓萌", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"self", bind:false, fba:"0", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:null,
@@ -623,11 +637,12 @@ const rows = [
     copy:{ title:"Support téléphone voiture", bullet:"fixation stable", keywords:"support; voiture", desc:"Compatible APPLE design" },
     add:"2025-10-27 22:19:20", upd:"2025-10-28 09:30:00",
     logs:[
-      { time:"2025-08-09 22:03:11", user:"袁效国", action:"导入删除listing", note:"校验通过，已提交删除" },
+      { time:"2025-08-09 22:03:11", user:"演示用户", action:"导入删除listing", note:"校验通过，已提交删除" },
       { time:"2025-08-10 02:00:00", user:"系统", action:"已加入删除listing队列", note:"定时任务入队" }
     ]
   }
 ];
+const rows = attachCodes(rowScenarios);
 
 function nowStr(){
   const now = new Date();
@@ -637,7 +652,7 @@ function nowStr(){
 function addRowLog(rowIndex, action, note=""){
   const r = rows[rowIndex];
   if(!r.logs) r.logs = [];
-  r.logs.unshift({ time:nowStr(), user:"袁效国", action, note });
+  r.logs.unshift({ time:nowStr(), user:"演示用户", action, note });
 }
 function renderLogs(entries){
   const list = entries && entries.length ? entries : [{ time:"—", user:"—", action:"暂无操作记录", note:"" }];
@@ -726,6 +741,14 @@ function buildOpMenu(r){
        + item("保留",canKeep(r),keepReason(r),"keep");
 }
 
+function renderImportTpl(){
+  const tbody = document.getElementById('importTplBody');
+  if(!tbody) return;
+  tbody.innerHTML = rows.filter(r => r.status === 'todel').map(r =>
+    `<tr><td>${r.asin}</td><td>${r.sku}</td><td>${r.msku}</td><td>${r.store}</td><td>通过</td></tr>`
+  ).join('');
+}
+
 function render(){
   document.getElementById('tbody').innerHTML = rows.map((r,i)=>`
     <tr data-i="${i}">
@@ -772,6 +795,7 @@ function render(){
   bindRowLogActions();
   updateSel();
   document.getElementById('totalCount').textContent = rows.length;
+  renderImportTpl();
 }
 const overlay = document.getElementById('confirmOverlay');
 const cfTitle = document.getElementById('cfTitle');
@@ -1105,9 +1129,11 @@ function findListingByMskuStore(msku, store){
 }
 function buildImportRowsFromFile(){
   if(importExampleMode === 'fail'){
+    const ok = rows.find(r => r.status === 'todel');
+    if(!ok) return [];
     return [
-      { line:2, asin:'B0CR2MK8PL', sku:'19660102', msku:'BOX12OFFICE…', store:'Amazon-Z011512-FR', audit:'通过' },
-      { line:3, asin:'B0XXXXXXX', sku:'00000000', msku:'NOTEXIST999', store:'Amazon-Z011512-FR', audit:'通过' }
+      { line:2, asin:ok.asin, sku:ok.sku, msku:ok.msku, store:ok.store, audit:'通过' },
+      { line:3, asin:genAsin(999), sku:genSku(999), msku:genMsku(999), store:ok.store, audit:'通过' }
     ];
   }
   return rows
@@ -1213,7 +1239,7 @@ render();
 <script src="../../import/prototype-annotate.js"></script>
 <script>
 PrototypeAnnotate.init({
-  storageKey: 'qinquan-chuli-list-annotations',
+  storageKey: 'qinquan-chuli-list-annotations-v2',
   exportTitle: '删词处理列表',
   exportFilename: '删词处理列表-原型标注.md',
   scopeLabels: {
@@ -1224,10 +1250,7 @@ PrototypeAnnotate.init({
     importResultOverlay: '导入结果',
     logOverlay: '操作日志'
   },
-  builtins: [
-    { id: 10001, scope: 'importOverlay', x: 380, y: 248, text: '展示例子，实际不显示这个导入示例', time: '2026-06-08' },
-    { id: 10002, scope: 'importOverlay', x: 210, y: 462, text: '展示例子，实际不展示「示例（二选一）」', time: '2026-06-08' }
-  ],
+  builtins: [],
   toast,
   nowStr
 });
