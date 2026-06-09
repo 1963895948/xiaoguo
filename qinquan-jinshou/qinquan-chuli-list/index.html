@@ -65,6 +65,7 @@
   .toolbar-menu.show{ display:block; }
   .toolbar-mi{ padding:8px 16px; font-size:13px; cursor:pointer; white-space:nowrap; }
   .toolbar-mi:hover{ background:#f3f6fb; color:var(--primary); }
+  .btn-import-audit{ font-size:12px; padding:0 12px; }
   .group-bar{ padding:8px 20px; background:#fafafa; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
     font-size:12px; color:var(--text-2); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
   .toolbar .spacer{ flex:1; }
@@ -263,7 +264,7 @@
       </div>
     </div>
     <button class="btn btn-primary" id="btnExport">导出</button>
-    <button class="btn btn-primary" id="btnImport">导入</button>
+    <button class="btn btn-primary btn-import-audit" id="btnImport">已审核listing删除导入</button>
   </div>
 
   <div class="group-bar">
@@ -344,7 +345,7 @@
 <!-- 导入删除 listing -->
 <div class="overlay" id="importOverlay">
   <div class="modal lg">
-    <div class="modal-head"><span>导入删除 listing</span><span class="x" data-close-import>×</span></div>
+    <div class="modal-head"><span>已审核 listing 删除导入</span><span class="x" data-close-import>×</span></div>
     <div class="modal-body">
       <p style="margin-bottom:8px">导入模板字段如下，审核结果为「通过」时将把对应 listing 从「待删除listing」推进为「删除listing中」：</p>
       <table class="tpl-table">
@@ -588,7 +589,7 @@ function buildOpMenu(r){
   const item=(label,enabled,reason,act)=> enabled
     ? `<div class="op-mi" data-act="${act}">${label}</div>`
     : `<div class="op-mi disabled" title="${reason}">${label}</div>`;
-  return item("删listing",canDelete(r),delReason(r),"del")
+  return item("删除listing",canDelete(r),delReason(r),"del")
        + item("修改文案",canEdit(r),editReason(r),"edit")
        + item("保留",canKeep(r),keepReason(r),"keep");
 }
@@ -677,6 +678,7 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 const editOverlay = document.getElementById('editOverlay');
 const detectTip = document.getElementById('detectTip');
 let editingIndex = -1;
+let pendingEditRemark = "";
 const SENSITIVE = [...new Set(rows.flatMap(r=>r.kw.map(k=>k.w)))]; // 模拟检测词库
 
 function highlight(text){
@@ -696,7 +698,7 @@ function openEdit(i){
   });
   editOverlay.classList.add('show');
 }
-editOverlay.querySelectorAll('[data-close-edit]').forEach(b=> b.onclick=()=> editOverlay.classList.remove('show'));
+editOverlay.querySelectorAll('[data-close-edit]').forEach(b=> b.onclick=()=>{ pendingEditRemark=""; editOverlay.classList.remove('show'); });
 document.getElementById('editSave').onclick = ()=>{
   // 模拟「商标词和禁用词合并检测接口」
   let hits=[];
@@ -716,7 +718,9 @@ document.getElementById('editSave').onclick = ()=>{
       editOverlay.classList.remove('show');
       rows[editingIndex].status = "toword";
       rows[editingIndex].upd = "刚刚";
-      addRowLog(editingIndex, "修改文案", `SKU ${rows[editingIndex].sku}`);
+      const logNote = pendingEditRemark || `SKU ${rows[editingIndex].sku}`;
+      addRowLog(editingIndex, "修改文案", logNote);
+      pendingEditRemark = "";
       render(); toast('文案已提交修改，状态更新为「待删词」，已写入操作日志');
     }, 700);
   }
@@ -730,17 +734,20 @@ function doAct(i, act){
   const r = rows[i];
   if(act==="del"){
     confirmBox('⚠️ 删除 listing 确认',
-      `确认提交删除该 listing？<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b><br><br>状态将变更为「<b>待删除listing</b>」。需定期导出待删除数据供业务确认，审核通过后通过「导入」推进为「删除listing中」执行删除。`,
+      `确认提交删除该 listing？<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b><br><br>状态将变更为「<b>待删除listing</b>」。需导出待删除数据供业务确认，审核通过后通过「已审核listing删除导入」推进为「删除listing中」。`,
       (remark)=>{
         r.status="todel"; r.upd="刚刚";
-        addRowLog(i, "删listing", remark);
+        addRowLog(i, "删除listing", remark);
         render(); toast('已提交，状态更新为「待删除listing」，已写入操作日志');
       });
   } else if(act==="edit"){
-    openEdit(i);
+    confirmBox('修改文案确认',
+      `确认打开文案编辑？<br><br>ASIN：<b>${r.asin}</b><br>系统SKU：<b>${r.sku}</b><br><span style="color:#97a0b0;font-size:12px">保存时将检测敏感词，备注写入操作日志。</span>`,
+      (remark)=>{ pendingEditRemark = remark; openEdit(i); },
+      { okClass:'btn btn-primary' });
   } else if(act==="keep"){
     confirmBox('保留确认',
-      `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、')}</b>`,
+      `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、') || '—'}</b>`,
       (remark)=>{
         r.status="keep"; r.upd="刚刚";
         addRowLog(i, "保留", remark);
@@ -801,7 +808,7 @@ function batchDeleteListing(){
       checked.forEach(c=>{
         const i=+c.closest('tr').dataset.i;
         rows[i].status="todel"; rows[i].upd="刚刚";
-        addRowLog(i, "删listing", remark);
+        addRowLog(i, "删除listing", remark);
       });
       checkAll.checked=false; render(); toast(`已提交批量删 listing ${n} 条`);
     });
