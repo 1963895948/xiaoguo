@@ -132,6 +132,7 @@
   .op-mi.disabled{ color:var(--text-3); cursor:not-allowed; background:none; }
 
   .time{ color:var(--text-2); font-size:11px; line-height:1.8; white-space:nowrap; }
+  .time .row-log{ display:inline-block; margin-top:4px; font-size:12px; }
 
   .pager{ display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:14px 20px;
     border-top:1px solid var(--border); flex-wrap:wrap; }
@@ -238,7 +239,6 @@
     <button class="btn btn-sm" id="btnImport">导入</button>
     <span class="muted" style="margin-left:8px">已选 <b id="selCount" style="color:var(--primary)">0</b> 条</span>
     <div class="spacer"></div>
-    <span class="link" id="btnViewLog">操作日志</span>
     <span class="link">隐藏快捷处理分组</span>
     <span class="link">设置快捷处理分组</span>
   </div>
@@ -337,7 +337,7 @@
 <!-- 操作日志 -->
 <div class="overlay" id="logOverlay">
   <div class="modal lg">
-    <div class="modal-head"><span>操作日志</span><span class="x" data-close-log>×</span></div>
+    <div class="modal-head"><span id="logModalTitle">操作日志</span><span class="x" data-close-log>×</span></div>
     <div class="modal-body" style="padding:0">
       <table class="log-table">
         <thead><tr><th>操作时间</th><th>操作人</th><th>操作内容</th><th>备注</th></tr></thead>
@@ -365,7 +365,8 @@ const rows = [
     kw:[{w:"SFS", type:"tm", pos:["描述","亮点"]}],
     status:"wait",
     copy:{ title:"SOLLISTRE fournitures de voiture", bullet:"SFS qualité premium pour voiture", keywords:"voiture; plaque; SFS", desc:"Accessoire SFS pour stationnement" },
-    add:"2025-10-27 22:21:55", upd:"2025-10-28 10:11:48"
+    add:"2025-10-27 22:21:55", upd:"2025-10-28 10:11:48",
+    logs:[{ time:"2025-08-09 22:02:57", user:"xxx", action:"人工删词", note:"不强制要求" }]
   },
   {
     img:"🖼️", title:"Alipis Lot de 6 cadres photo en bois à bricoler - Cadre ph at",
@@ -437,7 +438,8 @@ const rows = [
     kw:[{w:"best seller", type:"normal", pos:["亮点"]}],
     status:"keep",
     copy:{ title:"Lot de rangement plastique", bullet:"best seller rangement maison", keywords:"rangement; boite", desc:"Boîtes empilables" },
-    add:"2025-10-27 22:20:10", upd:"2025-10-28 10:08:40"
+    add:"2025-10-27 22:20:10", upd:"2025-10-28 10:08:40",
+    logs:[{ time:"2025-08-09 22:03:11", user:"xxx", action:"保留", note:"" }]
   },
   {
     img:"💡", title:"Guirlande lumineuse LED（删除失败）",
@@ -461,7 +463,8 @@ const rows = [
     kw:[{w:"IKEA", type:"tm", pos:["标题"]}],
     status:"todel",
     copy:{ title:"Coffret rangement bureau", bullet:"organisation", keywords:"boite; bureau", desc:"Set de rangement" },
-    add:"2025-10-27 22:19:40", upd:"2025-10-28 09:55:00"
+    add:"2025-10-27 22:19:40", upd:"2025-10-28 09:55:00",
+    logs:[{ time:"2025-08-09 22:03:11", user:"袁效国", action:"删listing", note:"" }]
   },
   {
     img:"⏳", title:"Support téléphone voiture（删除listing中·回扫中）",
@@ -473,30 +476,32 @@ const rows = [
     kw:[{w:"APPLE", type:"tm", pos:["描述"]}],
     status:"deling",
     copy:{ title:"Support téléphone voiture", bullet:"fixation stable", keywords:"support; voiture", desc:"Compatible APPLE design" },
-    add:"2025-10-27 22:19:20", upd:"2025-10-28 09:30:00"
+    add:"2025-10-27 22:19:20", upd:"2025-10-28 09:30:00",
+    logs:[{ time:"2025-08-09 22:03:11", user:"袁效国", action:"导入删除listing", note:"审核通过" }]
   }
 ];
 
-const logs = [
-  { time:"2025-08-09 22:02:57", user:"xxx", action:"人工删词", note:"不强制要求" },
-  { time:"2025-08-09 22:03:11", user:"xxx", action:"保留", note:"" },
-  { time:"2025-08-09 22:03:11", user:"袁效国", action:"导入删除listing", note:"" },
-  { time:"2025-08-09 22:03:11", user:"xxx", action:"人工删除listing", note:"" }
-];
-
-function addLog(action, note=""){
+function nowStr(){
   const now = new Date();
   const pad = n => String(n).padStart(2,"0");
-  logs.unshift({
-    time:`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
-    user:"袁效国", action, note
-  });
-  renderLogs();
+  return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 }
-function renderLogs(){
-  document.getElementById("logBody").innerHTML = logs.map(l=>
+function addRowLog(rowIndex, action, note=""){
+  const r = rows[rowIndex];
+  if(!r.logs) r.logs = [];
+  r.logs.unshift({ time:nowStr(), user:"袁效国", action, note });
+}
+function renderLogs(entries){
+  const list = entries && entries.length ? entries : [{ time:"—", user:"—", action:"暂无操作记录", note:"" }];
+  document.getElementById("logBody").innerHTML = list.map(l=>
     `<tr><td>${l.time}</td><td>${l.user}</td><td>${l.action}</td><td>${l.note||"—"}</td></tr>`
   ).join("");
+}
+function openRowLog(rowIndex){
+  const r = rows[rowIndex];
+  document.getElementById("logModalTitle").textContent = `操作日志 · ASIN ${r.asin}`;
+  renderLogs(r.logs);
+  logOverlay.classList.add("show");
 }
 
 const TYPE_LABEL = { tm:"商标词", high:"高危禁用词", normal:"普通禁用词" };
@@ -598,10 +603,11 @@ function render(){
       <td>${tagCell(r)}</td>
       <td>${kwCell(r)}</td>
       <td><span class="pill ${STATUS[r.status].c}">${STATUS[r.status].t}</span></td>
-      <td><div class="time">${r.add}<br>${r.upd}</div></td>
+      <td><div class="time">${r.add}<br>${r.upd}<br><span class="link row-log" data-log="${i}">操作日志</span></div></td>
     </tr>
   `).join('');
   bindRowActions();
+  bindRowLogActions();
   updateSel();
   document.getElementById('totalCount').textContent = rows.length;
 }
@@ -666,7 +672,7 @@ document.getElementById('editSave').onclick = ()=>{
       editOverlay.classList.remove('show');
       rows[editingIndex].status = "toword";
       rows[editingIndex].upd = "刚刚";
-      addLog("修改文案", `SKU ${rows[editingIndex].sku} · ASIN ${rows[editingIndex].asin}`);
+      addRowLog(editingIndex, "修改文案", `SKU ${rows[editingIndex].sku}`);
       render(); toast('文案已提交修改，状态更新为「待删词」，已写入操作日志');
     }, 700);
   }
@@ -683,7 +689,7 @@ function doAct(i, act){
       `确认提交删除该 listing？<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b><br><br>状态将变更为「<b>待删除listing</b>」。需定期导出待删除数据供业务确认，审核通过后通过「导入」推进为「删除listing中」执行删除。`,
       ()=>{
         r.status="todel"; r.upd="刚刚";
-        addLog("删listing", `ASIN ${r.asin}`);
+        addRowLog(i, "删listing", "");
         render(); toast('已提交，状态更新为「待删除listing」，已写入操作日志');
       });
   } else if(act==="edit"){
@@ -693,7 +699,7 @@ function doAct(i, act){
       `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、')}</b>`,
       ()=>{
         r.status="keep"; r.upd="刚刚";
-        addLog("保留", `ASIN ${r.asin}`);
+        addRowLog(i, "保留", "");
         render(); toast('已保留，状态更新为「保留」，已写入操作日志');
       });
   }
@@ -721,6 +727,15 @@ function bindRowActions(){
 document.addEventListener('click', hideOpMenu);
 window.addEventListener('scroll', hideOpMenu, true);
 
+function bindRowLogActions(){
+  document.querySelectorAll('.row-log').forEach(el=>{
+    el.onclick = (e)=>{
+      e.stopPropagation();
+      openRowLog(+el.dataset.log);
+    };
+  });
+}
+
 /* 全选 / 批量 */
 const checkAll = document.getElementById('checkAll');
 checkAll.addEventListener('change', e=>{
@@ -743,10 +758,11 @@ document.getElementById('btnBatchDelete').onclick = ()=>{
     `确认对已勾选的 <b>${n}</b> 条 listing 提交删除？<br><span style="color:#97a0b0;font-size:12px">状态将变更为「待删除listing」，仅待处理 / 保留状态可操作；结果写入操作日志。</span>`,
     ()=>{
       checked.forEach(c=>{
-        const i=+c.closest('tr').dataset.i; rows[i].status="todel"; rows[i].upd="刚刚";
+        const i=+c.closest('tr').dataset.i;
+        rows[i].status="todel"; rows[i].upd="刚刚";
+        addRowLog(i, "删listing", "批量删除");
       });
-      addLog("批量删listing", `共 ${n} 条`);
-      checkAll.checked=false; render(); toast(`已提交批量删除 ${n} 条，已写入操作日志`);
+      checkAll.checked=false; render(); toast(`已提交批量删除 ${n} 条，已写入各行操作日志`);
     });
 };
 
@@ -765,17 +781,19 @@ document.getElementById('btnBatchKeep').onclick = ()=>{
     `确认对 <b>${eligible.length}</b> 条符合条件的 listing 标记为「保留」？<br><span style="color:#97a0b0;font-size:12px">仅待处理且含普通禁用词的数据可保留；结果写入操作日志。</span>`,
     ()=>{
       eligible.forEach(c=>{
-        const i=+c.closest('tr').dataset.i; rows[i].status="keep"; rows[i].upd="刚刚";
+        const i=+c.closest('tr').dataset.i;
+        rows[i].status="keep"; rows[i].upd="刚刚";
+        addRowLog(i, "保留", "批量保留");
       });
-      addLog("批量保留", `共 ${eligible.length} 条`);
-      checkAll.checked=false; render(); toast(`已批量保留 ${eligible.length} 条，已写入操作日志`);
+      checkAll.checked=false; render(); toast(`已批量保留 ${eligible.length} 条，已写入各行操作日志`);
     });
 };
 
 document.getElementById('btnExport').onclick = ()=>{
-  const n = rows.filter(r=>r.status==="todel").length;
-  addLog("导出待删除listing", `共 ${n} 条`);
-  toast(`已导出 ${n} 条「待删除listing」数据（原型演示）`);
+  const pending = rows.map((r,i)=>({r,i})).filter(x=>x.r.status==="todel");
+  if(!pending.length){ toast('当前无「待删除listing」数据可导出'); return; }
+  pending.forEach(x=> addRowLog(x.i, "导出待删除listing", ""));
+  toast(`已导出 ${pending.length} 条「待删除listing」数据（原型演示）`);
 };
 
 const importOverlay = document.getElementById('importOverlay');
@@ -789,16 +807,19 @@ document.getElementById('importConfirm').onclick = ()=>{
     toast('当前无「待删除listing」数据可导入');
     return;
   }
-  pending.forEach(r=>{ r.status="deling"; r.upd="刚刚"; });
-  addLog("导入删除listing", `审核通过 ${pending.length} 条 → 删除listing中`);
+  rows.forEach((r,i)=>{
+    if(r.status==="todel"){
+      addRowLog(i, "导入删除listing", "审核通过");
+      r.status="deling"; r.upd="刚刚";
+    }
+  });
   importOverlay.classList.remove('show');
   render();
-  toast(`导入成功：${pending.length} 条已推进为「删除listing中」，已写入操作日志`);
+  toast(`导入成功：${pending.length} 条已推进为「删除listing中」，已写入各行操作日志`);
 };
 
 const logOverlay = document.getElementById('logOverlay');
 logOverlay.querySelectorAll('[data-close-log]').forEach(b=> b.onclick=()=> logOverlay.classList.remove('show'));
-document.getElementById('btnViewLog').onclick = ()=>{ renderLogs(); logOverlay.classList.add('show'); };
 
 document.querySelectorAll('.page-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
@@ -809,7 +830,6 @@ document.querySelectorAll('.page-btn').forEach(b=>{
 });
 
 render();
-renderLogs();
 </script>
 </body>
 </html>
