@@ -12,6 +12,9 @@
 ├── qinquan-jinshou/      # 分类：侵权禁售
 │   └── qinquan-chuli-list/   # 具体原型：删词处理列表
 │       └── index.html
+├── listing-shanci-list/  # Listing删词列表（与 qinquan-chuli-list 同步）
+│   ├── index.html
+│   └── Listing删词列表-原型-PRD单文件.html
 ├── hegui/               # 分类：合规
 ├── gongju/              # 分类：工具类
 └── _template/           # 带标注的最小原型模板

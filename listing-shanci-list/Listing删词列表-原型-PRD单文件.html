@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>删词处理列表</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root{
+    --primary:#2f6bff; --primary-hover:#1c54e0;
+    --border:#e8ebf0; --bg:#f3f5f8; --text:#1f2733; --text-2:#5b6577;
+    --text-3:#97a0b0; --link:#2f6bff; --warn:#fa8c16; --success:#16b364; --danger:#f5455c;
+    --radius:6px;
+  }
+  body{ font-family:"Microsoft YaHei","PingFang SC",-apple-system,"Segoe UI",sans-serif;
+    background:var(--bg); color:var(--text); font-size:13px; line-height:1.5; }
+  .app{ background:#fff; min-height:100vh; }
+
+  .tabs{ display:flex; gap:24px; padding:0 20px; border-bottom:1px solid var(--border); background:#fff; }
+  .tab{ padding:14px 2px; font-size:14px; color:var(--text-2); cursor:pointer; position:relative; }
+  .tab.active{ color:var(--primary); font-weight:600; }
+  .tab.active::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--primary); }
+
+  .filters{ padding:16px 20px 6px; background:#fff; }
+  .filter-row{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px; align-items:center; }
+  .field{ display:flex; align-items:stretch; height:32px; }
+  .field .lbl{ background:#f6f8fb; border:1px solid var(--border); border-right:none;
+    border-radius:var(--radius) 0 0 var(--radius); padding:0 10px; display:flex; align-items:center;
+    color:var(--text-2); white-space:nowrap; font-size:12px; }
+  .ctrl{ height:32px; border:1px solid var(--border); border-radius:var(--radius); background:#fff;
+    padding:0 10px; color:var(--text); font-size:13px; outline:none; min-width:120px; }
+  .ctrl:focus{ border-color:var(--primary); box-shadow:0 0 0 2px rgba(47,107,255,.12); }
+  .ctrl::placeholder{ color:var(--text-3); opacity:.55; }
+  .field .ctrl{ border-radius:0 var(--radius) var(--radius) 0; }
+  select.ctrl{ appearance:none; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%2397a0b0' fill='none' stroke-width='1.4'/></svg>") no-repeat right 9px center; padding-right:26px; cursor:pointer; }
+  .multi{ position:relative; }
+  .multi::after{ content:"多选"; position:absolute; right:24px; top:9px; font-size:10px; color:var(--text-3); pointer-events:none; }
+  .status-multi{ display:inline-block; min-width:140px; }
+  .status-multi-trigger{ width:100%; min-width:140px; text-align:left; cursor:pointer; font-family:inherit; }
+  .status-multi-panel{ display:none; position:absolute; top:100%; left:0; margin-top:4px; min-width:176px;
+    background:#fff; border:1px solid var(--border); border-radius:6px; box-shadow:0 6px 20px rgba(0,0,0,.14);
+    padding:6px 0; z-index:60; max-height:280px; overflow:auto; }
+  .status-multi-panel.show{ display:block; }
+  .status-multi-opt{ display:flex; align-items:center; gap:8px; padding:7px 14px; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .status-multi-opt:hover{ background:#f3f6fb; }
+  .status-multi-opt input{ cursor:pointer; margin:0; }
+  .num-range{ display:flex; align-items:center; gap:4px; }
+  .num-range .lbl2{ font-size:11px; color:var(--text-2); white-space:nowrap; margin-right:2px; }
+  .num-range .ctrl{ width:62px; min-width:62px; text-align:center; padding:0 4px; }
+  .num-range .sep{ color:var(--text-3); }
+  .date-range{ display:flex; align-items:center; gap:6px; }
+  .date-range .ctrl{ min-width:120px; }
+
+  .btn{ height:32px; padding:0 16px; border-radius:var(--radius); border:1px solid var(--border);
+    background:#fff; color:var(--text); cursor:pointer; font-size:13px; display:inline-flex;
+    align-items:center; gap:5px; transition:.15s; white-space:nowrap; }
+  .btn:hover{ border-color:var(--primary); color:var(--primary); }
+  .btn-primary{ background:var(--primary); border-color:var(--primary); color:#fff; }
+  .btn-primary:hover{ background:var(--primary-hover); border-color:var(--primary-hover); color:#fff; }
+  .btn-danger{ background:var(--danger); border-color:var(--danger); color:#fff; }
+  .btn-danger:hover{ filter:brightness(.94); color:#fff; }
+  .btn-success{ background:var(--success); border-color:var(--success); color:#fff; }
+  .btn-success:hover{ filter:brightness(.94); color:#fff; }
+  .btn-sm{ height:28px; padding:0 12px; font-size:12px; }
+  .btn[disabled]{ cursor:not-allowed; opacity:.5; }
+
+  .toolbar{ display:flex; align-items:center; gap:10px; padding:6px 20px 10px; flex-wrap:wrap; }
+  .toolbar-dropdown{ position:relative; display:inline-block; }
+  .btn-batch-op{ background:#e6f4ff; border-color:#91caff; color:var(--primary); }
+  .btn-batch-op:hover{ background:#bae0ff; border-color:#69b1ff; color:var(--primary); }
+  .toolbar-menu{ display:none; position:absolute; top:100%; left:0; margin-top:4px; min-width:128px;
+    background:#fff; border:1px solid var(--border); border-radius:6px; box-shadow:0 6px 20px rgba(0,0,0,.14);
+    padding:4px 0; z-index:50; }
+  .toolbar-menu.show{ display:block; }
+  .toolbar-mi{ padding:8px 16px; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .toolbar-mi:hover{ background:#f3f6fb; color:var(--primary); }
+  .btn-import-audit{ font-size:12px; padding:0 12px; }
+  .group-bar{ padding:8px 20px; background:#fafafa; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    font-size:12px; color:var(--text-2); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .toolbar .spacer{ flex:1; }
+  .muted{ color:var(--text-3); font-size:12px; }
+  .link{ color:var(--link); cursor:pointer; font-size:12px; }
+  .link:hover{ text-decoration:underline; }
+
+  .table-wrap{ padding:0 20px 20px; overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; min-width:1320px; }
+  thead th{ background:#f6f8fb; color:var(--text-2); font-weight:600; font-size:12px;
+    text-align:left; padding:10px 10px; border-bottom:1px solid var(--border); white-space:nowrap; position:sticky; top:0; z-index:1; }
+  tbody td{ padding:12px 10px; border-bottom:1px solid var(--border); vertical-align:top; font-size:12px; }
+  tbody tr:hover{ background:#fafbfd; }
+  .sort{ color:var(--text-3); font-size:10px; margin-left:2px; }
+
+  .listing{ display:flex; gap:10px; max-width:320px; }
+  .thumb{ width:54px; height:54px; border:1px solid var(--border); border-radius:4px; flex:none;
+    background:linear-gradient(135deg,#eef1f6,#dfe4ec); display:flex; align-items:center; justify-content:center;
+    color:#aeb6c4; font-size:18px; }
+  .listing .info{ min-width:0; }
+  .listing .title{ color:var(--text); font-size:12px; line-height:1.45; margin-bottom:4px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .kv{ color:var(--text-2); font-size:11px; line-height:1.7; }
+  .kv b{ color:var(--text); font-weight:500; }
+  .code{ color:var(--link); }
+  .copy{ cursor:pointer; opacity:.45; margin-left:3px; }
+  .copy:hover{ opacity:.9; }
+
+  .store .row, .sales .row, .stock .row{ font-size:11px; color:var(--text-2); line-height:1.8; white-space:nowrap; }
+  .store .name{ color:var(--text); font-weight:500; }
+  .store .abn{ color:var(--danger); }
+
+  .flag{ font-size:14px; margin-right:3px; }
+  .tag{ display:inline-block; padding:1px 7px; border-radius:3px; font-size:11px; line-height:18px; }
+  .tag-ship-self{ background:#fff3e0; color:#fa8c16; border:1px solid #ffd591; }
+  .tag-fba{ background:#e6f4ff; color:#2f6bff; border:1px solid #91caff; }
+  .tag-amz{ background:#232f3e; color:#ff9900; padding:0 6px; border-radius:3px; font-weight:600; font-size:10px; }
+  .ship-cell{ display:flex; flex-direction:column; gap:5px; align-items:flex-start; }
+  .bind{ font-size:10px; color:var(--text-3); }
+
+  /* 敏感词类型 */
+  .kw-item{ margin-bottom:4px; line-height:1.5; }
+  .kw-word{ font-weight:600; }
+  .kw-type{ display:inline-block; margin:0 4px; padding:0 5px; border-radius:3px; font-size:10px; line-height:16px; vertical-align:1px; }
+  .type-tm{ background:#fff1f0; color:#f5455c; border:1px solid #ffccc7; }       /* 商标词 */
+  .type-high{ background:#fff2e8; color:#fa541c; border:1px solid #ffbb96; }     /* 高危禁用词 */
+  .type-normal{ background:#fffbe6; color:#d48806; border:1px solid #ffe58f; }   /* 普通禁用词 */
+  .kw-pos{ color:var(--text-3); font-size:11px; }
+  .kw-word.tm{ color:#f5455c; }
+  .kw-word.high{ color:#fa541c; }
+  .kw-word.normal{ color:#d48806; }
+
+  .festival{ display:inline-block; margin-top:4px; padding:1px 7px; border-radius:3px;
+    background:#fff1f0; color:#f5455c; border:1px solid #ffccc7; font-size:11px; }
+  .dash{ color:var(--text-3); }
+
+  /* 处理状态 */
+  .pill{ display:inline-block; padding:0 8px; height:22px; line-height:22px; border-radius:11px; font-size:11px; white-space:nowrap; }
+  .st-wait{ background:#fff7e6; color:#fa8c16; }
+  .st-todel{ background:#e6f4ff; color:#2f6bff; }
+  .st-deling{ background:#fff0f6; color:#c41d7f; }
+  .st-delfail{ background:#fff1f0; color:#f5455c; }
+  .st-toword{ background:#f0f5ff; color:#597ef7; }
+  .st-wordfail{ background:#fff1f0; color:#f5455c; }
+  .st-keep{ background:#f0f9f3; color:#16b364; }
+
+  .ck-op{ display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
+  .op-trigger{ color:var(--link); cursor:pointer; user-select:none; display:inline-flex; align-items:center; gap:3px; font-size:12px; white-space:nowrap; }
+  .op-trigger:hover{ text-decoration:underline; }
+  .op-trigger .caret{ font-size:9px; }
+  .op-menu{ position:fixed; display:none; background:#fff; border:1px solid var(--border); border-radius:6px;
+    box-shadow:0 6px 20px rgba(0,0,0,.14); min-width:124px; z-index:120; padding:4px 0; }
+  .op-menu.show{ display:block; }
+  .op-mi{ padding:8px 16px; font-size:12px; color:var(--text); cursor:pointer; white-space:nowrap; }
+  .op-mi:hover{ background:#f3f6fb; color:var(--primary); }
+  .op-mi.disabled{ color:var(--text-3); cursor:not-allowed; background:none; }
+
+  .time{ color:var(--text-2); font-size:11px; line-height:1.8; white-space:nowrap; }
+  .time .row-log{ display:inline-block; margin-top:4px; font-size:12px; }
+
+  .pager{ display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:14px 20px;
+    border-top:1px solid var(--border); flex-wrap:wrap; }
+  .pager .total{ color:var(--text-2); margin-right:auto; }
+  .page-btn{ min-width:30px; height:30px; padding:0 8px; border:1px solid var(--border); border-radius:var(--radius);
+    background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--text-2); }
+  .page-btn:hover{ border-color:var(--primary); color:var(--primary); }
+  .page-btn.active{ background:var(--primary); border-color:var(--primary); color:#fff; }
+  .jump{ display:flex; align-items:center; gap:6px; color:var(--text-2); }
+  .jump .ctrl{ width:48px; min-width:48px; height:30px; text-align:center; padding:0; }
+
+  input[type=checkbox]{ width:15px; height:15px; cursor:pointer; accent-color:var(--primary); }
+
+  /* ===== 弹窗 ===== */
+  .overlay{ position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:100; }
+  .overlay.show{ display:flex; }
+  .modal{ background:#fff; border-radius:10px; width:440px; max-width:92vw; box-shadow:0 12px 40px rgba(0,0,0,.18); overflow:hidden; position:relative; }
+  .modal.lg{ width:720px; }
+  .modal-head{ padding:16px 20px; font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
+  .modal-head .x{ margin-left:auto; cursor:pointer; color:var(--text-3); font-size:18px; }
+  .modal-body{ padding:18px 20px; font-size:13px; color:var(--text-2); max-height:62vh; overflow:auto; }
+  .modal-foot{ padding:12px 20px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); }
+  .warn-ico{ color:var(--warn); }
+  .danger-ico{ color:var(--danger); }
+
+  /* listing文案编辑 */
+  .modal.edit-copy{ width:720px; max-width:96vw; border-radius:4px; }
+  .modal.edit-copy .modal-head{ padding:14px 16px; font-size:14px; font-weight:600; border-bottom:1px solid #e8e8e8; }
+  .modal.edit-copy .modal-body{ padding:16px 20px; max-height:70vh; overflow-y:auto; }
+  .modal.edit-copy .modal-foot{ padding:10px 16px 14px; }
+  .edit-meta{ font-size:12px; color:var(--text-3); margin-bottom:14px; }
+  .edit-field{ margin-bottom:16px; }
+  .edit-field-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .edit-field-head label{ font-size:13px; color:var(--text); font-weight:500; }
+  .edit-field-actions{ display:flex; gap:12px; }
+  .edit-area-wrap{ position:relative; border:1px solid #d9d9d9; border-radius:2px; background:#fff; }
+  .edit-area-wrap:focus-within{ border-color:var(--primary); box-shadow:0 0 0 2px rgba(47,107,255,.12); }
+  .edit-area{ width:100%; border:none; outline:none; padding:8px 10px 24px; font-size:13px; line-height:1.65;
+    resize:vertical; min-height:72px; font-family:inherit; display:block; color:var(--text); background:transparent; }
+  .edit-area.title-area{ min-height:96px; }
+  .edit-count{ position:absolute; right:10px; bottom:6px; font-size:12px; color:var(--text-3); pointer-events:none; }
+  .edit-count.over{ color:var(--danger); }
+  .bullet-list{ display:flex; flex-direction:column; gap:10px; }
+  .edit-remark{ width:100%; min-height:48px; padding:8px 10px; resize:vertical; line-height:1.5; border:1px solid #d9d9d9; border-radius:2px; font-size:13px; outline:none; font-family:inherit; }
+  .edit-remark:focus{ border-color:var(--primary); box-shadow:0 0 0 2px rgba(47,107,255,.12); }
+  .detect-tip{ font-size:12px; margin-top:6px; padding:8px 10px; border-radius:4px; display:none; }
+  .detect-tip.err{ display:block; background:#fff1f0; color:#f5455c; border:1px solid #ffccc7; }
+  .detect-tip.ok{ display:block; background:#f0f9f3; color:#16b364; border:1px solid #b7eb8f; }
+  .legend{ font-size:11px; color:var(--text-3); margin-bottom:12px; }
+  .readonly{ background:#f6f8fb; color:var(--text-2); padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; }
+  .tpl-table{ width:100%; border-collapse:collapse; margin:10px 0; font-size:12px; }
+  .tpl-table th,.tpl-table td{ border:1px solid var(--border); padding:8px 10px; text-align:left; }
+  .tpl-table th{ background:#f6f8fb; color:var(--text-2); font-weight:600; }
+  .upload-box{ border:1px dashed var(--border); border-radius:8px; padding:18px; text-align:center; color:var(--text-3); font-size:12px; margin:12px 0; cursor:pointer; }
+  .upload-box:hover{ border-color:var(--primary); color:var(--primary); }
+  .upload-box.has-file{ border-style:solid; border-color:var(--primary); color:var(--text); background:#f6f9ff; }
+  .import-rules{ font-size:12px; color:var(--text-2); line-height:1.7; margin-bottom:10px; }
+  .import-rules ol{ margin:6px 0 0 18px; }
+  .import-rules li{ margin-bottom:4px; }
+  .import-result-summary{ font-size:13px; line-height:1.7; margin-bottom:12px; }
+  .import-result-summary.err{ color:var(--danger); }
+  .import-result-summary.ok{ color:var(--success); }
+  .err-table td.reason{ color:var(--danger); }
+  .import-foot-note{ font-size:11px; color:var(--text-3); margin-right:auto; align-self:center; }
+  .import-examples{ font-size:12px; color:var(--text-2); margin-top:8px; }
+  .import-examples .eg-active{ color:var(--primary); font-weight:600; }
+  .log-table{ width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
+  .log-table th,.log-table td{ border-bottom:1px solid var(--border); padding:5px 8px; text-align:left; line-height:1.45; word-break:break-all; }
+  .log-table th{ background:#f6f8fb; color:var(--text-2); font-weight:600; }
+  .log-table th:nth-child(1){ width:132px; }
+  .log-table th:nth-child(2){ width:64px; }
+  .log-table th:nth-child(3){ width:96px; }
+  .modal.log-modal{ width:520px; }
+  .modal.log-modal .modal-head{ padding:12px 16px; font-size:14px; }
+  .modal.log-modal .modal-body{ max-height:none; overflow:visible; padding:0 12px 4px; }
+  .modal.log-modal .modal-foot{ padding:8px 16px 12px; }
+  .cf-remark-wrap{ margin-top:14px; }
+  .cf-remark-wrap label{ display:block; font-size:12px; font-weight:600; color:var(--text); margin-bottom:5px; }
+  .cf-remark{ width:100%; min-height:56px; height:auto; padding:8px 10px; resize:vertical; line-height:1.5; }
+
+  /* toast */
+  .toast{ position:fixed; top:24px; left:50%; transform:translateX(-50%); background:#1f2733; color:#fff;
+    padding:10px 18px; border-radius:8px; font-size:13px; z-index:200; opacity:0; transition:.25s; pointer-events:none; }
+  .toast.show{ opacity:1; top:34px; }
+</style>
+<style>
+/* prototype-annotate.css */
+/* 原型标注（共享）— 各原型通过 import/prototype-annotate.css 引入 */
+body.anno-mode{ cursor:crosshair; }
+body.anno-mode .app{ user-select:none; }
+.anno-ui{ z-index:500; }
+.anno-bar{ position:fixed; right:20px; bottom:20px; display:flex; gap:8px; align-items:center;
+  background:#fff; border:1px solid var(--border, #e8ebf0); border-radius:8px; padding:8px 10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12); font-size:12px; }
+.anno-bar .btn-anno{ height:28px; padding:0 12px; border-radius:6px; border:1px solid var(--border, #e8ebf0);
+  background:#fff; cursor:pointer; font-size:12px; }
+.anno-bar .btn-anno:hover{ border-color:var(--primary, #2f6bff); color:var(--primary, #2f6bff); }
+.anno-bar .btn-anno.on{ background:var(--primary, #2f6bff); border-color:var(--primary, #2f6bff); color:#fff; }
+.anno-bar .anno-count{ color:var(--text-3, #97a0b0); font-size:11px; }
+.anno-pins{ position:absolute; top:0; left:0; width:0; height:0; z-index:240; pointer-events:none; }
+.anno-scope-pins{ position:absolute; inset:0; pointer-events:none; z-index:20; overflow:visible; }
+.anno-pin{ position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; }
+.anno-pin .dot{ width:26px; height:26px; border-radius:50%; background:#ff4d4f; color:#fff;
+  font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 8px rgba(255,77,79,.45); border:2px solid #fff; }
+.anno-pin .tip{ display:none; position:absolute; left:50%; top:-6px; transform:translate(-50%,-100%);
+  min-width:160px; max-width:240px; background:#1f2733; color:#fff; font-size:11px; line-height:1.5;
+  padding:8px 10px; border-radius:6px; white-space:pre-wrap; word-break:break-word; }
+.anno-pin:hover .tip, .anno-pin.active .tip{ display:block; }
+.anno-pin.active .dot{ background:#2f6bff; box-shadow:0 2px 8px rgba(47,107,255,.45); }
+.anno-panel{ position:fixed; top:0; right:0; width:300px; height:100vh; background:#fff;
+  border-left:1px solid var(--border, #e8ebf0); box-shadow:-8px 0 24px rgba(0,0,0,.08); z-index:490;
+  transform:translateX(100%); transition:.25s; display:flex; flex-direction:column; }
+.anno-panel.show{ transform:translateX(0); }
+.anno-panel-head{ padding:14px 16px; font-size:14px; font-weight:600; border-bottom:1px solid var(--border, #e8ebf0);
+  display:flex; align-items:center; justify-content:space-between; }
+.anno-panel-body{ flex:1; overflow:auto; padding:10px 12px; }
+.anno-item{ border:1px solid var(--border, #e8ebf0); border-radius:6px; padding:10px; margin-bottom:8px; cursor:pointer; }
+.anno-item:hover, .anno-item.active{ border-color:#91caff; background:#f6f9ff; }
+.anno-item .no{ display:inline-block; width:20px; height:20px; border-radius:50%; background:#ff4d4f;
+  color:#fff; font-size:11px; font-weight:700; text-align:center; line-height:20px; margin-right:6px; }
+.anno-item .txt{ font-size:12px; color:var(--text, #1f2733); line-height:1.55; margin-top:6px; }
+.anno-item .meta{ font-size:10px; color:var(--text-3, #97a0b0); margin-top:6px; }
+.anno-item .del{ float:right; color:var(--text-3, #97a0b0); font-size:11px; cursor:pointer; }
+.anno-item .del:hover{ color:var(--danger, #f5455c); }
+.anno-empty{ font-size:12px; color:var(--text-3, #97a0b0); text-align:center; padding:24px 12px; }
+.anno-editor{ position:fixed; z-index:510; width:280px; background:#fff; border:1px solid var(--border, #e8ebf0);
+  border-radius:8px; box-shadow:0 12px 32px rgba(0,0,0,.16); padding:12px; display:none; }
+.anno-editor.show{ display:block; }
+.anno-editor label{ display:block; font-size:12px; font-weight:600; margin-bottom:6px; }
+.anno-editor textarea{ width:100%; min-height:72px; resize:vertical; border:1px solid var(--border, #e8ebf0);
+  border-radius:6px; padding:8px; font-size:12px; font-family:inherit; outline:none; }
+.anno-editor textarea:focus{ border-color:var(--primary, #2f6bff); }
+.anno-editor-foot{ display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
+.anno-hint{ position:fixed; top:12px; left:50%; transform:translateX(-50%); background:#fff7e6;
+  border:1px solid #ffd591; color:#d46b08; font-size:12px; padding:6px 14px; border-radius:6px;
+  z-index:480; display:none; box-shadow:0 4px 12px rgba(0,0,0,.08); }
+body.anno-mode .anno-hint{ display:block; }
+
+/* 弹窗内标注容器（init 自动注入） */
+.overlay .modal{ position:relative; }
+
+</style>
+</head>
+<body>
+<span class="proto-hint" style="position:fixed;top:8px;left:8px;z-index:9999;background:#fff7e6;border:1px solid #ffd591;color:#d46b08;font-size:11px;padding:4px 10px;border-radius:4px;">PRD 附件 · 单文件（浏览器打开）</span>
+<div class="app">
+
+  <div class="tabs">
+    <div class="tab active">删词处理列表</div>
+    <div class="tab">保留禁用词列表</div>
+  </div>
+
+  <!-- 筛选区（按 PRD 1.1.1，紧凑两行布局） -->
+  <div class="filters">
+    <div class="filter-row">
+      <div class="field">
+        <select class="ctrl" style="border-radius:6px 0 0 6px;min-width:110px">
+          <option>ASIN</option><option>系统SKU</option><option>MSKU</option>
+        </select>
+        <input class="ctrl" placeholder="精准查询，支持批量（空格/换行分隔）" style="min-width:220px" />
+      </div>
+      <select class="ctrl multi"><option>全部店铺</option></select>
+      <select class="ctrl"><option>全部店铺状态</option><option>正常</option><option>异常</option></select>
+      <select class="ctrl"><option>全部配送类型</option><option>FBA</option><option>FBM</option></select>
+      <select class="ctrl"><option>是否纯FBM链接</option><option>是</option><option>否</option></select>
+      <select class="ctrl"><option>是否备货</option><option>是</option><option>否</option></select>
+      <select class="ctrl multi"><option>敏感词类型</option><option>商标词</option><option>普通禁用词</option><option>高危禁用词</option></select>
+      <select class="ctrl" title="选择数值指标后，在下一行填写范围">
+        <option>近30天销量</option><option>近30天订单</option><option>近365天销量</option><option>近365天订单</option>
+        <option>FBA库存</option><option>FBA在途</option><option>建单待发</option><option>全链路库存</option>
+      </select>
+    </div>
+
+    <div class="filter-row">
+      <input class="ctrl" placeholder="请输入" style="min-width:120px" />
+      <span class="sep" style="color:var(--text-3)">~</span>
+      <input class="ctrl" placeholder="请输入" style="min-width:120px" />
+      <div class="date-range">
+        <select class="ctrl" style="min-width:100px"><option>创建日期</option><option>更新日期</option></select>
+        <input class="ctrl" type="date" /><span class="muted">-</span><input class="ctrl" type="date" />
+      </div>
+      <div class="status-multi multi" id="filterStatusWrap">
+        <button type="button" class="ctrl status-multi-trigger" id="filterStatusTrigger">
+          <span id="filterStatusLabel">处理状态</span>
+        </button>
+        <div class="status-multi-panel" id="filterStatusPanel">
+          <label class="status-multi-opt"><input type="checkbox" value="wait" />待处理</label>
+          <label class="status-multi-opt"><input type="checkbox" value="todel" />待删除listing</label>
+          <label class="status-multi-opt"><input type="checkbox" value="deling" />删除listing中</label>
+          <label class="status-multi-opt"><input type="checkbox" value="delfail" />删除listing失败</label>
+          <label class="status-multi-opt"><input type="checkbox" value="toword" />待删词</label>
+          <label class="status-multi-opt"><input type="checkbox" value="wordfail" />删词失败</label>
+          <label class="status-multi-opt"><input type="checkbox" value="keep" />保留</label>
+        </div>
+      </div>
+      <select class="ctrl multi"><option>全部销售人员</option><option>（组织架构）</option></select>
+      <select class="ctrl multi"><option>全部 FBA/FBM 业务员</option><option>（组织架构）</option></select>
+      <button class="btn btn-primary" id="btnSearch" type="button">搜索</button>
+      <button class="btn" id="btnResetFilter" type="button">重置</button>
+      <button class="btn">保存快捷键</button>
+    </div>
+  </div>
+
+  <!-- 操作栏（原版：批量提取 + 批量操作下拉 + 导出/导入） -->
+  <div class="toolbar">
+    <button class="btn btn-primary" id="btnBatchExtract">批量提取</button>
+    <div class="toolbar-dropdown" id="batchOpDropdown">
+      <button class="btn btn-batch-op" id="btnBatchOpToggle" type="button">批量操作 <span style="font-size:10px">▾</span></button>
+      <div class="toolbar-menu" id="batchOpMenu">
+        <div class="toolbar-mi" data-batch="del">删listing</div>
+        <div class="toolbar-mi" data-batch="keep">保留</div>
+      </div>
+    </div>
+    <div class="toolbar-dropdown" id="exportDropdown">
+      <button class="btn btn-primary" id="btnExportToggle" type="button">导出 <span style="font-size:10px">▾</span></button>
+      <div class="toolbar-menu" id="exportMenu">
+        <div class="toolbar-mi" data-export="selected">选中数据导出</div>
+        <div class="toolbar-mi" data-export="filtered">当前条件导出</div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-import-audit" id="btnImport">已审核listing删除导入</button>
+  </div>
+
+  <div class="group-bar">
+    <span>未分配：无数据</span>
+    <span class="link">隐藏快捷键分组</span>
+    <span class="link">设置快捷键分组</span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:56px"><input type="checkbox" id="checkAll" /></th>
+          <th>listing 信息</th>
+          <th>店铺信息</th>
+          <th>销量信息 <span class="sort">↕</span></th>
+          <th>配送类型</th>
+          <th>库存信息 <span class="sort">↕</span></th>
+          <th>产品标签/节日标签</th>
+          <th>敏感词及类型</th>
+          <th>处理状态</th>
+          <th>添加时间/更新时间 <span class="sort">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    <span class="total">共 <span id="totalCount">666</span> 条</span>
+    <select class="ctrl" style="height:30px;min-width:90px"><option>200条/页</option><option>50条/页</option><option>100条/页</option></select>
+    <button class="page-btn">‹</button>
+    <button class="page-btn active">1</button>
+    <button class="page-btn">2</button>
+    <button class="page-btn">3</button>
+    <button class="page-btn">4</button>
+    <span class="muted">…</span>
+    <button class="page-btn">›</button>
+    <span class="jump">跳至 <input class="ctrl" value="1" /> 页</span>
+  </div>
+</div>
+
+<!-- 通用确认弹窗 -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal">
+    <div class="modal-head"><span id="cfTitle">提示</span><span class="x" data-close>×</span></div>
+    <div class="modal-body" id="cfBody"></div>
+    <div class="modal-foot">
+      <button class="btn" data-close>取消</button>
+      <button class="btn btn-danger" id="cfOk">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- listing文案编辑 -->
+<div class="overlay" id="editOverlay">
+  <div class="modal edit-copy">
+    <div class="modal-head"><span>listing文案编辑</span><span class="x" data-close-edit>×</span></div>
+    <div class="modal-body">
+      <div class="edit-meta">系统 SKU：<span id="editSku"></span> · 保存时将检测敏感词并写入操作日志</div>
+
+      <div class="edit-field">
+        <div class="edit-field-head"><label for="editTitle">标题</label></div>
+        <div class="edit-area-wrap">
+          <textarea class="edit-area title-area" id="editTitle" maxlength="200" placeholder="请输入标题"></textarea>
+          <span class="edit-count" id="editTitleCount">0 / 200</span>
+        </div>
+      </div>
+
+      <div class="edit-field">
+        <div class="edit-field-head">
+          <label>亮点</label>
+          <div class="edit-field-actions">
+            <span class="link" id="btnAddBullet">新增</span>
+            <span class="link" id="btnDelBullet">删除</span>
+          </div>
+        </div>
+        <div class="bullet-list" id="bulletList"></div>
+      </div>
+
+      <div class="edit-field">
+        <div class="edit-field-head"><label for="editKeywords">关键词</label></div>
+        <div class="edit-area-wrap">
+          <textarea class="edit-area" id="editKeywords" placeholder="请输入关键词"></textarea>
+        </div>
+      </div>
+
+      <div class="edit-field">
+        <div class="edit-field-head"><label for="editDesc">描述</label></div>
+        <div class="edit-area-wrap">
+          <textarea class="edit-area" id="editDesc" placeholder="请输入描述" style="min-height:120px"></textarea>
+        </div>
+      </div>
+
+      <div class="edit-field">
+        <div class="edit-field-head"><label for="editRemark">备注</label></div>
+        <textarea class="edit-remark" id="editRemark" placeholder="选填，保存后写入操作日志"></textarea>
+      </div>
+
+      <div class="detect-tip" id="detectTip"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close-edit>关闭</button>
+      <button class="btn btn-primary" id="editSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 操作下拉浮层（共用） -->
+<div class="op-menu" id="opMenu"></div>
+
+<!-- 导入删除 listing -->
+<div class="overlay" id="importOverlay">
+  <div class="modal lg">
+    <div class="modal-head"><span>已审核 listing 删除导入</span><span class="x" data-close-import>×</span></div>
+    <div class="modal-body">
+      <div class="import-rules">
+        <b>导入规则</b>
+        <ol>
+          <li>仅支持导入系统中状态为「<b>待删除 listing</b>」的数据。</li>
+          <li>校验字段：<b>MSKU + 店铺</b>，须对应 listing 存在且状态为「待删除 listing」。</li>
+          <li><b>任一条不匹配则整批失败</b>，返回错误行明细；<b>不做任何状态变更、不入队</b>。</li>
+          <li>全部通过后：状态批量改为「<b>删除 listing 中</b>」，后台定时加入删 listing 队列；实际删除结果由队列执行及对账回写。</li>
+        </ol>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
+        <span class="muted">模板字段如下，校验以 MSKU + 店铺为准</span>
+        <span class="link" id="btnDownloadTpl">下载导入模板</span>
+      </div>
+      <table class="tpl-table">
+        <thead><tr><th>ASIN</th><th>SKU</th><th>MSKU</th><th>店铺</th><th>审核结果</th></tr></thead>
+        <tbody id="importTplBody"></tbody>
+      </table>
+      <div class="upload-box" id="importUpload">点击或拖拽上传 Excel / CSV</div>
+      <div class="muted" id="importFileHint" style="margin-top:-6px">未选择文件</div>
+      <div class="import-examples">
+        示例（二选一）：
+        <span class="link import-eg" data-eg="success">导入成功示例</span>
+        ·
+        <span class="link import-eg" data-eg="fail">导入失败示例</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span class="import-foot-note">确认后将全量校验，任一条失败则整批不成功</span>
+      <button class="btn" data-close-import>取消</button>
+      <button class="btn btn-primary" id="importConfirm">确认导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 导入结果 -->
+<div class="overlay" id="importResultOverlay">
+  <div class="modal lg">
+    <div class="modal-head"><span id="importResultTitle">导入结果</span><span class="x" data-close-import-result>×</span></div>
+    <div class="modal-body" id="importResultBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" data-close-import-result>知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- 操作日志 -->
+<div class="overlay" id="logOverlay">
+  <div class="modal log-modal">
+    <div class="modal-head"><span id="logModalTitle">操作日志</span><span class="x" data-close-log>×</span></div>
+    <div class="modal-body">
+      <table class="log-table">
+        <thead><tr><th>操作时间</th><th>操作人</th><th>操作内容</th><th>备注</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close-log>关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* 敏感词类型：tm=商标词, high=高危禁用词, normal=普通禁用词 */
+const CODE_CHARS = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+const STORE_SITES = ['FR', 'BE', 'DE'];
+function mkRng(seed){
+  let s = seed >>> 0;
+  return ()=>{ s = (s * 1664525 + 1013904223) >>> 0; return s / 0xffffffff; };
+}
+function pickCode(rng, len, charset = CODE_CHARS){
+  let out = '';
+  for(let i = 0; i < len; i++) out += charset[Math.floor(rng() * charset.length)];
+  return out;
+}
+const CODE_SEED_BASE = 16000;
+function genAsin(i){ return 'B0' + pickCode(mkRng(CODE_SEED_BASE + 3000 + i), 8); }
+function genSku(i){ return pickCode(mkRng(CODE_SEED_BASE + 2000 + i), 8, '0123456789'); }
+function genMsku(i){ return pickCode(mkRng(CODE_SEED_BASE + 1000 + i), 12) + '…'; }
+function genStore(i){
+  const rng = mkRng(CODE_SEED_BASE + i);
+  return `Amazon-Z0${pickCode(rng, 5, '0123456789')}-${STORE_SITES[i % STORE_SITES.length]}`;
+}
+function attachCodes(scenarios){
+  return scenarios.map((row, i) => ({
+    ...row,
+    asin: genAsin(i),
+    sku: genSku(i),
+    msku: genMsku(i),
+    store: genStore(i)
+  }));
+}
+
+const rowScenarios = [
+  {
+    img:"🚗", title:"SOLLISTRE fournitures de stationnerie de voiture numér…",
+    normalStore:true, gold:"需餐宴", fbm:"-",
+    s30:"0 (0)", s365:"0 (1)", sale90:0,
+    ship:"self", bind:true, fba:"0", transit:"0", whWait:"0", whAll:"0",
+    tag:"—", festival:null,
+    kw:[{w:"SFS", type:"tm", pos:["描述","亮点"]}],
+    status:"wait",
+    copy:{ title:"SOLLISTRE fournitures de voiture", bullet:"SFS qualité premium pour voiture", keywords:"voiture; plaque; SFS", desc:"Accessoire SFS pour stationnement" },
+    add:"2025-10-27 22:21:55", upd:"2025-10-28 10:11:48",
+    logs:[{ time:"2025-08-09 22:02:57", user:"xxx", action:"人工删词", note:"不强制要求" }]
+  },
+  {
+    img:"🖼️", title:"Alipis Lot de 6 cadres photo en bois à bricoler - Cadre ph at",
+    normalStore:true, gold:"陈桌然", fbm:"-",
+    s30:"0 (0)", s365:"0 (0)", sale90:0,
+    ship:"fba", bind:false, fba:"12", transit:"0", whWait:"0", whAll:"0",
+    tag:"—", festival:null,
+    kw:[{w:"FINIS", type:"tm", pos:["亮点"]}],
+    status:"wait",
+    copy:{ title:"Alipis Lot de 6 cadres photo", bullets:["Lot de 6 cadres photo en bois à bricoler - Cadre photo en bois avec support et verre, cadre photo à bricoler pour bricolage, décoration, cadeau"], keywords:"cadre; photo; bois", desc:"Cadre photo à bricoler" },
+    add:"2025-10-27 22:21:44", upd:"2025-10-28 10:11:27"
+  },
+  {
+    img:"🧤", title:"Mobestech Lot de 8 housses de poignée de porte de réfrig",
+    normalStore:true, gold:"王晓萌", fbm:"-",
+    s30:"0 (0)", s365:"0 (0)", sale90:0,
+    ship:"self", bind:false, fba:"0", transit:"0", whWait:"0", whAll:"0",
+    tag:"—", festival:"圣诞节",
+    kw:[{w:"GANTS", type:"normal", pos:["标题"]}],
+    status:"wait",
+    copy:{ title:"Mobestech GANTS housses de poignée", bullet:"protection poignée réfrigérateur", keywords:"housse; poignée; cuisine", desc:"Lot de 8 housses décoratives" },
+    add:"2025-10-27 22:21:33", upd:"2025-10-28 10:10:59"
+  },
+  {
+    img:"🧤", title:"Mobestech Lot de 8 housses de poignée de porte (有销量)",
+    normalStore:true, gold:"陈桌然", fbm:"-",
+    s30:"1 (1)", s365:"3 (4)", sale90:8,
+    ship:"fba", bind:true, fba:"36", transit:"10", whWait:"0", whAll:"5",
+    tag:"—", festival:null,
+    kw:[{w:"GANTS", type:"normal", pos:["标题"]}],
+    status:"wait",
+    copy:{ title:"Mobestech GANTS housses poignée premium", bullet:"décoration cuisine", keywords:"housse; poignée", desc:"Lot de 8 housses" },
+    add:"2025-10-27 22:21:21", upd:"2025-10-28 10:10:31"
+  },
+  {
+    img:"🎨", title:"Wsmyp Kit de peinture diamant 5D - Bricolage（高危禁用词）",
+    normalStore:true, gold:"王晓萌", fbm:"-",
+    s30:"0 (0)", s365:"0 (0)", sale90:0,
+    ship:"fba", bind:false, fba:"58", transit:"0", whWait:"0", whAll:"0",
+    tag:"新品", festival:"圣诞节",
+    kw:[{w:"DISNEY", type:"tm", pos:["标题","描述"]},{w:"mercury", type:"high", pos:["描述"]}],
+    status:"wordfail",
+    copy:{ title:"Wsmyp DISNEY peinture diamant 5D", bullet:"kit complet bricolage", keywords:"diamant; peinture; DISNEY", desc:"Contient mercury free, DISNEY design" },
+    add:"2025-10-27 22:20:58", upd:"2025-10-28 10:09:47"
+  },
+  {
+    img:"🔧", title:"Outils de réparation tournevis 24 en 1（异常店铺）",
+    normalStore:false, gold:"需餐宴", fbm:"绑定BMlist",
+    s30:"0 (0)", s365:"5 (6)", sale90:0,
+    ship:"self", bind:true, fba:"0", transit:"0", whWait:"8", whAll:"8",
+    tag:"—", festival:null,
+    kw:[{w:"BOSCH", type:"tm", pos:["标题"]}],
+    status:"toword",
+    copy:{ title:"BOSCH outils tournevis 24 en 1", bullet:"kit réparation", keywords:"tournevis; BOSCH", desc:"24 en 1 outils" },
+    add:"2025-10-27 22:20:33", upd:"2025-10-28 10:09:12"
+  },
+  {
+    img:"📦", title:"Lot de rangement plastique（保留状态·普通禁用词）",
+    normalStore:true, gold:"陈桌然", fbm:"-",
+    s30:"0 (0)", s365:"0 (0)", sale90:0,
+    ship:"fba", bind:false, fba:"20", transit:"0", whWait:"0", whAll:"0",
+    tag:"—", festival:null,
+    kw:[{w:"best seller", type:"normal", pos:["亮点"]}],
+    status:"keep",
+    copy:{ title:"Lot de rangement plastique", bullet:"best seller rangement maison", keywords:"rangement; boite", desc:"Boîtes empilables" },
+    add:"2025-10-27 22:20:10", upd:"2025-10-28 10:08:40",
+    logs:[{ time:"2025-08-09 22:03:11", user:"xxx", action:"保留", note:"" }]
+  },
+  {
+    img:"💡", title:"Guirlande lumineuse LED（删除失败）",
+    normalStore:true, gold:"王晓萌", fbm:"-",
+    s30:"0 (0)", s365:"0 (0)", sale90:0,
+    ship:"self", bind:false, fba:"0", transit:"0", whWait:"0", whAll:"0",
+    tag:"—", festival:"圣诞节",
+    kw:[{w:"PHILIPS", type:"tm", pos:["标题"]}],
+    status:"delfail",
+    copy:{ title:"PHILIPS guirlande LED", bullet:"décoration Noël", keywords:"LED; guirlande", desc:"50m guirlande lumineuse" },
+    add:"2025-10-27 22:19:55", upd:"2025-10-28 10:08:11",
+    logs:[
+      { time:"2025-08-10 02:15:00", user:"系统", action:"导入删除listing", note:"校验通过，已提交删除" },
+      { time:"2025-08-10 02:20:00", user:"系统", action:"已加入删除listing队列", note:"定时任务入队" },
+      { time:"2025-08-11 09:00:00", user:"系统", action:"队列执行完成", note:"删除失败：平台限制不可删" }
+    ]
+  },
+  {
+    img:"📋", title:"Coffret rangement bureau（待删除listing·待导入确认）",
+    normalStore:true, gold:"陈桌然", fbm:"-",
+    s30:"0 (0)", s365:"0 (0)", sale90:0,
+    ship:"fba", bind:false, fba:"5", transit:"0", whWait:"0", whAll:"0",
+    tag:"—", festival:null,
+    kw:[{w:"IKEA", type:"tm", pos:["标题"]}],
+    status:"todel",
+    copy:{ title:"Coffret rangement bureau", bullet:"organisation", keywords:"boite; bureau", desc:"Set de rangement" },
+    add:"2025-10-27 22:19:40", upd:"2025-10-28 09:55:00",
+    logs:[{ time:"2025-08-09 22:03:11", user:"演示用户", action:"删除listing", note:"" }]
+  },
+  {
+    img:"📋", title:"Boîte de rangement bureau XL（待删除listing·可批量导入）",
+    normalStore:true, gold:"王晓萌", fbm:"-",
+    s30:"0 (0)", s365:"0 (0)", sale90:0,
+    ship:"fba", bind:false, fba:"3", transit:"0", whWait:"0", whAll:"0",
+    tag:"—", festival:null,
+    kw:[{w:"3M", type:"tm", pos:["标题"]}],
+    status:"todel",
+    copy:{ title:"Boîte de rangement bureau XL", bullet:"organisation bureau", keywords:"boite; bureau", desc:"Rangement XL" },
+    add:"2025-10-27 22:19:35", upd:"2025-10-28 09:50:00",
+    logs:[{ time:"2025-08-09 22:03:11", user:"演示用户", action:"删除listing", note:"批量提交" }]
+  },
+  {
+    img:"⏳", title:"Support téléphone voiture（删除listing中·等待队列回写）",
+    normalStore:true, gold:"王晓萌", fbm:"-",
+    s30:"0 (0)", s365:"0 (0)", sale90:0,
+    ship:"self", bind:false, fba:"0", transit:"0", whWait:"0", whAll:"0",
+    tag:"—", festival:null,
+    kw:[{w:"APPLE", type:"tm", pos:["描述"]}],
+    status:"deling",
+    queued:true,
+    copy:{ title:"Support téléphone voiture", bullet:"fixation stable", keywords:"support; voiture", desc:"Compatible APPLE design" },
+    add:"2025-10-27 22:19:20", upd:"2025-10-28 09:30:00",
+    logs:[
+      { time:"2025-08-09 22:03:11", user:"演示用户", action:"导入删除listing", note:"校验通过，已提交删除" },
+      { time:"2025-08-10 02:00:00", user:"系统", action:"已加入删除listing队列", note:"定时任务入队" }
+    ]
+  }
+];
+const rows = attachCodes(rowScenarios);
+
+function nowStr(){
+  const now = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+}
+function addRowLog(rowIndex, action, note=""){
+  const r = rows[rowIndex];
+  if(!r.logs) r.logs = [];
+  r.logs.unshift({ time:nowStr(), user:"演示用户", action, note });
+}
+function renderLogs(entries){
+  const list = entries && entries.length ? entries : [{ time:"—", user:"—", action:"暂无操作记录", note:"" }];
+  document.getElementById("logBody").innerHTML = list.map(l=>{
+    const note = (l.note === undefined || l.note === null || l.note === "") ? "—" : l.note;
+    return `<tr><td>${l.time}</td><td>${l.user}</td><td>${l.action}</td><td>${note}</td></tr>`;
+  }).join("");
+}
+function openRowLog(rowIndex){
+  const r = rows[rowIndex];
+  document.getElementById("logModalTitle").textContent = `操作日志 · ASIN ${r.asin}`;
+  renderLogs(r.logs);
+  logOverlay.classList.add("show");
+}
+
+const TYPE_LABEL = { tm:"商标词", high:"高危禁用词", normal:"普通禁用词" };
+const TYPE_CLASS = { tm:"type-tm", high:"type-high", normal:"type-normal" };
+const STATUS = {
+  wait:{ t:"待处理", c:"st-wait" },
+  todel:{ t:"待删除listing", c:"st-todel", tip:"已提交删 listing，待业务审核后导入" },
+  deling:{ t:"删除listing中", c:"st-deling", tip:"已提交删除任务，等待队列执行；最终结果以后台处理为准" },
+  delfail:{ t:"删除listing失败", c:"st-delfail", tip:"队列执行或对账失败，详见操作日志" },
+  toword:{ t:"待删词", c:"st-toword" },
+  wordfail:{ t:"删词失败", c:"st-wordfail" },
+  keep:{ t:"保留", c:"st-keep" }
+};
+const LOCKED_STATUSES = new Set(["todel","deling","delfail","toword","wordfail"]);
+let statusFilters = new Set();
+
+function readStatusFilterChecks(){
+  return new Set(
+    [...document.querySelectorAll('#filterStatusPanel input[type=checkbox]:checked')].map(el => el.value)
+  );
+}
+function syncStatusFilterChecks(){
+  document.querySelectorAll('#filterStatusPanel input[type=checkbox]').forEach(el => {
+    el.checked = statusFilters.has(el.value);
+  });
+}
+function updateStatusFilterLabel(){
+  const el = document.getElementById('filterStatusLabel');
+  if(!statusFilters.size){
+    el.textContent = '处理状态';
+    return;
+  }
+  const names = [...statusFilters].map(k => STATUS[k].t);
+  el.textContent = names.length <= 2 ? names.join('、') : `处理状态（${names.length}）`;
+}
+function hideStatusFilterPanel(){
+  document.getElementById('filterStatusPanel')?.classList.remove('show');
+}
+
+function getVisibleRows(){
+  if(!statusFilters.size) return rows.map((r, i) => ({ r, i }));
+  return rows.map((r, i) => ({ r, i })).filter(x => statusFilters.has(x.r.status));
+}
+
+function statusPill(r){
+  const s = STATUS[r.status];
+  const tip = s.tip ? ` title="${s.tip}"` : "";
+  return `<span class="pill ${s.c}"${tip}>${s.t}</span>`;
+}
+function shipCell(r){
+  const badge = r.ship==="fba" ? '<span class="tag tag-fba">FBA</span>' : '<span class="tag tag-ship-self">自发</span>';
+  const bind = r.bind ? '<span class="bind">绑定 BMlist</span>' : '';
+  return `<div class="ship-cell"><span class="tag-amz">amazon</span>${badge}${bind}</div>`;
+}
+function kwCell(r){
+  return r.kw.map(k=>`<div class="kw-item">
+      <span class="kw-word ${k.type}">${k.w}</span>
+      <span class="kw-type ${TYPE_CLASS[k.type]}">${TYPE_LABEL[k.type]}</span>
+      <span class="kw-pos">【${k.pos.join('、')}】</span>
+    </div>`).join('');
+}
+function tagCell(r){
+  let html = r.tag==="—" ? '<span class="dash">—</span>' : r.tag;
+  if(r.festival) html += `<br><span class="festival">${r.festival}</span>`;
+  return html;
+}
+
+/* 操作可用性规则（PRD 1.1.2.1） */
+function canDelete(r){ return r.sale90===0 && (r.status==="wait"||r.status==="keep"); }      // 删listing：90天销量=0 且 待处理/保留
+function canEdit(r){ return (r.status==="wait"||r.status==="keep") && r.normalStore; }         // 修改文案：待处理/保留 且 正常店铺
+function canKeep(r){ return r.kw.some(k=>k.type==="normal") && r.status==="wait"; }             // 保留：含普通禁用词 且 待处理
+
+function delReason(r){
+  if(r.sale90!==0) return "近90天销量≠0，不可删listing";
+  if(r.status==="todel") return "已在待删除 listing，请导出审核后导入";
+  if(r.status==="deling") return "删除 listing 中，不可操作";
+  if(r.status==="delfail") return "删除 listing 失败，不可操作";
+  if(!(r.status==="wait"||r.status==="keep")) return "仅待处理/保留状态可删listing";
+  return "";
+}
+function editReason(r){
+  if(r.status==="todel") return "待删除 listing，不可修改文案";
+  if(LOCKED_STATUSES.has(r.status) && r.status!=="todel") return `${STATUS[r.status].t}，不可修改文案`;
+  if(!(r.status==="wait"||r.status==="keep")) return "仅待处理/保留状态可修改文案";
+  if(!r.normalStore) return "异常店铺不可修改文案";
+  return "";
+}
+function keepReason(r){
+  if(r.status==="todel") return "待删除 listing，不可保留";
+  if(LOCKED_STATUSES.has(r.status) && r.status!=="wait") return `${STATUS[r.status].t}，不可保留`;
+  if(!r.kw.some(k=>k.type==="normal")) return "仅普通禁用词可保留";
+  if(r.status!=="wait") return "仅待处理状态可保留";
+  return "";
+}
+
+function buildOpMenu(r){
+  const item=(label,enabled,reason,act)=> enabled
+    ? `<div class="op-mi" data-act="${act}">${label}</div>`
+    : `<div class="op-mi disabled" title="${reason}">${label}</div>`;
+  return item("删除listing",canDelete(r),delReason(r),"del")
+       + item("修改文案",canEdit(r),editReason(r),"edit")
+       + item("保留",canKeep(r),keepReason(r),"keep");
+}
+
+function renderImportTpl(){
+  const tbody = document.getElementById('importTplBody');
+  if(!tbody) return;
+  tbody.innerHTML = rows.filter(r => r.status === 'todel').map(r =>
+    `<tr><td>${r.asin}</td><td>${r.sku}</td><td>${r.msku}</td><td>${r.store}</td><td>通过</td></tr>`
+  ).join('');
+}
+
+function render(){
+  const visible = getVisibleRows();
+  document.getElementById('tbody').innerHTML = visible.map(({ r, i })=>`
+    <tr data-i="${i}">
+      <td><div class="ck-op">
+        <input type="checkbox" class="rowck" ${ (r.status==="wait"||r.status==="keep") ? "" : "disabled title='仅待处理/保留可批量删除'" } />
+        <span class="op-trigger" data-trigger="${i}">操作 <span class="caret">▾</span></span>
+      </div></td>
+      <td>
+        <div class="listing">
+          <div class="thumb">${r.img}</div>
+          <div class="info">
+            <div class="title">${r.title}</div>
+            <div class="kv">ASIN：<span class="code">${r.asin}</span><span class="copy">⧉</span></div>
+            <div class="kv">系统SKU：<b>${r.sku}</b></div>
+            <div class="kv">MSKU：<b>${r.msku}</b><span class="copy">⧉</span></div>
+          </div>
+        </div>
+      </td>
+      <td><div class="store">
+        <div class="row"><span class="flag">🇧🇪</span><span class="name">${r.store}</span></div>
+        <div class="row">黄金业务员：${r.gold}</div>
+        <div class="row">FBM业务员：${r.fbm}</div>
+        <div class="row">店铺状态：${ r.normalStore ? "正常" : '<span class="abn">异常</span>' }</div>
+      </div></td>
+      <td><div class="sales">
+        <div class="row">近30天销量(订单)：${r.s30}</div>
+        <div class="row">近365天销量(订单)：${r.s365}</div>
+        <div class="row">近90天销量：<b>${r.sale90}</b></div>
+      </div></td>
+      <td>${shipCell(r)}</td>
+      <td><div class="stock">
+        <div class="row">FBA库存：${r.fba}</div>
+        <div class="row">FBA在途：${r.transit}</div>
+        <div class="row">建单待发：${r.whWait}</div>
+        <div class="row">全链路库存：${r.whAll}</div>
+      </div></td>
+      <td>${tagCell(r)}</td>
+      <td>${kwCell(r)}</td>
+      <td>${statusPill(r)}</td>
+      <td><div class="time">${r.add}<br>${r.upd}<br><span class="link row-log" data-log="${i}">操作日志</span></div></td>
+    </tr>
+  `).join('');
+  bindRowActions();
+  bindRowLogActions();
+  updateSel();
+  document.getElementById('totalCount').textContent = visible.length;
+  renderImportTpl();
+}
+const overlay = document.getElementById('confirmOverlay');
+const cfTitle = document.getElementById('cfTitle');
+const cfBody = document.getElementById('cfBody');
+const cfOk = document.getElementById('cfOk');
+let okHandler = null;
+function confirmRemarkHtml(){
+  return `<div class="cf-remark-wrap">
+    <label for="cfRemark">备注</label>
+    <textarea class="ctrl cf-remark" id="cfRemark" placeholder="选填，将写入该行操作日志"></textarea>
+  </div>`;
+}
+function getConfirmRemark(){
+  const el = document.getElementById('cfRemark');
+  return el ? el.value.trim() : '';
+}
+function confirmBox(title, html, onOk, options={}){
+  const showRemark = options.showRemark !== false;
+  cfTitle.innerHTML = title;
+  cfBody.innerHTML = html + (showRemark ? confirmRemarkHtml() : '');
+  okHandler = onOk;
+  cfOk.textContent = options.okText || '确认';
+  cfOk.className = options.okClass || 'btn btn-danger';
+  cfOk.onclick = ()=>{
+    const remark = showRemark ? getConfirmRemark() : '';
+    if(okHandler) okHandler(remark);
+    overlay.classList.remove('show');
+  };
+  overlay.classList.add('show');
+}
+overlay.querySelectorAll('[data-close]').forEach(b=> b.onclick=()=> overlay.classList.remove('show'));
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+
+/* listing文案编辑 */
+const editOverlay = document.getElementById('editOverlay');
+const detectTip = document.getElementById('detectTip');
+const bulletList = document.getElementById('bulletList');
+const editTitle = document.getElementById('editTitle');
+const editTitleCount = document.getElementById('editTitleCount');
+let editingIndex = -1;
+const SENSITIVE = [...new Set(rows.flatMap(r=>r.kw.map(k=>k.w)))];
+
+function bulletsFromCopy(c){
+  if(Array.isArray(c.bullets) && c.bullets.length) return c.bullets.slice();
+  if(c.bullet) return String(c.bullet).split(/\n+/).filter(Boolean);
+  return [""];
+}
+function updateTitleCount(){
+  const n = editTitle.value.length;
+  editTitleCount.textContent = `${n} / 200`;
+  editTitleCount.classList.toggle('over', n > 200);
+}
+function renderBulletList(values){
+  bulletList.innerHTML = '';
+  values.forEach(v=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'edit-area-wrap';
+    const ta = document.createElement('textarea');
+    ta.className = 'edit-area bullet-area';
+    ta.placeholder = '请输入亮点';
+    ta.value = v;
+    wrap.appendChild(ta);
+    bulletList.appendChild(wrap);
+  });
+}
+function getBulletValues(){
+  return [...bulletList.querySelectorAll('.bullet-area')].map(t=>t.value);
+}
+function collectEditTexts(){
+  return {
+    title: editTitle.value.trim(),
+    bullets: getBulletValues(),
+    keywords: document.getElementById('editKeywords').value.trim(),
+    desc: document.getElementById('editDesc').value.trim()
+  };
+}
+function findSensitiveHits(texts){
+  const all = [texts.title, ...texts.bullets, texts.keywords, texts.desc].join('\n');
+  const hits = [];
+  SENSITIVE.forEach(w=>{ if(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(all)) hits.push(w); });
+  return [...new Set(hits)];
+}
+function openEdit(i){
+  editingIndex = i;
+  const c = rows[i].copy;
+  document.getElementById('editSku').textContent = rows[i].sku;
+  document.getElementById('editRemark').value = '';
+  editTitle.value = c.title || '';
+  updateTitleCount();
+  renderBulletList(bulletsFromCopy(c));
+  document.getElementById('editKeywords').value = c.keywords || '';
+  document.getElementById('editDesc').value = c.desc || '';
+  detectTip.className = 'detect-tip';
+  editOverlay.classList.add('show');
+}
+editTitle.addEventListener('input', updateTitleCount);
+document.getElementById('btnAddBullet').onclick = ()=>{
+  renderBulletList(getBulletValues().concat(''));
+};
+document.getElementById('btnDelBullet').onclick = ()=>{
+  const vals = getBulletValues();
+  if(vals.length <= 1){ toast('至少保留一条亮点'); return; }
+  vals.pop();
+  renderBulletList(vals);
+};
+editOverlay.querySelectorAll('[data-close-edit]').forEach(b=> b.onclick=()=> editOverlay.classList.remove('show'));
+document.getElementById('editSave').onclick = ()=>{
+  const texts = collectEditTexts();
+  const hits = findSensitiveHits(texts);
+  if(hits.length){
+    detectTip.className = 'detect-tip err';
+    detectTip.textContent = `检测未通过：仍包含敏感词【${hits.join('、')}】，请清除后再保存。`;
+    return;
+  }
+  detectTip.className = 'detect-tip ok';
+  detectTip.textContent = '检测通过，正在调用 listingV2 编辑接口保存…';
+  const savedRemark = document.getElementById('editRemark').value.trim();
+  const savedIndex = editingIndex;
+  rows[savedIndex].copy = {
+    title: texts.title,
+    bullets: texts.bullets.filter(Boolean),
+    bullet: texts.bullets.filter(Boolean).join('\n'),
+    keywords: texts.keywords,
+    desc: texts.desc
+  };
+  setTimeout(()=>{
+    editOverlay.classList.remove('show');
+    rows[savedIndex].status = 'toword';
+    rows[savedIndex].upd = '刚刚';
+    addRowLog(savedIndex, '修改文案', savedRemark);
+    render();
+    toast('文案已保存，状态更新为「待删词」，已写入操作日志');
+  }, 700);
+};
+
+/* 操作下拉浮层 */
+const opMenu = document.getElementById('opMenu');
+let opMenuRow = -1;
+function hideOpMenu(){ opMenu.classList.remove('show'); opMenuRow = -1; }
+function doAct(i, act){
+  const r = rows[i];
+  if(act==="del"){
+    confirmBox('⚠️ 删除 listing 确认',
+      `确认提交删除该 listing？<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b><br><br>状态将变更为「<b>待删除listing</b>」。需导出待删除数据供业务确认，审核通过后通过「已审核listing删除导入」推进为「删除listing中」。`,
+      (remark)=>{
+        r.status="todel"; r.upd="刚刚";
+        addRowLog(i, "删除listing", remark);
+        render(); toast('已提交，状态更新为「待删除listing」，已写入操作日志');
+      });
+  } else if(act==="edit"){
+    openEdit(i);
+  } else if(act==="keep"){
+    confirmBox('保留确认',
+      `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、') || '—'}</b>`,
+      (remark)=>{
+        r.status="keep"; r.upd="刚刚";
+        addRowLog(i, "保留", remark);
+        render(); toast('已保留，状态更新为「保留」，已写入操作日志');
+      });
+  }
+}
+function bindRowActions(){
+  document.querySelectorAll('#tbody [data-trigger]').forEach(t=>{
+    t.onclick = (e)=>{
+      e.stopPropagation();
+      const i = +t.dataset.trigger;
+      if(opMenu.classList.contains('show') && opMenuRow===i){ hideOpMenu(); return; }
+      opMenuRow = i;
+      opMenu.innerHTML = buildOpMenu(rows[i]);
+      opMenu.classList.add('show');
+      const rect = t.getBoundingClientRect();
+      let top = rect.bottom + 4, left = rect.left;
+      if(top + opMenu.offsetHeight > window.innerHeight) top = rect.top - opMenu.offsetHeight - 4;
+      if(left + opMenu.offsetWidth > window.innerWidth) left = window.innerWidth - opMenu.offsetWidth - 8;
+      opMenu.style.top = top + 'px'; opMenu.style.left = left + 'px';
+      opMenu.querySelectorAll('.op-mi[data-act]').forEach(a=>{
+        a.onclick = (ev)=>{
+          ev.stopPropagation();
+          const act = a.dataset.act;
+          const rowIndex = i;
+          hideOpMenu();
+          doAct(rowIndex, act);
+        };
+      });
+    };
+  });
+}
+function bindRowLogActions(){
+  document.querySelectorAll('.row-log').forEach(el=>{
+    el.onclick = (e)=>{
+      e.stopPropagation();
+      openRowLog(+el.dataset.log);
+    };
+  });
+}
+
+/* 全选 / 批量 */
+const checkAll = document.getElementById('checkAll');
+checkAll.addEventListener('change', e=>{
+  document.querySelectorAll('.rowck:not([disabled])').forEach(c=> c.checked = e.target.checked);
+  updateSel();
+});
+function updateSel(){
+  document.querySelectorAll('.rowck').forEach(c=> c.onchange = updateSelCount);
+}
+function updateSelCount(){ /* 原版无已选计数 */ }
+
+function getCheckedRows(){
+  return [...document.querySelectorAll('.rowck:checked')];
+}
+function batchDeleteListing(){
+  const checked = getCheckedRows();
+  const n = checked.length;
+  if(!n){ toast('请先勾选待操作的 listing'); return; }
+  confirmBox('⚠️ 批量删 listing 确认',
+    `确认对已勾选的 <b>${n}</b> 条 listing 提交删除？<br><span style="color:#97a0b0;font-size:12px">状态将变更为「待删除listing」，仅待处理 / 保留状态可勾选。</span>`,
+    (remark)=>{
+      checked.forEach(c=>{
+        const i=+c.closest('tr').dataset.i;
+        rows[i].status="todel"; rows[i].upd="刚刚";
+        addRowLog(i, "删除listing", remark);
+      });
+      checkAll.checked=false; render(); toast(`已提交批量删 listing ${n} 条`);
+    });
+}
+function batchKeepListing(){
+  const checked = getCheckedRows();
+  if(!checked.length){ toast('请先勾选待操作的 listing'); return; }
+  const eligible = checked.filter(c=> canKeep(rows[+c.closest('tr').dataset.i]));
+  if(!eligible.length){
+    toast('所选数据不满足保留条件：仅「待处理」且含「普通禁用词」可保留');
+    return;
+  }
+  confirmBox('批量保留确认',
+    `确认对 <b>${eligible.length}</b> 条符合条件的 listing 标记为「保留」？`,
+    (remark)=>{
+      eligible.forEach(c=>{
+        const i=+c.closest('tr').dataset.i;
+        rows[i].status="keep"; rows[i].upd="刚刚";
+        addRowLog(i, "保留", remark);
+      });
+      checkAll.checked=false; render(); toast(`已批量保留 ${eligible.length} 条`);
+    });
+}
+
+const batchOpMenu = document.getElementById('batchOpMenu');
+const batchOpDropdown = document.getElementById('batchOpDropdown');
+function hideBatchOpMenu(){ batchOpMenu.classList.remove('show'); }
+document.getElementById('btnBatchOpToggle').onclick = (e)=>{
+  e.stopPropagation();
+  batchOpMenu.classList.toggle('show');
+};
+batchOpMenu.querySelectorAll('[data-batch]').forEach(mi=>{
+  mi.onclick = (e)=>{
+    e.stopPropagation();
+    hideBatchOpMenu();
+    if(mi.dataset.batch==="del") batchDeleteListing();
+    else batchKeepListing();
+  };
+});
+document.addEventListener('click', ()=>{ hideBatchOpMenu(); hideExportMenu(); hideOpMenu(); hideStatusFilterPanel(); });
+window.addEventListener('scroll', ()=>{ hideBatchOpMenu(); hideExportMenu(); hideOpMenu(); hideStatusFilterPanel(); }, true);
+
+const filterStatusTrigger = document.getElementById('filterStatusTrigger');
+const filterStatusPanel = document.getElementById('filterStatusPanel');
+filterStatusTrigger.onclick = (e)=>{
+  e.stopPropagation();
+  hideBatchOpMenu();
+  hideExportMenu();
+  hideOpMenu();
+  syncStatusFilterChecks();
+  filterStatusPanel.classList.toggle('show');
+};
+filterStatusPanel.onclick = (e)=> e.stopPropagation();
+
+const exportMenu = document.getElementById('exportMenu');
+function hideExportMenu(){ exportMenu.classList.remove('show'); }
+document.getElementById('btnExportToggle').onclick = (e)=>{
+  e.stopPropagation();
+  hideBatchOpMenu();
+  exportMenu.classList.toggle('show');
+};
+exportMenu.querySelectorAll('[data-export]').forEach(mi=>{
+  mi.onclick = (e)=>{
+    e.stopPropagation();
+    hideExportMenu();
+    if(mi.dataset.export === 'selected'){
+      const checked = getCheckedRows();
+      if(!checked.length){ toast('请先勾选需要导出的数据'); return; }
+      checked.forEach(c=>{
+        const i = +c.closest('tr').dataset.i;
+        if(rows[i].status === 'todel') addRowLog(i, '导出待删除listing', '');
+      });
+      toast(`已导出选中 ${checked.length} 条数据`);
+      return;
+    }
+    rows.forEach((r,i)=>{ if(r.status === 'todel') addRowLog(i, '导出待删除listing', ''); });
+    const n = getVisibleRows().length;
+    toast(`已按当前条件导出 ${n} 条数据`);
+  };
+});
+
+document.getElementById('btnSearch').onclick = ()=>{
+  statusFilters = readStatusFilterChecks();
+  updateStatusFilterLabel();
+  hideStatusFilterPanel();
+  render();
+  if(statusFilters.size){
+    const names = [...statusFilters].map(k => STATUS[k].t).join('、');
+    toast(`已筛选：${names}，共 ${getVisibleRows().length} 条`);
+  } else {
+    toast('已显示全部处理状态');
+  }
+};
+document.getElementById('btnResetFilter').onclick = ()=>{
+  statusFilters = new Set();
+  document.querySelectorAll('#filterStatusPanel input[type=checkbox]').forEach(el => { el.checked = false; });
+  updateStatusFilterLabel();
+  hideStatusFilterPanel();
+  render();
+  toast('已重置筛选');
+};
+
+document.getElementById('btnBatchExtract').onclick = ()=>{
+  const n = getCheckedRows().length;
+  if(!n){ toast('请先勾选需要提取的 listing'); return; }
+  toast(`已批量提取 ${n} 条（原型演示）`);
+};
+
+const importOverlay = document.getElementById('importOverlay');
+const importResultOverlay = document.getElementById('importResultOverlay');
+const importUpload = document.getElementById('importUpload');
+const importFileHint = document.getElementById('importFileHint');
+let importFileSelected = false;
+let importExampleMode = '';
+
+function resetImportOverlay(){
+  importFileSelected = false;
+  importExampleMode = '';
+  importUpload.classList.remove('has-file');
+  importFileHint.textContent = '未选择文件';
+  document.querySelectorAll('.import-eg').forEach(el=> el.classList.remove('eg-active'));
+}
+function selectImportExample(mode){
+  importExampleMode = mode;
+  importFileSelected = true;
+  importUpload.classList.add('has-file');
+  document.querySelectorAll('.import-eg').forEach(el=>{
+    el.classList.toggle('eg-active', el.dataset.eg === mode);
+  });
+  importFileHint.textContent = mode === 'fail'
+    ? '已选择：listing删除导入_失败示例.xlsx'
+    : '已选择：listing删除导入_成功示例.xlsx';
+}
+function selectImportFile(){
+  selectImportExample('success');
+}
+function findListingByMskuStore(msku, store){
+  const key = String(msku).trim();
+  return rows.find(r=>{
+    if(r.store !== String(store).trim()) return false;
+    return r.msku === key || r.msku.startsWith(key.replace(/…$/,'')) || key.startsWith(r.msku.replace(/…$/,''));
+  });
+}
+function buildImportRowsFromFile(){
+  if(importExampleMode === 'fail'){
+    const ok = rows.find(r => r.status === 'todel');
+    if(!ok) return [];
+    return [
+      { line:2, asin:ok.asin, sku:ok.sku, msku:ok.msku, store:ok.store, audit:'通过' },
+      { line:3, asin:genAsin(888), sku:genSku(888), msku:genMsku(888), store:ok.store, audit:'通过' }
+    ];
+  }
+  return rows
+    .map((r,i)=>({ r, i }))
+    .filter(x=>x.r.status==='todel')
+    .map((x,idx)=>({
+      line:idx+2,
+      asin:x.r.asin,
+      sku:x.r.sku,
+      msku:x.r.msku,
+      store:x.r.store,
+      audit:'通过'
+    }));
+}
+function validateImportBatch(fileRows){
+  if(!fileRows.length){
+    return [{ line:'—', asin:'—', msku:'—', store:'—', reason:'文件无有效数据' }];
+  }
+  const errors = [];
+  fileRows.forEach(fr=>{
+    const audit = String(fr.audit || '').trim();
+    if(audit !== '通过'){
+      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:`审核结果须为「通过」，当前为「${audit || '空'}」` });
+      return;
+    }
+    const listing = findListingByMskuStore(fr.msku, fr.store);
+    if(!listing){
+      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:'listing 不存在（MSKU+店铺不匹配）' });
+    } else if(listing.status !== 'todel'){
+      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:`listing 状态为「${STATUS[listing.status].t}」，非待删除 listing` });
+    }
+  });
+  return errors;
+}
+function showImportResult(title, html){
+  document.getElementById('importResultTitle').textContent = title;
+  document.getElementById('importResultBody').innerHTML = html;
+  importResultOverlay.classList.add('show');
+}
+function applyImportSuccess(fileRows){
+  const matched = [];
+  fileRows.forEach(fr=>{
+    const listing = findListingByMskuStore(fr.msku, fr.store);
+    if(!listing || listing.status !== 'todel') return;
+    const i = rows.indexOf(listing);
+    if(i < 0) return;
+    rows[i].status = 'deling';
+    rows[i].upd = '刚刚';
+    addRowLog(i, '导入删除listing', '校验通过，已提交删除');
+    matched.push({ listing, index:i });
+  });
+  return matched;
+}
+importOverlay.querySelectorAll('[data-close-import]').forEach(b=> b.onclick=()=> importOverlay.classList.remove('show'));
+importResultOverlay.querySelectorAll('[data-close-import-result]').forEach(b=> b.onclick=()=> importResultOverlay.classList.remove('show'));
+document.getElementById('btnImport').onclick = ()=>{ resetImportOverlay(); importOverlay.classList.add('show'); };
+document.getElementById('btnDownloadTpl').onclick = ()=> toast('已下载导入模板（ASIN / SKU / MSKU / 店铺 / 审核结果）');
+importUpload.onclick = selectImportFile;
+document.querySelectorAll('.import-eg').forEach(el=> el.onclick = ()=> selectImportExample(el.dataset.eg));
+document.getElementById('importConfirm').onclick = ()=>{
+  if(!importFileSelected){
+    toast('请先上传导入文件');
+    return;
+  }
+  const fileRows = buildImportRowsFromFile();
+  const errors = validateImportBatch(fileRows);
+  importOverlay.classList.remove('show');
+  if(errors.length){
+    const summary = `<div class="import-result-summary err">导入失败：共 ${fileRows.length} 条，${errors.length} 条校验不通过。<b>本批未做任何状态变更、未入队。</b></div>`;
+    const table = `<table class="tpl-table err-table"><thead><tr><th>行号</th><th>ASIN</th><th>MSKU</th><th>店铺</th><th>失败原因</th></tr></thead><tbody>${
+      errors.map(e=>`<tr><td>${e.line}</td><td>${e.asin||'—'}</td><td>${e.msku}</td><td>${e.store}</td><td class="reason">${e.reason}</td></tr>`).join('')
+    }</tbody></table>`;
+    showImportResult('导入失败', summary + table);
+    toast('导入校验失败，请修正后重新导入');
+    return;
+  }
+  const matched = applyImportSuccess(fileRows);
+  render();
+  const n = matched.length;
+  showImportResult('导入成功',
+    `<div class="import-result-summary ok">校验通过，已提交删除 <b>${n}</b> 条。</div>
+     <p style="font-size:12px;line-height:1.7;color:var(--text-2)">
+       状态已更新为「<b>删除 listing 中</b>」，系统将<b>定时</b>加入删除 listing 队列。<br>
+       删除成功数据不在本列表展示；若失败将回写为「<b>删除 listing 失败</b>」并写入操作日志。
+     </p>`
+  );
+  toast(`校验通过，${n} 条已提交删除，系统将加入删除 listing 队列`);
+};
+
+const logOverlay = document.getElementById('logOverlay');
+logOverlay.querySelectorAll('[data-close-log]').forEach(b=> b.onclick=()=> logOverlay.classList.remove('show'));
+
+document.querySelectorAll('.page-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    if(b.textContent==='‹'||b.textContent==='›') return;
+    document.querySelectorAll('.page-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+
+render();
+</script>
+<script>
+/**
+ * 原型标注（共享）
+ * 用法：PrototypeAnnotate.init({ storageKey, exportTitle, scopeLabels, builtins, toast, nowStr })
+ */
+(function (global) {
+  'use strict';
+
+  const DEFAULT_SCOPE_LABELS = { page: '页面' };
+
+  let config = {};
+  let annotations = [];
+  let annoMode = false;
+  let annoEditingId = null;
+  let annoPendingCtx = null;
+
+  function toast(msg) {
+    if (typeof config.toast === 'function') config.toast(msg);
+    else alert(msg);
+  }
+
+  function nowStr() {
+    if (typeof config.nowStr === 'function') return config.nowStr();
+    const n = new Date();
+    const p = (x) => String(x).padStart(2, '0');
+    return `${n.getFullYear()}-${p(n.getMonth() + 1)}-${p(n.getDate())} ${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  }
+
+  function escapeAnno(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function scopeLabel(scope) {
+    const labels = config.scopeLabels || DEFAULT_SCOPE_LABELS;
+    return labels[scope] || scope || '页面';
+  }
+
+  function builtinList() {
+    return (config.builtins || []).map((a) => ({ ...a }));
+  }
+
+  function builtinIds() {
+    return new Set(builtinList().map((b) => b.id));
+  }
+
+  function normalizeAnnotations() {
+    annotations.forEach((a) => {
+      if (!a.scope) a.scope = 'page';
+    });
+  }
+
+  function loadAnnotations() {
+    const builtins = builtinList();
+    try {
+      const raw = localStorage.getItem(config.storageKey);
+      const saved = raw ? JSON.parse(raw) : [];
+      const ids = builtinIds();
+      const extra = (Array.isArray(saved) ? saved : []).filter((a) => !ids.has(a.id));
+      annotations = [...builtins, ...extra];
+      annotations.forEach((a, i) => {
+        a.no = i + 1;
+      });
+      normalizeAnnotations();
+    } catch {
+      annotations = builtins;
+    }
+  }
+
+  function saveAnnotations() {
+    localStorage.setItem(config.storageKey, JSON.stringify(annotations));
+  }
+
+  function ensureAnnoDOM() {
+    if (document.getElementById('annoPins')) return;
+    const html = `
+<div class="anno-hint anno-ui">标注模式已开启：点击页面任意位置添加标注</div>
+<div class="anno-pins anno-ui" id="annoPins"></div>
+<div class="anno-bar anno-ui">
+  <span class="anno-count" id="annoCount">标注 0</span>
+  <button class="btn-anno" id="annoModeBtn" type="button">标注模式</button>
+  <button class="btn-anno" id="annoPanelBtn" type="button">标注列表</button>
+  <button class="btn-anno" id="annoExportBtn" type="button">导出</button>
+  <button class="btn-anno" id="annoClearBtn" type="button">清空</button>
+</div>
+<div class="anno-panel anno-ui" id="annoPanel">
+  <div class="anno-panel-head"><span>标注列表</span><span class="link" id="annoPanelClose" style="cursor:pointer;color:#2f6bff">关闭</span></div>
+  <div class="anno-panel-body" id="annoList"></div>
+</div>
+<div class="anno-editor anno-ui" id="annoEditor">
+  <label id="annoEditorLabel">标注 #1</label>
+  <textarea id="annoEditorText" placeholder="填写说明，如：此处需二次确认、字段含义等"></textarea>
+  <div class="anno-editor-foot">
+    <button type="button" id="annoEditorCancel" style="height:28px;padding:0 12px;border:1px solid #e8ebf0;border-radius:6px;background:#fff;cursor:pointer">取消</button>
+    <button type="button" id="annoEditorSave" style="height:28px;padding:0 12px;border:none;border-radius:6px;background:#2f6bff;color:#fff;cursor:pointer">保存</button>
+  </div>
+</div>`;
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    while (host.firstChild) document.body.appendChild(host.firstChild);
+  }
+
+  function ensureModalPins() {
+    document.querySelectorAll('.overlay').forEach((overlay) => {
+      const modal = overlay.querySelector('.modal');
+      if (!modal) return;
+      if (!overlay.id) return;
+      if (modal.querySelector('.anno-scope-pins')) return;
+      const pins = document.createElement('div');
+      pins.className = 'anno-scope-pins';
+      pins.dataset.annoScope = overlay.id;
+      modal.appendChild(pins);
+    });
+  }
+
+  function getAnnoContextFromClick(e) {
+    const overlay = e.target.closest('.overlay.show');
+    if (overlay) {
+      const modal = overlay.querySelector('.modal');
+      const rect = modal.getBoundingClientRect();
+      return {
+        scope: overlay.id,
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+        editorX: e.pageX,
+        editorY: e.pageY,
+      };
+    }
+    return { scope: 'page', x: e.pageX, y: e.pageY, editorX: e.pageX, editorY: e.pageY };
+  }
+
+  function getPagePosFromAnno(a) {
+    if (!a.scope || a.scope === 'page') return { x: a.x, y: a.y };
+    const overlay = document.getElementById(a.scope);
+    if (!overlay) return { x: a.x, y: a.y };
+    const modal = overlay.querySelector('.modal');
+    if (!modal) return { x: a.x, y: a.y };
+    const rect = modal.getBoundingClientRect();
+    return { x: rect.left + a.x, y: rect.top + a.y };
+  }
+
+  function getAnnoPinContainer(a) {
+    if (!a.scope || a.scope === 'page') return document.getElementById('annoPins');
+    const overlay = document.getElementById(a.scope);
+    return overlay ? overlay.querySelector('.anno-scope-pins') : null;
+  }
+
+  function bindAnnoPinEvents(pin, id) {
+    pin.onclick = (e) => {
+      e.stopPropagation();
+      if (annoMode) return;
+      highlightAnno(id);
+    };
+    pin.ondblclick = (e) => {
+      e.stopPropagation();
+      const a = annotations.find((x) => x.id === id);
+      if (a) {
+        const pos = getPagePosFromAnno(a);
+        openAnnoEditor(pos.x, pos.y, id);
+      }
+    };
+  }
+
+  function createAnnoPinElement(a) {
+    const pin = document.createElement('div');
+    pin.className = 'anno-pin';
+    pin.dataset.id = a.id;
+    pin.style.left = a.x + 'px';
+    pin.style.top = a.y + 'px';
+    pin.innerHTML = `<div class="dot">${a.no}</div><div class="tip">${escapeAnno(a.text)}</div>`;
+    bindAnnoPinEvents(pin, a.id);
+    return pin;
+  }
+
+  function updateAnnoCount() {
+    const el = document.getElementById('annoCount');
+    if (el) el.textContent = `标注 ${annotations.length}`;
+  }
+
+  function renderAnnoPins() {
+    const root = document.getElementById('annoPins');
+    if (!root) return;
+    root.innerHTML = '';
+    document.querySelectorAll('.anno-scope-pins').forEach((el) => {
+      el.innerHTML = '';
+    });
+    annotations.forEach((a) => {
+      if (a.scope && a.scope !== 'page') {
+        const overlay = document.getElementById(a.scope);
+        if (!overlay || !overlay.classList.contains('show')) return;
+      }
+      const container = getAnnoPinContainer(a);
+      if (container) container.appendChild(createAnnoPinElement(a));
+    });
+  }
+
+  function renderAnnoList() {
+    const box = document.getElementById('annoList');
+    if (!box) return;
+    if (!annotations.length) {
+      box.innerHTML = '<div class="anno-empty">暂无标注<br>开启标注模式后点击页面添加</div>';
+      return;
+    }
+    box.innerHTML = annotations
+      .map(
+        (a) => `
+    <div class="anno-item" data-id="${a.id}">
+      <span class="del" data-del="${a.id}">删除</span>
+      <span class="no">${a.no}</span>
+      <div class="txt">${escapeAnno(a.text)}</div>
+      <div class="meta">${scopeLabel(a.scope)}${a.time ? ' · ' + a.time : ''}</div>
+    </div>`
+      )
+      .join('');
+    box.querySelectorAll('.anno-item').forEach((item) => {
+      item.onclick = () => highlightAnno(+item.dataset.id, true);
+    });
+    box.querySelectorAll('[data-del]').forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        deleteAnno(+btn.dataset.del);
+      };
+    });
+  }
+
+  function clearAnnoHighlight() {
+    document.querySelectorAll('.anno-pin.active, .anno-item.active').forEach((el) => el.classList.remove('active'));
+  }
+
+  function highlightAnno(id, scroll) {
+    clearAnnoHighlight();
+    const a = annotations.find((x) => x.id === id);
+    if (!a) return;
+    if (a.scope && a.scope !== 'page') {
+      const overlay = document.getElementById(a.scope);
+      if (overlay) overlay.classList.add('show');
+      renderAnnoPins();
+    }
+    const pin = document.querySelector(`.anno-pin[data-id="${id}"]`);
+    const item = document.querySelector(`.anno-item[data-id="${id}"]`);
+    if (pin) pin.classList.add('active');
+    if (item) item.classList.add('active');
+    document.getElementById('annoPanel')?.classList.add('show');
+    if (scroll && (!a.scope || a.scope === 'page')) {
+      window.scrollTo({ top: Math.max(0, a.y - window.innerHeight / 3), behavior: 'smooth' });
+    }
+  }
+
+  function openAnnoEditor(x, y, id, ctx) {
+    const editor = document.getElementById('annoEditor');
+    if (!editor) return;
+    annoEditingId = id || null;
+    annoPendingCtx = id ? null : ctx || null;
+    const a = id ? annotations.find((item) => item.id === id) : null;
+    document.getElementById('annoEditorLabel').textContent = a
+      ? `编辑标注 #${a.no}`
+      : `新建标注 #${annotations.length + 1}`;
+    document.getElementById('annoEditorText').value = a ? a.text : '';
+    let left = x + 12;
+    let top = y + 12;
+    if (left + 300 > window.innerWidth) left = x - 292;
+    if (top + 180 > window.innerHeight) top = y - 180;
+    editor.style.left = Math.max(8, left) + 'px';
+    editor.style.top = Math.max(8, top) + 'px';
+    editor.classList.add('show');
+    document.getElementById('annoEditorText').focus();
+  }
+
+  function closeAnnoEditor() {
+    document.getElementById('annoEditor')?.classList.remove('show');
+    annoEditingId = null;
+    annoPendingCtx = null;
+  }
+
+  function saveAnnoEditor() {
+    const text = document.getElementById('annoEditorText').value.trim();
+    if (!text) {
+      toast('请填写标注内容');
+      return;
+    }
+    const time = nowStr();
+    if (annoEditingId) {
+      const a = annotations.find((x) => x.id === annoEditingId);
+      if (a) {
+        a.text = text;
+        a.time = time;
+      }
+    } else if (annoPendingCtx) {
+      annotations.push({
+        id: Date.now(),
+        no: annotations.length + 1,
+        scope: annoPendingCtx.scope || 'page',
+        x: annoPendingCtx.x,
+        y: annoPendingCtx.y,
+        text,
+        time,
+      });
+    }
+    saveAnnotations();
+    closeAnnoEditor();
+    renderAnnoPins();
+    renderAnnoList();
+    updateAnnoCount();
+    toast('标注已保存');
+  }
+
+  function deleteAnno(id) {
+    annotations = annotations.filter((a) => a.id !== id);
+    annotations.forEach((a, i) => {
+      a.no = i + 1;
+    });
+    saveAnnotations();
+    renderAnnoPins();
+    renderAnnoList();
+    updateAnnoCount();
+  }
+
+  function setAnnoMode(on) {
+    annoMode = on;
+    document.body.classList.toggle('anno-mode', on);
+    document.getElementById('annoModeBtn')?.classList.toggle('on', on);
+    if (!on) closeAnnoEditor();
+  }
+
+  function exportAnnotations() {
+    if (!annotations.length) {
+      toast('暂无标注可导出');
+      return;
+    }
+    const title = config.exportTitle || '原型';
+    const filename = config.exportFilename || `${title}-原型标注.md`;
+    const lines = [
+      `# ${title} · 原型标注`,
+      '',
+      ...annotations.map((a) => {
+        return `## ${a.no}. ${a.text}\n- 归属：${scopeLabel(a.scope)}\n- 位置：(${Math.round(a.x)}, ${Math.round(a.y)})\n- 时间：${a.time || '—'}`;
+      }),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast('标注已导出');
+  }
+
+  function bindOverlayAnnoWatch() {
+    document.querySelectorAll('.overlay').forEach((overlay) => {
+      const observer = new MutationObserver(() => {
+        if (overlay.classList.contains('show')) renderAnnoPins();
+        else {
+          clearAnnoHighlight();
+          closeAnnoEditor();
+          renderAnnoPins();
+        }
+      });
+      observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+    });
+  }
+
+  function bindEvents() {
+    document.getElementById('annoModeBtn')?.addEventListener('click', () => setAnnoMode(!annoMode));
+    document.getElementById('annoPanelBtn')?.addEventListener('click', () => {
+      document.getElementById('annoPanel')?.classList.toggle('show');
+    });
+    document.getElementById('annoPanelClose')?.addEventListener('click', () => {
+      document.getElementById('annoPanel')?.classList.remove('show');
+    });
+    document.getElementById('annoExportBtn')?.addEventListener('click', exportAnnotations);
+    document.getElementById('annoClearBtn')?.addEventListener('click', () => {
+      const extras = annotations.filter((a) => !builtinIds().has(a.id));
+      if (!extras.length) {
+        toast('无用户标注可清空');
+        return;
+      }
+      if (confirm('确认清空用户添加的标注？内置说明标注将保留。')) {
+        const ids = builtinIds();
+        annotations = annotations.filter((a) => ids.has(a.id));
+        annotations.forEach((a, i) => {
+          a.no = i + 1;
+        });
+        saveAnnotations();
+        renderAnnoPins();
+        renderAnnoList();
+        updateAnnoCount();
+        toast('已清空用户标注');
+      }
+    });
+    document.getElementById('annoEditorSave')?.addEventListener('click', saveAnnoEditor);
+    document.getElementById('annoEditorCancel')?.addEventListener('click', closeAnnoEditor);
+    document.addEventListener(
+      'click',
+      (e) => {
+        if (!annoMode) return;
+        if (e.target.closest('.anno-ui')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const ctx = getAnnoContextFromClick(e);
+        openAnnoEditor(ctx.editorX, ctx.editorY, null, ctx);
+      },
+      true
+    );
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAnnoEditor();
+        setAnnoMode(false);
+      }
+    });
+  }
+
+  function init(options) {
+    if (!options || !options.storageKey) {
+      console.error('PrototypeAnnotate.init: storageKey is required');
+      return;
+    }
+    config = options;
+    ensureAnnoDOM();
+    ensureModalPins();
+    loadAnnotations();
+    bindEvents();
+    bindOverlayAnnoWatch();
+    renderAnnoPins();
+    renderAnnoList();
+    updateAnnoCount();
+  }
+
+  global.PrototypeAnnotate = { init, ensureModalPins };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+PrototypeAnnotate.init({
+  storageKey: 'listing-shanci-list-annotations-v2',
+  exportTitle: '删词处理列表',
+  exportFilename: '删词处理列表-原型标注.md',
+  scopeLabels: {
+    page: '页面',
+    confirmOverlay: '确认弹窗',
+    editOverlay: 'listing文案编辑',
+    importOverlay: '已审核 listing 删除导入',
+    importResultOverlay: '导入结果',
+    logOverlay: '操作日志'
+  },
+  builtins: [],
+  toast,
+  nowStr
+});
+</script>
+</body>
+</html>
