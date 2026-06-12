@@ -77,7 +77,7 @@
   .st-wait{ background:#fff7e6; color:#fa8c16; }
   .st-doing{ background:#e6f4ff; color:#2f6bff; }
   .st-done{ background:#f0f9f3; color:#16b364; }
-  .st-pending{ background:#fff7e6; color:#fa8c16; }
+  .st-queue{ background:#f9f0ff; color:#722ed1; }
   .st-proc-doing{ background:#e6f4ff; color:#2f6bff; }
   .st-proc-ok{ background:#f0f9f3; color:#16b364; }
   .st-proc-fail{ background:#fff1f0; color:#f5455c; }
@@ -120,7 +120,9 @@
   .ship-cell{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; }
 
   .time{ color:var(--text-2); font-size:11px; line-height:1.8; white-space:nowrap; }
+  .proc-done-tag{ display:inline-block; margin-top:4px; padding:0 8px; height:22px; line-height:22px; border-radius:11px; font-size:11px; background:#f6ffed; color:#52c41a; border:1px solid #b7eb8f; }
   .filter-tag{ display:inline-block; margin-left:8px; padding:2px 8px; background:#e6f4ff; color:var(--primary); border-radius:4px; font-size:11px; }
+  .detail-hint{ margin:0 20px 8px; padding:8px 12px; background:#e6f4ff; border:1px solid #91caff; border-radius:6px; font-size:12px; color:var(--text-2); }
 
   .pager{ display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:14px 20px;
     border-top:1px solid var(--border); flex-wrap:wrap; }
@@ -237,6 +239,8 @@
       <span class="meta" id="detailMeta"></span>
     </div>
 
+    <p class="detail-hint">检出敏感词后将<strong>自动删词</strong>。任务按<strong>检索敏感词</strong>维度展示；同词多行导入会合并 ASIN。组合词用 <code>&&</code>，如 <code>Mercury&&Lead</code> 会拆成两条词任务。</p>
+
     <div class="filters">
       <div class="filter-row">
         <div class="field">
@@ -260,7 +264,6 @@
             <span id="procStatusLabel">处理状态</span>
           </button>
           <div class="status-multi-panel" id="procStatusPanel">
-            <label class="status-multi-opt"><input type="checkbox" value="pending" />未处理</label>
             <label class="status-multi-opt"><input type="checkbox" value="deleting" />删词中</label>
             <label class="status-multi-opt"><input type="checkbox" value="success" />删词成功</label>
             <label class="status-multi-opt"><input type="checkbox" value="fail" />删词失败</label>
@@ -273,13 +276,6 @@
     </div>
 
     <div class="toolbar">
-      <div class="toolbar-dropdown" id="oneKeyDeleteDropdown">
-        <button class="btn btn-primary" id="btnOneKeyDeleteToggle" type="button">一键删词 <span style="font-size:10px">▾</span></button>
-        <div class="toolbar-menu" id="oneKeyDeleteMenu">
-          <div class="toolbar-mi" data-delete-mode="filter">按条件</div>
-          <div class="toolbar-mi" data-delete-mode="selected">按勾选</div>
-        </div>
-      </div>
       <button class="btn btn-primary" id="btnExport" type="button">导出</button>
     </div>
 
@@ -287,7 +283,6 @@
       <table>
         <thead>
           <tr>
-            <th style="width:48px"><input type="checkbox" id="detailCheckAll" /></th>
             <th>listing 信息</th>
             <th>店铺信息</th>
             <th>配送类型</th>
@@ -347,6 +342,9 @@
         <p>1、支持导入格式为xls，xlsx的文件（手动修改文件后缀无效）</p>
         <p>2、请按照下载模板的格式导入，表头不可修改</p>
         <p>3、数据记录不要超过20000条</p>
+        <p>4、检索敏感词支持<strong>组合词</strong>，用 <code>&&</code> 连接，如 <code>Mercury&&Lead</code> 会拆成 Mercury、Lead 两条独立任务</p>
+        <p>5、同一文件中「检索敏感词 + 店铺名称 + ASIN」<strong>不可重复</strong>；系统中已存在的词<strong>不可再次导入</strong></p>
+        <p>6、同一检索敏感词多行（不同 ASIN/店铺）会<strong>合并为一条任务</strong>，检索 ASIN 列汇总展示</p>
       </div>
     </div>
   </div>
@@ -363,19 +361,16 @@ const SEARCH_STATUS = {
 const FILTER_LABEL = {
   hasWord: '有词',
   noWord: '无词',
-  pending: '待处理',
   deleting: '删词中',
   success: '删词成功',
   fail: '删词失败'
 };
 const PROC_STATUS = {
-  pending: '未处理',
   deleting: '删词中',
   success: '删词成功',
   fail: '删词失败'
 };
 const PROC_PILL = {
-  pending: 'st-pending',
   deleting: 'st-proc-doing',
   success: 'st-proc-ok',
   fail: 'st-proc-fail'
@@ -406,9 +401,8 @@ const DETAIL_LISTINGS = [
     store:'Amazon-Z011228-US', gold:'柯栋', fbm:'-', normalStore:true,
     copy:{ title:'EcoGrow Biodegradable Compost Bags', bullet:'Heavy duty biodegradable bags', keywords:'compost;biodegradable;bag', desc:'30 gallon biodegradable compost bags' },
     results:[
-      { type:'title', status:'pending' },
-      { type:'desc', status:'pending' },
-      { type:'keyword', status:'pending' }
+      { queueId:'Q20260528001', type:'title', status:'deleting' },
+      { queueId:'Q20260528002', type:'desc', status:'deleting' }
     ] },
   { asin:'B0F6JY5G4F', sku:'10123459', msku:'MSKU001234567893', img:'🌱',
     title:'GreenRoot Biodegradable Plant Labels 200pcs',
@@ -429,40 +423,45 @@ const DETAIL_LISTINGS = [
     ] }
 ];
 
-/** listing 状态由全部队列结果聚合 */
+/** listing 状态由全部队列聚合（检出后自动删词，无「未处理」） */
 function getListingStatus(listing){
   const rs = listing.results || [];
-  if(!rs.length || rs.every(r => r.status === 'pending')) return 'pending';
+  if(!rs.length) return 'deleting';
   if(rs.some(r => r.status === 'fail')) return 'fail';
-  if(rs.some(r => r.status === 'deleting')) return 'deleting';
+  if(rs.some(r => r.status === 'deleting' || r.status === 'pending')) return 'deleting';
   if(rs.every(r => r.status === 'success')) return 'success';
   return 'deleting';
 }
 function countByListingStatus(listings){
-  const c = { pending:0, deleting:0, success:0, fail:0 };
+  const c = { deleting:0, success:0, fail:0 };
   listings.forEach(l => { c[getListingStatus(l)]++; });
   return c;
+}
+function isTaskProcComplete(task){
+  if(task.status !== 'done' || !task.hasWord) return false;
+  const c = countByListingStatus(task.listings);
+  return c.deleting === 0;
 }
 function procStatusPill(status){
   return `<span class="pill ${PROC_PILL[status]}">${PROC_STATUS[status]}</span>`;
 }
 
 const TASKS = [
-  { id:30, keyword:'Biodegradable', asins:['B0F6JY5G1C','B0F6JY5G2D','B0F6JY5G3E','B0F6JY5G4F','B0F6JY5G5G','B0AAA000001','B0AAA000002','B0AAA000003','B0AAA000004','B0AAA000005','B0AAA000006','B0AAA000007'],
-    listingCount:78, status:'done', searchTotal:78, hasWord:5, noWord:73,
-    remark:'-', addTime:'2026-05-27 09:52:10', addBy:'戴怡',
+  { id:30, keyword:'Biodegradable', asins:['B0GN8XGYT9','B0GNCYDD86','B0GN8XGYTA','B0GN8XGYTB','B0GN8XGYTC','B0GN8XGYTD','B0GN8XGYTE','B0GN8XGYTF','B0GN8XGYTG','B0GN8XGYTH','B0GN8XGYTI','B0GN8XGYTJ'],
+    listingCount:988, status:'done', searchTotal:988, hasWord:105, noWord:883,
+    remark:'-', addTime:'2026-05-25 19:52:33', addBy:'贾旭杨',
     listings: DETAIL_LISTINGS },
-  { id:29, keyword:'Compost', asins:['B0BBB000001','B0BBB000002','B0BBB000003'],
-    listingCount:12, status:'done', searchTotal:12, hasWord:3, noWord:9,
-    remark:'-', addTime:'2026-05-26 14:20:33', addBy:'柯栋',
-    listings: DETAIL_LISTINGS.slice(0,3) },
+  { id:29, keyword:'Compost', asins:['B0GN8XGYT9','B0GNCYDD86','B0GN8XGYTA','B0GN8XGYTB'],
+    listingCount:402, status:'done', searchTotal:402, hasWord:1, noWord:401,
+    remark:'李新华', addTime:'2026-05-25 19:52:33', addBy:'贾旭杨',
+    listings: [DETAIL_LISTINGS[4]] },
   { id:28, keyword:'Mercury', asins:['B0CCC000001'],
     listingCount:5, status:'doing', searchTotal:3, hasWord:1, noWord:2,
-    remark:'由 Mercury&&Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
+    remark:'Mercury&&Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
     listings: DETAIL_LISTINGS.slice(2,3) },
   { id:27, keyword:'Lead', asins:['B0CCC000001'],
-    listingCount:5, status:'doing', searchTotal:2, hasWord:0, noWord:2,
-    remark:'由 Mercury&&Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
+    listingCount:5, status:'wait', searchTotal:0, hasWord:0, noWord:0,
+    remark:'Mercury&&Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
     listings: [] },
   { id:26, keyword:'Disney', asins:['B0DDD000001','B0DDD000002','B0DDD000003','B0DDD000004'],
     listingCount:20, status:'wait', searchTotal:0, hasWord:0, noWord:0,
@@ -531,10 +530,11 @@ function renderTaskList(){
       </div></td>
       <td><div class="sub-info">${(() => {
         const c = countByListingStatus(t.listings);
-        return `待处理listing数量：${numLink(t.id,'pending',c.pending)}<br>
-        删词中listing数量：${numLink(t.id,'deleting',c.deleting)}<br>
+        const doneTag = isTaskProcComplete(t) ? '<span class="proc-done-tag">处理完成</span>' : '';
+        return `删词中listing数量：${numLink(t.id,'deleting',c.deleting)}<br>
         删词成功listing数量：${numLink(t.id,'success',c.success)}<br>
-        删词失败listing数量：${numLink(t.id,'fail',c.fail)}`;
+        删词失败listing数量：${numLink(t.id,'fail',c.fail)}<br>
+        ${doneTag}`;
       })()}</div></td>
       <td>${t.remark === '-' ? '<span class="dash">-</span>' : t.remark}</td>
       <td><div class="sub-info">添加时间：${t.addTime}<br>添加人：${t.addBy}</div></td>
@@ -559,7 +559,7 @@ function bindTaskLinks(){
 function filterListingsByRoute(task, filter){
   if(filter === 'noWord') return [];
   if(filter === 'hasWord' || !filter) return task.listings.slice();
-  if(['pending','deleting','success','fail'].includes(filter)){
+  if(['deleting','success','fail'].includes(filter)){
     return task.listings.filter(l => getListingStatus(l) === filter);
   }
   return task.listings.slice();
@@ -599,7 +599,6 @@ function renderDetail(){
   document.getElementById('detailTbody').innerHTML = listings.map((l, i) => {
     const ps = getListingStatus(l);
     return `<tr data-i="${i}">
-      <td><input type="checkbox" class="detail-ck" ${ps === 'pending' ? '' : 'disabled title="仅未处理可勾选（原型演示）"'} /></td>
       <td>
         <div class="listing">
           <div class="thumb">${l.img}</div>
@@ -621,7 +620,7 @@ function renderDetail(){
       <td>${procStatusPill(ps)}<br><span class="link" data-result="${i}">查看详情</span></td>
       <td><div class="time">${task.addTime}<br>${task.addTime}</div></td>
     </tr>`;
-  }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:32px">暂无数据</td></tr>`;
+  }).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:32px">暂无数据</td></tr>`;
 
   document.getElementById('detailTotal').textContent = listings.length;
 
@@ -676,22 +675,19 @@ function openResultDetail(listing){
   document.getElementById('resultOverlay').classList.add('show');
 }
 function buildExportRows(task, listings){
-  const rows = [];
-  listings.forEach(l => {
+  return listings.map(l => {
     const ps = getListingStatus(l);
-    const queues = (l.results || []).filter(r => r.status !== 'pending');
-    const src = queues.length ? queues : (l.results || []);
-    src.forEach(r => {
-      rows.push({
-        店铺: l.store, ASIN: l.asin, MSKU: l.msku, SKU: l.sku,
-        首选业务员: l.gold, 店铺状态: l.normalStore ? '正常' : '异常',
-        检索敏感词: task.keyword, 类型: TYPE_LABEL[r.type] || r.type,
-        处理状态: PROC_STATUS[r.status] || PROC_STATUS[ps],
-        失败原因: r.reason || '-'
-      });
-    });
+    const active = (l.results || []).filter(r => r.status !== 'pending');
+    const types = [...new Set(active.map(r => TYPE_LABEL[r.type] || r.type))].join('、') || '-';
+    const failReasons = active.filter(r => r.status === 'fail' && r.reason)
+      .map(r => `${TYPE_LABEL[r.type] || r.type}：${r.reason}`).join('；') || '-';
+    return {
+      店铺: l.store, ASIN: l.asin, MSKU: l.msku, SKU: l.sku,
+      首选业务员: l.gold, 店铺状态: l.normalStore ? '正常' : '异常',
+      检索敏感词: task.keyword, 类型: types,
+      处理状态: PROC_STATUS[ps], 失败原因: ps === 'fail' ? failReasons : '-'
+    };
   });
-  return rows;
 }
 
 function parseHash(){
@@ -715,7 +711,7 @@ function applyRoute(){
     renderTaskList();
   } else {
     routeState = { taskId:r.taskId, filter:r.filter };
-    if(['pending','deleting','success','fail'].includes(r.filter)){
+    if(['deleting','success','fail'].includes(r.filter)){
       detailProcFilters = new Set([r.filter]);
       updateProcStatusLabel();
       syncProcStatusChecks();
@@ -767,43 +763,12 @@ document.getElementById('importFileInput').onchange = (e) => {
   if(!file) return;
   document.getElementById('importOverlay').classList.remove('show');
   const name = file.name;
-  if(/mercury.*lead|lead.*mercury/i.test(name) || name.includes('组合')){
-    toast(`导入成功：${name} · Mercury&&Lead 已拆分为 2 条检索任务`);
-  } else {
-    toast(`导入成功：${name}`);
-  }
+  toast(`导入成功：${name} · 已按词生成任务；组合词 && 会拆分，同词多行会合并 ASIN`);
   renderTaskList();
 };
 
-const oneKeyDeleteMenu = document.getElementById('oneKeyDeleteMenu');
-function hideOneKeyDeleteMenu(){ oneKeyDeleteMenu.classList.remove('show'); }
-function getDetailRowCount(){
-  return document.querySelectorAll('#detailTbody tr[data-i]').length;
-}
-function getCheckedDetailCount(){
-  return document.querySelectorAll('.detail-ck:checked').length;
-}
-document.getElementById('btnOneKeyDeleteToggle').onclick = (e) => {
-  e.stopPropagation();
-  oneKeyDeleteMenu.classList.toggle('show');
-};
-oneKeyDeleteMenu.querySelectorAll('[data-delete-mode]').forEach(mi => {
-  mi.onclick = (e) => {
-    e.stopPropagation();
-    hideOneKeyDeleteMenu();
-    if(mi.dataset.deleteMode === 'filter'){
-      const n = getDetailRowCount();
-      if(!n){ toast('当前条件下暂无可删词 listing'); return; }
-      toast(`已按条件提交 ${n} 条；执行完成后可导出结果明细（含失败原因）`);
-      return;
-    }
-    const n = getCheckedDetailCount();
-    if(!n){ toast('请先勾选需要删词的 listing'); return; }
-    toast(`已按勾选提交 ${n} 条；执行完成后可导出结果明细（含失败原因）`);
-  };
-});
-document.addEventListener('click', () => { hideOneKeyDeleteMenu(); hideProcStatusPanel(); });
-window.addEventListener('scroll', () => { hideOneKeyDeleteMenu(); hideProcStatusPanel(); }, true);
+document.addEventListener('click', () => { hideProcStatusPanel(); });
+window.addEventListener('scroll', () => { hideProcStatusPanel(); }, true);
 
 document.getElementById('procStatusTrigger').onclick = (e) => {
   e.stopPropagation();
@@ -835,17 +800,13 @@ document.getElementById('btnExport').onclick = () => {
   listings = filterListingsByProc(listings);
   const rows = buildExportRows(task, listings);
   if(!rows.length){ toast('当前无数据可导出'); return; }
-  toast(`已导出 ${rows.length} 行 · 字段：${EXPORT_FIELDS.join('、')}`);
+  toast(`已导出 ${rows.length} 条 listing · 字段：${EXPORT_FIELDS.join('、')}`);
 };
 
 document.querySelectorAll('[data-close-asin]').forEach(b => b.onclick = () => document.getElementById('asinOverlay').classList.remove('show'));
 document.querySelectorAll('[data-close-copy]').forEach(b => b.onclick = () => document.getElementById('copyOverlay').classList.remove('show'));
 document.querySelectorAll('[data-close-result]').forEach(b => b.onclick = () => document.getElementById('resultOverlay').classList.remove('show'));
 document.querySelectorAll('[data-close-import]').forEach(b => b.onclick = () => document.getElementById('importOverlay').classList.remove('show'));
-
-document.getElementById('detailCheckAll').onchange = e => {
-  document.querySelectorAll('.detail-ck').forEach(c => { c.checked = e.target.checked; });
-};
 
 if(!location.hash) location.hash = '#/TaskList';
 else applyRoute();

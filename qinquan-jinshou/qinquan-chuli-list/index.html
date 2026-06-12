@@ -138,6 +138,7 @@
   .st-deling{ background:#fff0f6; color:#c41d7f; }
   .st-delfail{ background:#fff1f0; color:#f5455c; }
   .st-toword{ background:#f0f5ff; color:#597ef7; }
+  .st-wordsucc{ background:#f0f9f3; color:#16b364; }
   .st-wordfail{ background:#fff1f0; color:#f5455c; }
   .st-keep{ background:#f0f9f3; color:#16b364; }
 
@@ -287,7 +288,7 @@
           <label class="status-multi-opt"><input type="checkbox" value="todel" />待删除listing</label>
           <label class="status-multi-opt"><input type="checkbox" value="deling" />删除listing中</label>
           <label class="status-multi-opt"><input type="checkbox" value="delfail" />删除listing失败</label>
-          <label class="status-multi-opt"><input type="checkbox" value="toword" />待删词</label>
+          <label class="status-multi-opt"><input type="checkbox" value="wordsucc" />删词成功</label>
           <label class="status-multi-opt"><input type="checkbox" value="wordfail" />删词失败</label>
           <label class="status-multi-opt"><input type="checkbox" value="keep" />保留</label>
         </div>
@@ -300,14 +301,15 @@
     </div>
   </div>
 
-  <!-- 操作栏（原版：批量提取 + 批量操作下拉 + 导出/导入） -->
+  <!-- 操作栏（批量提取 + 批量操作下拉 + 导出 + 主管确认删除） -->
   <div class="toolbar">
     <button class="btn btn-primary" id="btnBatchExtract">批量提取</button>
     <div class="toolbar-dropdown" id="batchOpDropdown">
       <button class="btn btn-batch-op" id="btnBatchOpToggle" type="button">批量操作 <span style="font-size:10px">▾</span></button>
       <div class="toolbar-menu" id="batchOpMenu">
-        <div class="toolbar-mi" data-batch="del">删listing</div>
+        <div class="toolbar-mi" data-batch="del">批量删除</div>
         <div class="toolbar-mi" data-batch="keep">保留</div>
+        <div class="toolbar-mi" data-batch="confirmDel">确认删除listing</div>
       </div>
     </div>
     <div class="toolbar-dropdown" id="exportDropdown">
@@ -317,7 +319,7 @@
         <div class="toolbar-mi" data-export="filtered">当前条件导出</div>
       </div>
     </div>
-    <button class="btn btn-primary btn-import-audit" id="btnImport">已审核listing删除导入</button>
+    <button class="btn btn-primary btn-import-audit" id="btnConfirmDel" title="高级主管权限：对待删除 listing 执行确认删除">确认删除listing</button>
   </div>
 
   <div class="group-bar">
@@ -372,112 +374,8 @@
   </div>
 </div>
 
-<!-- listing文案编辑 -->
-<div class="overlay" id="editOverlay">
-  <div class="modal edit-copy">
-    <div class="modal-head"><span>listing文案编辑</span><span class="x" data-close-edit>×</span></div>
-    <div class="modal-body">
-      <div class="edit-meta">系统 SKU：<span id="editSku"></span> · 保存时将检测敏感词并写入操作日志</div>
-
-      <div class="edit-field">
-        <div class="edit-field-head"><label for="editTitle">标题</label></div>
-        <div class="edit-area-wrap">
-          <textarea class="edit-area title-area" id="editTitle" maxlength="200" placeholder="请输入标题"></textarea>
-          <span class="edit-count" id="editTitleCount">0 / 200</span>
-        </div>
-      </div>
-
-      <div class="edit-field">
-        <div class="edit-field-head">
-          <label>亮点</label>
-          <div class="edit-field-actions">
-            <span class="link" id="btnAddBullet">新增</span>
-            <span class="link" id="btnDelBullet">删除</span>
-          </div>
-        </div>
-        <div class="bullet-list" id="bulletList"></div>
-      </div>
-
-      <div class="edit-field">
-        <div class="edit-field-head"><label for="editKeywords">关键词</label></div>
-        <div class="edit-area-wrap">
-          <textarea class="edit-area" id="editKeywords" placeholder="请输入关键词"></textarea>
-        </div>
-      </div>
-
-      <div class="edit-field">
-        <div class="edit-field-head"><label for="editDesc">描述</label></div>
-        <div class="edit-area-wrap">
-          <textarea class="edit-area" id="editDesc" placeholder="请输入描述" style="min-height:120px"></textarea>
-        </div>
-      </div>
-
-      <div class="edit-field">
-        <div class="edit-field-head"><label for="editRemark">备注</label></div>
-        <textarea class="edit-remark" id="editRemark" placeholder="选填，保存后写入操作日志"></textarea>
-      </div>
-
-      <div class="detect-tip" id="detectTip"></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" data-close-edit>关闭</button>
-      <button class="btn btn-primary" id="editSave">保存</button>
-    </div>
-  </div>
-</div>
-
 <!-- 操作下拉浮层（共用） -->
 <div class="op-menu" id="opMenu"></div>
-
-<!-- 导入删除 listing -->
-<div class="overlay" id="importOverlay">
-  <div class="modal lg">
-    <div class="modal-head"><span>已审核 listing 删除导入</span><span class="x" data-close-import>×</span></div>
-    <div class="modal-body">
-      <div class="import-rules">
-        <b>导入规则</b>
-        <ol>
-          <li>仅支持导入系统中状态为「<b>待删除 listing</b>」的数据。</li>
-          <li>校验字段：<b>MSKU + 店铺</b>，须对应 listing 存在且状态为「待删除 listing」。</li>
-          <li><b>任一条不匹配则整批失败</b>，返回错误行明细；<b>不做任何状态变更、不入队</b>。</li>
-          <li>全部通过后：状态批量改为「<b>删除 listing 中</b>」，后台定时加入删 listing 队列；实际删除结果由队列执行及对账回写。</li>
-        </ol>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
-        <span class="muted">模板字段如下，校验以 MSKU + 店铺为准</span>
-        <span class="link" id="btnDownloadTpl">下载导入模板</span>
-      </div>
-      <table class="tpl-table">
-        <thead><tr><th>ASIN</th><th>SKU</th><th>MSKU</th><th>店铺</th><th>审核结果</th></tr></thead>
-        <tbody id="importTplBody"></tbody>
-      </table>
-      <div class="upload-box" id="importUpload">点击或拖拽上传 Excel / CSV</div>
-      <div class="muted" id="importFileHint" style="margin-top:-6px">未选择文件</div>
-      <div class="import-examples">
-        示例（二选一）：
-        <span class="link import-eg" data-eg="success">导入成功示例</span>
-        ·
-        <span class="link import-eg" data-eg="fail">导入失败示例</span>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <span class="import-foot-note">确认后将全量校验，任一条失败则整批不成功</span>
-      <button class="btn" data-close-import>取消</button>
-      <button class="btn btn-primary" id="importConfirm">确认导入</button>
-    </div>
-  </div>
-</div>
-
-<!-- 导入结果 -->
-<div class="overlay" id="importResultOverlay">
-  <div class="modal lg">
-    <div class="modal-head"><span id="importResultTitle">导入结果</span><span class="x" data-close-import-result>×</span></div>
-    <div class="modal-body" id="importResultBody"></div>
-    <div class="modal-foot">
-      <button class="btn btn-primary" data-close-import-result>知道了</button>
-    </div>
-  </div>
-</div>
 
 <!-- 操作日志 -->
 <div class="overlay" id="logOverlay">
@@ -541,8 +439,8 @@ const rowScenarios = [
     logs:[{ time:"2025-08-09 22:02:57", user:"xxx", action:"人工删词", note:"不强制要求" }]
   },
   {
-    img:"🖼️", title:"Alipis Lot de 6 cadres photo en bois à bricoler - Cadre ph at",
-    normalStore:true, gold:"陈桌然", fbm:"-",
+    img:"🖼️", title:"Alipis Lot de 6 cadres photo（异常店铺·不可确认删词）",
+    normalStore:false, gold:"陈桌然", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"fba", bind:false, fba:"12", transit:"0", whWait:"0", whAll:"0",
     tag:"—", festival:null,
@@ -585,15 +483,19 @@ const rowScenarios = [
     add:"2025-10-27 22:20:58", upd:"2025-10-28 10:09:47"
   },
   {
-    img:"🔧", title:"Outils de réparation tournevis 24 en 1（异常店铺）",
-    normalStore:false, gold:"需餐宴", fbm:"绑定BMlist",
+    img:"🔧", title:"Outils de réparation tournevis 24 en 1（删词成功·待剔除）",
+    normalStore:true, gold:"需餐宴", fbm:"绑定BMlist",
     s30:"0 (0)", s365:"5 (6)", sale90:0,
     ship:"self", bind:true, fba:"0", transit:"0", whWait:"8", whAll:"8",
     tag:"—", festival:null,
     kw:[{w:"BOSCH", type:"tm", pos:["标题"]}],
-    status:"toword",
-    copy:{ title:"BOSCH outils tournevis 24 en 1", bullet:"kit réparation", keywords:"tournevis; BOSCH", desc:"24 en 1 outils" },
-    add:"2025-10-27 22:20:33", upd:"2025-10-28 10:09:12"
+    status:"wordsucc",
+    copy:{ title:"Outils tournevis 24 en 1", bullet:"kit réparation", keywords:"tournevis; outils", desc:"24 en 1 outils" },
+    add:"2025-10-27 22:20:33", upd:"2025-10-28 10:09:12",
+    logs:[
+      { time:"2025-08-09 22:02:57", user:"演示用户", action:"确认删词", note:"已在平台完成人工删词" },
+      { time:"2025-08-10 08:00:00", user:"系统", action:"回扫通过", note:"文案无敏感词，待剔除列表" }
+    ]
   },
   {
     img:"📦", title:"Lot de rangement plastique（保留状态·普通禁用词）",
@@ -618,13 +520,13 @@ const rowScenarios = [
     copy:{ title:"PHILIPS guirlande LED", bullet:"décoration Noël", keywords:"LED; guirlande", desc:"50m guirlande lumineuse" },
     add:"2025-10-27 22:19:55", upd:"2025-10-28 10:08:11",
     logs:[
-      { time:"2025-08-10 02:15:00", user:"系统", action:"导入删除listing", note:"校验通过，已提交删除" },
+      { time:"2025-08-10 02:15:00", user:"高级主管", action:"高级主管确认删除listing", note:"业务审核通过" },
       { time:"2025-08-10 02:20:00", user:"系统", action:"已加入删除listing队列", note:"定时任务入队" },
       { time:"2025-08-11 09:00:00", user:"系统", action:"队列执行完成", note:"删除失败：平台限制不可删" }
     ]
   },
   {
-    img:"📋", title:"Coffret rangement bureau（待删除listing·待导入确认）",
+    img:"📋", title:"Coffret rangement bureau（待删除listing·待主管确认）",
     normalStore:true, gold:"陈桌然", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"fba", bind:false, fba:"5", transit:"0", whWait:"0", whAll:"0",
@@ -636,7 +538,7 @@ const rowScenarios = [
     logs:[{ time:"2025-08-09 22:03:11", user:"演示用户", action:"删除listing", note:"" }]
   },
   {
-    img:"📋", title:"Boîte de rangement bureau XL（待删除listing·可批量导入）",
+    img:"📋", title:"Boîte de rangement bureau XL（待删除listing·可批量确认）",
     normalStore:true, gold:"王晓萌", fbm:"-",
     s30:"0 (0)", s365:"0 (0)", sale90:0,
     ship:"fba", bind:false, fba:"3", transit:"0", whWait:"0", whAll:"0",
@@ -659,7 +561,7 @@ const rowScenarios = [
     copy:{ title:"Support téléphone voiture", bullet:"fixation stable", keywords:"support; voiture", desc:"Compatible APPLE design" },
     add:"2025-10-27 22:19:20", upd:"2025-10-28 09:30:00",
     logs:[
-      { time:"2025-08-09 22:03:11", user:"演示用户", action:"导入删除listing", note:"校验通过，已提交删除" },
+      { time:"2025-08-09 22:03:11", user:"高级主管", action:"高级主管确认删除listing", note:"业务审核通过" },
       { time:"2025-08-10 02:00:00", user:"系统", action:"已加入删除listing队列", note:"定时任务入队" }
     ]
   }
@@ -671,10 +573,10 @@ function nowStr(){
   const pad = n => String(n).padStart(2,"0");
   return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 }
-function addRowLog(rowIndex, action, note=""){
+function addRowLog(rowIndex, action, note="", user="演示用户"){
   const r = rows[rowIndex];
   if(!r.logs) r.logs = [];
-  r.logs.unshift({ time:nowStr(), user:"演示用户", action, note });
+  r.logs.unshift({ time:nowStr(), user, action, note });
 }
 function renderLogs(entries){
   const list = entries && entries.length ? entries : [{ time:"—", user:"—", action:"暂无操作记录", note:"" }];
@@ -694,14 +596,17 @@ const TYPE_LABEL = { tm:"商标词", high:"高危禁用词", normal:"普通禁�
 const TYPE_CLASS = { tm:"type-tm", high:"type-high", normal:"type-normal" };
 const STATUS = {
   wait:{ t:"待处理", c:"st-wait" },
-  todel:{ t:"待删除listing", c:"st-todel", tip:"已提交删 listing，待业务审核后导入" },
+  todel:{ t:"待删除listing", c:"st-todel", tip:"已提交删 listing，待导出供业务确认；高级主管确认后进入删除 listing 中" },
   deling:{ t:"删除listing中", c:"st-deling", tip:"已提交删除任务，等待队列执行；最终结果以后台处理为准" },
   delfail:{ t:"删除listing失败", c:"st-delfail", tip:"队列执行或对账失败，详见操作日志" },
-  toword:{ t:"待删词", c:"st-toword" },
-  wordfail:{ t:"删词失败", c:"st-wordfail" },
+  toword:{ t:"待删词", c:"st-toword", tip:"已确认人工删词，系统回扫中（本列表不展示）" },
+  wordsucc:{ t:"删词成功", c:"st-wordsucc", tip:"回扫确认文案无敏感词，将从列表剔除" },
+  wordfail:{ t:"删词失败", c:"st-wordfail", tip:"回扫仍含敏感词或队列失败，详见操作日志" },
   keep:{ t:"保留", c:"st-keep" }
 };
-const LOCKED_STATUSES = new Set(["todel","deling","delfail","toword","wordfail"]);
+/* 文档：待删词、删词中、删除listing成功 — 列表不展示 */
+const HIDDEN_LIST_STATUSES = new Set(["toword"]);
+const LOCKED_STATUSES = new Set(["todel","deling","delfail","toword","wordsucc","wordfail"]);
 let statusFilters = new Set();
 
 function readStatusFilterChecks(){
@@ -728,8 +633,9 @@ function hideStatusFilterPanel(){
 }
 
 function getVisibleRows(){
-  if(!statusFilters.size) return rows.map((r, i) => ({ r, i }));
-  return rows.map((r, i) => ({ r, i })).filter(x => statusFilters.has(x.r.status));
+  const all = rows.map((r, i) => ({ r, i }));
+  if(!statusFilters.size) return all.filter(x => !HIDDEN_LIST_STATUSES.has(x.r.status));
+  return all.filter(x => statusFilters.has(x.r.status));
 }
 
 function statusPill(r){
@@ -756,23 +662,24 @@ function tagCell(r){
 }
 
 /* 操作可用性规则（PRD 1.1.2.1） */
-function canDelete(r){ return r.sale90===0 && (r.status==="wait"||r.status==="keep"); }      // 删listing：90天销量=0 且 待处理/保留
-function canEdit(r){ return (r.status==="wait"||r.status==="keep") && r.normalStore; }         // 修改文案：待处理/保留 且 正常店铺
+function canDelete(r){ return r.sale90===0 && (r.status==="wait"||r.status==="keep"); }          // 删listing：90天销量=0 且 待处理/保留
+function canConfirmDelete(r){ return r.status==="todel"; }                                       // 确认删除listing：仅待删除listing（高级主管）
+function canConfirmWord(r){ return (r.status==="wait"||r.status==="keep") && r.normalStore; }   // 确认删词：待处理/保留 且 正常店铺
 function canKeep(r){ return r.kw.some(k=>k.type==="normal") && r.status==="wait"; }             // 保留：含普通禁用词 且 待处理
 
 function delReason(r){
   if(r.sale90!==0) return "近90天销量≠0，不可删listing";
-  if(r.status==="todel") return "已在待删除 listing，请导出审核后导入";
+  if(r.status==="todel") return "已在待删除 listing，请导出供业务确认后由高级主管确认删除";
   if(r.status==="deling") return "删除 listing 中，不可操作";
   if(r.status==="delfail") return "删除 listing 失败，不可操作";
   if(!(r.status==="wait"||r.status==="keep")) return "仅待处理/保留状态可删listing";
   return "";
 }
-function editReason(r){
-  if(r.status==="todel") return "待删除 listing，不可修改文案";
-  if(LOCKED_STATUSES.has(r.status) && r.status!=="todel") return `${STATUS[r.status].t}，不可修改文案`;
-  if(!(r.status==="wait"||r.status==="keep")) return "仅待处理/保留状态可修改文案";
-  if(!r.normalStore) return "异常店铺不可修改文案";
+function confirmWordReason(r){
+  if(r.status==="todel") return "待删除 listing，不可确认删词";
+  if(LOCKED_STATUSES.has(r.status) && r.status!=="todel") return `${STATUS[r.status].t}，不可确认删词`;
+  if(!(r.status==="wait"||r.status==="keep")) return "仅待处理/保留状态可确认删词";
+  if(!r.normalStore) return "异常店铺不可确认删词";
   return "";
 }
 function keepReason(r){
@@ -782,22 +689,19 @@ function keepReason(r){
   if(r.status!=="wait") return "仅待处理状态可保留";
   return "";
 }
+function confirmDelReason(r){
+  if(r.status!=="todel") return "仅待删除 listing 状态可由高级主管确认删除";
+  return "";
+}
 
 function buildOpMenu(r){
   const item=(label,enabled,reason,act)=> enabled
     ? `<div class="op-mi" data-act="${act}">${label}</div>`
     : `<div class="op-mi disabled" title="${reason}">${label}</div>`;
   return item("删除listing",canDelete(r),delReason(r),"del")
-       + item("修改文案",canEdit(r),editReason(r),"edit")
+       + item("确认删除listing",canConfirmDelete(r),confirmDelReason(r),"confirmDel")
+       + item("确认删词",canConfirmWord(r),confirmWordReason(r),"confirmWord")
        + item("保留",canKeep(r),keepReason(r),"keep");
-}
-
-function renderImportTpl(){
-  const tbody = document.getElementById('importTplBody');
-  if(!tbody) return;
-  tbody.innerHTML = rows.filter(r => r.status === 'todel').map(r =>
-    `<tr><td>${r.asin}</td><td>${r.sku}</td><td>${r.msku}</td><td>${r.store}</td><td>通过</td></tr>`
-  ).join('');
 }
 
 function render(){
@@ -805,7 +709,7 @@ function render(){
   document.getElementById('tbody').innerHTML = visible.map(({ r, i })=>`
     <tr data-i="${i}">
       <td><div class="ck-op">
-        <input type="checkbox" class="rowck" ${ (r.status==="wait"||r.status==="keep") ? "" : "disabled title='仅待处理/保留可批量删除'" } />
+        <input type="checkbox" class="rowck" ${ (r.status==="wait"||r.status==="keep"||r.status==="todel") ? "" : "disabled title='待处理/保留可批量删listing；待删除listing可批量确认'" } />
         <span class="op-trigger" data-trigger="${i}">操作 <span class="caret">▾</span></span>
       </div></td>
       <td>
@@ -847,7 +751,6 @@ function render(){
   bindRowLogActions();
   updateSel();
   document.getElementById('totalCount').textContent = visible.length;
-  renderImportTpl();
 }
 const overlay = document.getElementById('confirmOverlay');
 const cfTitle = document.getElementById('cfTitle');
@@ -882,108 +785,6 @@ overlay.querySelectorAll('[data-close]').forEach(b=> b.onclick=()=> overlay.clas
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
 
-/* listing文案编辑 */
-const editOverlay = document.getElementById('editOverlay');
-const detectTip = document.getElementById('detectTip');
-const bulletList = document.getElementById('bulletList');
-const editTitle = document.getElementById('editTitle');
-const editTitleCount = document.getElementById('editTitleCount');
-let editingIndex = -1;
-const SENSITIVE = [...new Set(rows.flatMap(r=>r.kw.map(k=>k.w)))];
-
-function bulletsFromCopy(c){
-  if(Array.isArray(c.bullets) && c.bullets.length) return c.bullets.slice();
-  if(c.bullet) return String(c.bullet).split(/\n+/).filter(Boolean);
-  return [""];
-}
-function updateTitleCount(){
-  const n = editTitle.value.length;
-  editTitleCount.textContent = `${n} / 200`;
-  editTitleCount.classList.toggle('over', n > 200);
-}
-function renderBulletList(values){
-  bulletList.innerHTML = '';
-  values.forEach(v=>{
-    const wrap = document.createElement('div');
-    wrap.className = 'edit-area-wrap';
-    const ta = document.createElement('textarea');
-    ta.className = 'edit-area bullet-area';
-    ta.placeholder = '请输入亮点';
-    ta.value = v;
-    wrap.appendChild(ta);
-    bulletList.appendChild(wrap);
-  });
-}
-function getBulletValues(){
-  return [...bulletList.querySelectorAll('.bullet-area')].map(t=>t.value);
-}
-function collectEditTexts(){
-  return {
-    title: editTitle.value.trim(),
-    bullets: getBulletValues(),
-    keywords: document.getElementById('editKeywords').value.trim(),
-    desc: document.getElementById('editDesc').value.trim()
-  };
-}
-function findSensitiveHits(texts){
-  const all = [texts.title, ...texts.bullets, texts.keywords, texts.desc].join('\n');
-  const hits = [];
-  SENSITIVE.forEach(w=>{ if(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(all)) hits.push(w); });
-  return [...new Set(hits)];
-}
-function openEdit(i){
-  editingIndex = i;
-  const c = rows[i].copy;
-  document.getElementById('editSku').textContent = rows[i].sku;
-  document.getElementById('editRemark').value = '';
-  editTitle.value = c.title || '';
-  updateTitleCount();
-  renderBulletList(bulletsFromCopy(c));
-  document.getElementById('editKeywords').value = c.keywords || '';
-  document.getElementById('editDesc').value = c.desc || '';
-  detectTip.className = 'detect-tip';
-  editOverlay.classList.add('show');
-}
-editTitle.addEventListener('input', updateTitleCount);
-document.getElementById('btnAddBullet').onclick = ()=>{
-  renderBulletList(getBulletValues().concat(''));
-};
-document.getElementById('btnDelBullet').onclick = ()=>{
-  const vals = getBulletValues();
-  if(vals.length <= 1){ toast('至少保留一条亮点'); return; }
-  vals.pop();
-  renderBulletList(vals);
-};
-editOverlay.querySelectorAll('[data-close-edit]').forEach(b=> b.onclick=()=> editOverlay.classList.remove('show'));
-document.getElementById('editSave').onclick = ()=>{
-  const texts = collectEditTexts();
-  const hits = findSensitiveHits(texts);
-  if(hits.length){
-    detectTip.className = 'detect-tip err';
-    detectTip.textContent = `检测未通过：仍包含敏感词【${hits.join('、')}】，请清除后再保存。`;
-    return;
-  }
-  detectTip.className = 'detect-tip ok';
-  detectTip.textContent = '检测通过，正在调用 listingV2 编辑接口保存…';
-  const savedRemark = document.getElementById('editRemark').value.trim();
-  const savedIndex = editingIndex;
-  rows[savedIndex].copy = {
-    title: texts.title,
-    bullets: texts.bullets.filter(Boolean),
-    bullet: texts.bullets.filter(Boolean).join('\n'),
-    keywords: texts.keywords,
-    desc: texts.desc
-  };
-  setTimeout(()=>{
-    editOverlay.classList.remove('show');
-    rows[savedIndex].status = 'toword';
-    rows[savedIndex].upd = '刚刚';
-    addRowLog(savedIndex, '修改文案', savedRemark);
-    render();
-    toast('文案已保存，状态更新为「待删词」，已写入操作日志');
-  }, 700);
-};
-
 /* 操作下拉浮层 */
 const opMenu = document.getElementById('opMenu');
 let opMenuRow = -1;
@@ -992,19 +793,34 @@ function doAct(i, act){
   const r = rows[i];
   if(act==="del"){
     confirmBox('⚠️ 删除 listing 确认',
-      `确认提交删除该 listing？<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b><br><br>状态将变更为「<b>待删除listing</b>」。需导出待删除数据供业务确认，审核通过后通过「已审核listing删除导入」推进为「删除listing中」。`,
+      `确认提交删除该 listing？<br><br>ASIN：<b>${r.asin}</b><br>近90天销量：<b>${r.sale90}</b><br><br>状态将变更为「<b>待删除listing</b>」。请导出待删除数据供业务确认，<b>高级主管确认后</b>将进入「删除listing中」并加入删 listing 队列。`,
       (remark)=>{
-        r.status="todel"; r.upd="刚刚";
+        r.status="todel"; r.upd=nowStr();
         addRowLog(i, "删除listing", remark);
         render(); toast('已提交，状态更新为「待删除listing」，已写入操作日志');
       });
-  } else if(act==="edit"){
-    openEdit(i);
+  } else if(act==="confirmDel"){
+    confirmBox('⚠️ 高级主管确认删除 listing',
+      `确认对该 listing 执行删除？<br><br>ASIN：<b>${r.asin}</b><br>MSKU：<b>${r.msku}</b><br>店铺：<b>${r.store}</b><br><br>确认后状态将变更为「<b>删除listing中</b>」，系统将定时加入删 listing 队列。`,
+      (remark)=>{
+        r.status="deling"; r.upd=nowStr();
+        addRowLog(i, "高级主管确认删除listing", remark, "高级主管");
+        render(); toast('已确认删除，状态更新为「删除listing中」，已写入操作日志');
+      }, { okText: '确认删除', okClass: 'btn btn-danger' });
+  } else if(act==="confirmWord"){
+    const kwList = r.kw.map(k=>k.w).join('、') || '—';
+    confirmBox('确认删词',
+      `本页<b>不支持在线改文案</b>，请先在平台完成人工删词后再确认。<br><br>ASIN：<b>${r.asin}</b><br>敏感词：<b>${kwList}</b>`,
+      (remark)=>{
+        r.status="toword"; r.upd=nowStr();
+        addRowLog(i, "确认删词", remark);
+        render(); toast('已确认删词，系统回扫中；本列表不展示「待删词」状态');
+      });
   } else if(act==="keep"){
     confirmBox('保留确认',
       `确认将该 listing 标记为「保留」？<br><br>仅普通禁用词可保留：<b>${r.kw.filter(k=>k.type==='normal').map(k=>k.w).join('、') || '—'}</b>`,
       (remark)=>{
-        r.status="keep"; r.upd="刚刚";
+        r.status="keep"; r.upd=nowStr();
         addRowLog(i, "保留", remark);
         render(); toast('已保留，状态更新为「保留」，已写入操作日志');
       });
@@ -1061,17 +877,22 @@ function getCheckedRows(){
 }
 function batchDeleteListing(){
   const checked = getCheckedRows();
-  const n = checked.length;
-  if(!n){ toast('请先勾选待操作的 listing'); return; }
-  confirmBox('⚠️ 批量删 listing 确认',
-    `确认对已勾选的 <b>${n}</b> 条 listing 提交删除？<br><span style="color:#97a0b0;font-size:12px">状态将变更为「待删除listing」，仅待处理 / 保留状态可勾选。</span>`,
+  if(!checked.length){ toast('请先勾选待操作的 listing'); return; }
+  const eligible = checked.filter(c=> canDelete(rows[+c.closest('tr').dataset.i]));
+  if(!eligible.length){
+    toast('所选数据不满足条件：仅「待处理/保留」且近90天销量=0 可批量删 listing');
+    return;
+  }
+  confirmBox('⚠️ 批量删除确认',
+    `确认对已勾选的 <b>${eligible.length}</b> 条 listing 提交删除？<br><span style="color:#97a0b0;font-size:12px">状态将变更为「待删除listing」，仅待处理 / 保留状态可操作。</span>`,
     (remark)=>{
-      checked.forEach(c=>{
+      eligible.forEach(c=>{
         const i=+c.closest('tr').dataset.i;
-        rows[i].status="todel"; rows[i].upd="刚刚";
+        rows[i].status="todel"; rows[i].upd=nowStr();
         addRowLog(i, "删除listing", remark);
       });
-      checkAll.checked=false; render(); toast(`已提交批量删 listing ${n} 条`);
+      checkAll.checked=false; render();
+      toast(`已批量删除 ${eligible.length} 条，状态更新为「待删除listing」`);
     });
 }
 function batchKeepListing(){
@@ -1087,11 +908,30 @@ function batchKeepListing(){
     (remark)=>{
       eligible.forEach(c=>{
         const i=+c.closest('tr').dataset.i;
-        rows[i].status="keep"; rows[i].upd="刚刚";
+        rows[i].status="keep"; rows[i].upd=nowStr();
         addRowLog(i, "保留", remark);
       });
       checkAll.checked=false; render(); toast(`已批量保留 ${eligible.length} 条`);
     });
+}
+function batchConfirmDeleteListing(){
+  const checked = getCheckedRows();
+  if(!checked.length){ toast('请先勾选待确认删除的 listing'); return; }
+  const eligible = checked.filter(c=> canConfirmDelete(rows[+c.closest('tr').dataset.i]));
+  if(!eligible.length){
+    toast('所选数据不满足确认条件：仅「待删除listing」状态可由高级主管确认删除');
+    return;
+  }
+  confirmBox('⚠️ 批量确认删除 listing',
+    `确认对已勾选的 <b>${eligible.length}</b> 条待删除 listing 执行删除？<br><span style="color:#97a0b0;font-size:12px">确认后状态将变更为「删除listing中」，系统将定时加入删 listing 队列。</span>`,
+    (remark)=>{
+      eligible.forEach(c=>{
+        const i=+c.closest('tr').dataset.i;
+        rows[i].status="deling"; rows[i].upd=nowStr();
+        addRowLog(i, "高级主管确认删除listing", remark, "高级主管");
+      });
+      checkAll.checked=false; render(); toast(`已批量确认删除 ${eligible.length} 条，状态更新为「删除listing中」`);
+    }, { okText: '确认删除', okClass: 'btn btn-danger' });
 }
 
 const batchOpMenu = document.getElementById('batchOpMenu');
@@ -1106,6 +946,7 @@ batchOpMenu.querySelectorAll('[data-batch]').forEach(mi=>{
     e.stopPropagation();
     hideBatchOpMenu();
     if(mi.dataset.batch==="del") batchDeleteListing();
+    else if(mi.dataset.batch==="confirmDel") batchConfirmDeleteListing();
     else batchKeepListing();
   };
 });
@@ -1178,136 +1019,7 @@ document.getElementById('btnBatchExtract').onclick = ()=>{
   toast(`已批量提取 ${n} 条（原型演示）`);
 };
 
-const importOverlay = document.getElementById('importOverlay');
-const importResultOverlay = document.getElementById('importResultOverlay');
-const importUpload = document.getElementById('importUpload');
-const importFileHint = document.getElementById('importFileHint');
-let importFileSelected = false;
-let importExampleMode = '';
-
-function resetImportOverlay(){
-  importFileSelected = false;
-  importExampleMode = '';
-  importUpload.classList.remove('has-file');
-  importFileHint.textContent = '未选择文件';
-  document.querySelectorAll('.import-eg').forEach(el=> el.classList.remove('eg-active'));
-}
-function selectImportExample(mode){
-  importExampleMode = mode;
-  importFileSelected = true;
-  importUpload.classList.add('has-file');
-  document.querySelectorAll('.import-eg').forEach(el=>{
-    el.classList.toggle('eg-active', el.dataset.eg === mode);
-  });
-  importFileHint.textContent = mode === 'fail'
-    ? '已选择：listing删除导入_失败示例.xlsx'
-    : '已选择：listing删除导入_成功示例.xlsx';
-}
-function selectImportFile(){
-  selectImportExample('success');
-}
-function findListingByMskuStore(msku, store){
-  const key = String(msku).trim();
-  return rows.find(r=>{
-    if(r.store !== String(store).trim()) return false;
-    return r.msku === key || r.msku.startsWith(key.replace(/…$/,'')) || key.startsWith(r.msku.replace(/…$/,''));
-  });
-}
-function buildImportRowsFromFile(){
-  if(importExampleMode === 'fail'){
-    const ok = rows.find(r => r.status === 'todel');
-    if(!ok) return [];
-    return [
-      { line:2, asin:ok.asin, sku:ok.sku, msku:ok.msku, store:ok.store, audit:'通过' },
-      { line:3, asin:genAsin(999), sku:genSku(999), msku:genMsku(999), store:ok.store, audit:'通过' }
-    ];
-  }
-  return rows
-    .map((r,i)=>({ r, i }))
-    .filter(x=>x.r.status==='todel')
-    .map((x,idx)=>({
-      line:idx+2,
-      asin:x.r.asin,
-      sku:x.r.sku,
-      msku:x.r.msku,
-      store:x.r.store,
-      audit:'通过'
-    }));
-}
-function validateImportBatch(fileRows){
-  if(!fileRows.length){
-    return [{ line:'—', asin:'—', msku:'—', store:'—', reason:'文件无有效数据' }];
-  }
-  const errors = [];
-  fileRows.forEach(fr=>{
-    const audit = String(fr.audit || '').trim();
-    if(audit !== '通过'){
-      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:`审核结果须为「通过」，当前为「${audit || '空'}」` });
-      return;
-    }
-    const listing = findListingByMskuStore(fr.msku, fr.store);
-    if(!listing){
-      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:'listing 不存在（MSKU+店铺不匹配）' });
-    } else if(listing.status !== 'todel'){
-      errors.push({ line:fr.line, asin:fr.asin, msku:fr.msku, store:fr.store, reason:`listing 状态为「${STATUS[listing.status].t}」，非待删除 listing` });
-    }
-  });
-  return errors;
-}
-function showImportResult(title, html){
-  document.getElementById('importResultTitle').textContent = title;
-  document.getElementById('importResultBody').innerHTML = html;
-  importResultOverlay.classList.add('show');
-}
-function applyImportSuccess(fileRows){
-  const matched = [];
-  fileRows.forEach(fr=>{
-    const listing = findListingByMskuStore(fr.msku, fr.store);
-    if(!listing || listing.status !== 'todel') return;
-    const i = rows.indexOf(listing);
-    if(i < 0) return;
-    rows[i].status = 'deling';
-    rows[i].upd = '刚刚';
-    addRowLog(i, '导入删除listing', '校验通过，已提交删除');
-    matched.push({ listing, index:i });
-  });
-  return matched;
-}
-importOverlay.querySelectorAll('[data-close-import]').forEach(b=> b.onclick=()=> importOverlay.classList.remove('show'));
-importResultOverlay.querySelectorAll('[data-close-import-result]').forEach(b=> b.onclick=()=> importResultOverlay.classList.remove('show'));
-document.getElementById('btnImport').onclick = ()=>{ resetImportOverlay(); importOverlay.classList.add('show'); };
-document.getElementById('btnDownloadTpl').onclick = ()=> toast('已下载导入模板（ASIN / SKU / MSKU / 店铺 / 审核结果）');
-importUpload.onclick = selectImportFile;
-document.querySelectorAll('.import-eg').forEach(el=> el.onclick = ()=> selectImportExample(el.dataset.eg));
-document.getElementById('importConfirm').onclick = ()=>{
-  if(!importFileSelected){
-    toast('请先上传导入文件');
-    return;
-  }
-  const fileRows = buildImportRowsFromFile();
-  const errors = validateImportBatch(fileRows);
-  importOverlay.classList.remove('show');
-  if(errors.length){
-    const summary = `<div class="import-result-summary err">导入失败：共 ${fileRows.length} 条，${errors.length} 条校验不通过。<b>本批未做任何状态变更、未入队。</b></div>`;
-    const table = `<table class="tpl-table err-table"><thead><tr><th>行号</th><th>ASIN</th><th>MSKU</th><th>店铺</th><th>失败原因</th></tr></thead><tbody>${
-      errors.map(e=>`<tr><td>${e.line}</td><td>${e.asin||'—'}</td><td>${e.msku}</td><td>${e.store}</td><td class="reason">${e.reason}</td></tr>`).join('')
-    }</tbody></table>`;
-    showImportResult('导入失败', summary + table);
-    toast('导入校验失败，请修正后重新导入');
-    return;
-  }
-  const matched = applyImportSuccess(fileRows);
-  render();
-  const n = matched.length;
-  showImportResult('导入成功',
-    `<div class="import-result-summary ok">校验通过，已提交删除 <b>${n}</b> 条。</div>
-     <p style="font-size:12px;line-height:1.7;color:var(--text-2)">
-       状态已更新为「<b>删除 listing 中</b>」，系统将<b>定时</b>加入删除 listing 队列。<br>
-       删除成功数据不在本列表展示；若失败将回写为「<b>删除 listing 失败</b>」并写入操作日志。
-     </p>`
-  );
-  toast(`校验通过，${n} 条已提交删除，系统将加入删除 listing 队列`);
-};
+document.getElementById('btnConfirmDel').onclick = batchConfirmDeleteListing;
 
 const logOverlay = document.getElementById('logOverlay');
 logOverlay.querySelectorAll('[data-close-log]').forEach(b=> b.onclick=()=> logOverlay.classList.remove('show'));
@@ -1331,12 +1043,11 @@ PrototypeAnnotate.init({
   scopeLabels: {
     page: '页面',
     confirmOverlay: '确认弹窗',
-    editOverlay: 'listing文案编辑',
-    importOverlay: '已审核 listing 删除导入',
-    importResultOverlay: '导入结果',
     logOverlay: '操作日志'
   },
-  builtins: [],
+  builtins: [
+    { scope: 'page', pin: { top: '72px', left: 'calc(100% - 240px)' }, text: 'v1.1：批量删除→待删除listing，仅待处理/保留；筛选项无「待删词」、有「删词成功」。' }
+  ],
   toast,
   nowStr
 });
