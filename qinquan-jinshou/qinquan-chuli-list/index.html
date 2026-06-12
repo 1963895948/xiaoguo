@@ -307,9 +307,9 @@
     <div class="toolbar-dropdown" id="batchOpDropdown">
       <button class="btn btn-batch-op" id="btnBatchOpToggle" type="button">批量操作 <span style="font-size:10px">▾</span></button>
       <div class="toolbar-menu" id="batchOpMenu">
-        <div class="toolbar-mi" data-batch="del">批量删除</div>
+        <div class="toolbar-mi" data-batch="del">删除listing</div>
+        <div class="toolbar-mi" data-batch="confirmWord">确认删词</div>
         <div class="toolbar-mi" data-batch="keep">保留</div>
-        <div class="toolbar-mi" data-batch="confirmDel">确认删除listing</div>
       </div>
     </div>
     <div class="toolbar-dropdown" id="exportDropdown">
@@ -875,62 +875,99 @@ function updateSelCount(){ /* 原版无已选计数 */ }
 function getCheckedRows(){
   return [...document.querySelectorAll('.rowck:checked')];
 }
-function batchDeleteListing(){
+function resolveBatchScope(){
   const checked = getCheckedRows();
-  if(!checked.length){ toast('请先勾选待操作的 listing'); return; }
-  const eligible = checked.filter(c=> canDelete(rows[+c.closest('tr').dataset.i]));
-  if(!eligible.length){
-    toast('所选数据不满足条件：仅「待处理/保留」且近90天销量=0 可批量删 listing');
+  if(checked.length) return { scope:'selected', indices: checked.map(c => +c.closest('tr').dataset.i) };
+  const filtered = getVisibleRows().map(x => x.i);
+  return { scope:'filter', indices: filtered };
+}
+function batchScopeLabel(scope){
+  return scope === 'filter' ? '当前条件下' : '已勾选';
+}
+function batchDeleteListing(){
+  const { scope, indices } = resolveBatchScope();
+  if(!indices.length){
+    toast('当前筛选条件下无数据');
     return;
   }
-  confirmBox('⚠️ 批量删除确认',
-    `确认对已勾选的 <b>${eligible.length}</b> 条 listing 提交删除？<br><span style="color:#97a0b0;font-size:12px">状态将变更为「待删除listing」，仅待处理 / 保留状态可操作。</span>`,
+  const eligible = indices.filter(i => canDelete(rows[i]));
+  if(!eligible.length){
+    toast('无符合条件数据：仅「待处理/保留」且近90天销量=0 可删 listing');
+    return;
+  }
+  confirmBox('⚠️ 删除 listing 确认',
+    `确认对<b>${batchScopeLabel(scope)}</b>的 <b>${eligible.length}</b> 条 listing 提交删除？<br><span style="color:#97a0b0;font-size:12px">状态将变更为「待删除listing」，仅待处理 / 保留状态可操作。</span>`,
     (remark)=>{
-      eligible.forEach(c=>{
-        const i=+c.closest('tr').dataset.i;
+      eligible.forEach(i=>{
         rows[i].status="todel"; rows[i].upd=nowStr();
         addRowLog(i, "删除listing", remark);
       });
       checkAll.checked=false; render();
-      toast(`已批量删除 ${eligible.length} 条，状态更新为「待删除listing」`);
+      toast(`已删除 listing ${eligible.length} 条，状态更新为「待删除listing」`);
+    });
+}
+function batchConfirmWord(){
+  const { scope, indices } = resolveBatchScope();
+  if(!indices.length){
+    toast('当前筛选条件下无数据');
+    return;
+  }
+  const eligible = indices.filter(i => canConfirmWord(rows[i]));
+  if(!eligible.length){
+    toast('无符合条件数据：仅「待处理/保留」且正常店铺可确认删词');
+    return;
+  }
+  confirmBox('确认删词',
+    `确认对<b>${batchScopeLabel(scope)}</b>的 <b>${eligible.length}</b> 条 listing 执行确认删词？<br><span style="color:#97a0b0;font-size:12px">请确保已在平台完成人工删词；本页不支持在线改文案。</span>`,
+    (remark)=>{
+      eligible.forEach(i=>{
+        rows[i].status="toword"; rows[i].upd=nowStr();
+        addRowLog(i, "确认删词", remark);
+      });
+      checkAll.checked=false; render();
+      toast(`已确认删词 ${eligible.length} 条，系统回扫中`);
     });
 }
 function batchKeepListing(){
-  const checked = getCheckedRows();
-  if(!checked.length){ toast('请先勾选待操作的 listing'); return; }
-  const eligible = checked.filter(c=> canKeep(rows[+c.closest('tr').dataset.i]));
-  if(!eligible.length){
-    toast('所选数据不满足保留条件：仅「待处理」且含「普通禁用词」可保留');
+  const { scope, indices } = resolveBatchScope();
+  if(!indices.length){
+    toast('当前筛选条件下无数据');
     return;
   }
-  confirmBox('批量保留确认',
-    `确认对 <b>${eligible.length}</b> 条符合条件的 listing 标记为「保留」？`,
+  const eligible = indices.filter(i => canKeep(rows[i]));
+  if(!eligible.length){
+    toast('无符合条件数据：仅「待处理」且含「普通禁用词」可保留');
+    return;
+  }
+  confirmBox('保留确认',
+    `确认对<b>${batchScopeLabel(scope)}</b>的 <b>${eligible.length}</b> 条 listing 标记为「保留」？`,
     (remark)=>{
-      eligible.forEach(c=>{
-        const i=+c.closest('tr').dataset.i;
+      eligible.forEach(i=>{
         rows[i].status="keep"; rows[i].upd=nowStr();
         addRowLog(i, "保留", remark);
       });
-      checkAll.checked=false; render(); toast(`已批量保留 ${eligible.length} 条`);
+      checkAll.checked=false; render(); toast(`已保留 ${eligible.length} 条`);
     });
 }
 function batchConfirmDeleteListing(){
-  const checked = getCheckedRows();
-  if(!checked.length){ toast('请先勾选待确认删除的 listing'); return; }
-  const eligible = checked.filter(c=> canConfirmDelete(rows[+c.closest('tr').dataset.i]));
-  if(!eligible.length){
-    toast('所选数据不满足确认条件：仅「待删除listing」状态可由高级主管确认删除');
+  const { scope, indices } = resolveBatchScope();
+  if(!indices.length){
+    toast('当前筛选条件下无数据');
     return;
   }
-  confirmBox('⚠️ 批量确认删除 listing',
-    `确认对已勾选的 <b>${eligible.length}</b> 条待删除 listing 执行删除？<br><span style="color:#97a0b0;font-size:12px">确认后状态将变更为「删除listing中」，系统将定时加入删 listing 队列。</span>`,
+  const eligible = indices.filter(i => canConfirmDelete(rows[i]));
+  if(!eligible.length){
+    toast('无符合条件数据：仅「待删除listing」状态可由高级主管确认删除');
+    return;
+  }
+  confirmBox('⚠️ 确认删除 listing',
+    `确认对<b>${batchScopeLabel(scope)}</b>的 <b>${eligible.length}</b> 条待删除 listing 执行删除？<br><span style="color:#97a0b0;font-size:12px">确认后状态将变更为「删除listing中」，系统将定时加入删 listing 队列。</span>`,
     (remark)=>{
-      eligible.forEach(c=>{
-        const i=+c.closest('tr').dataset.i;
+      eligible.forEach(i=>{
         rows[i].status="deling"; rows[i].upd=nowStr();
         addRowLog(i, "高级主管确认删除listing", remark, "高级主管");
       });
-      checkAll.checked=false; render(); toast(`已批量确认删除 ${eligible.length} 条，状态更新为「删除listing中」`);
+      checkAll.checked=false; render(); toast(`已确认删除 ${eligible.length} 条，状态更新为「删除listing中」`);
     }, { okText: '确认删除', okClass: 'btn btn-danger' });
 }
 
@@ -946,7 +983,7 @@ batchOpMenu.querySelectorAll('[data-batch]').forEach(mi=>{
     e.stopPropagation();
     hideBatchOpMenu();
     if(mi.dataset.batch==="del") batchDeleteListing();
-    else if(mi.dataset.batch==="confirmDel") batchConfirmDeleteListing();
+    else if(mi.dataset.batch==="confirmWord") batchConfirmWord();
     else batchKeepListing();
   };
 });
@@ -1046,7 +1083,7 @@ PrototypeAnnotate.init({
     logOverlay: '操作日志'
   },
   builtins: [
-    { scope: 'page', pin: { top: '72px', left: 'calc(100% - 240px)' }, text: 'v1.1：批量删除→待删除listing，仅待处理/保留；筛选项无「待删词」、有「删词成功」。' }
+    { scope: 'page', pin: { top: '72px', left: 'calc(100% - 260px)' }, text: '批量操作：有勾选则作用于勾选行，无勾选则作用于当前筛选结果。' }
   ],
   toast,
   nowStr
