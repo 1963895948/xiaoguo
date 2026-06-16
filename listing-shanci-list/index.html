@@ -56,6 +56,8 @@
   .toolbar-menu.show{ display:block; }
   .toolbar-mi{ padding:8px 16px; font-size:13px; cursor:pointer; white-space:nowrap; }
   .toolbar-mi:hover{ background:#f3f6fb; color:var(--primary); }
+  .toolbar-mi .mi-desc{ display:block; font-size:10px; color:var(--text-3); margin-top:2px; white-space:normal; line-height:1.4; }
+  .toolbar-menu.wide{ min-width:200px; }
 
   .table-wrap{ padding:0 20px 20px; overflow-x:auto; }
   table{ width:100%; border-collapse:collapse; min-width:1180px; }
@@ -276,6 +278,19 @@
     </div>
 
     <div class="toolbar">
+      <div class="toolbar-dropdown" id="delWordDropdown">
+        <button class="btn btn-primary" id="btnDelWordToggle" type="button">一键删词 <span style="font-size:10px">▾</span></button>
+        <div class="toolbar-menu wide" id="delWordMenu">
+          <div class="toolbar-mi" data-delword="condition">
+            按条件删词
+            <span class="mi-desc">对当前筛选结果全部发起删词（含其他页）</span>
+          </div>
+          <div class="toolbar-mi" data-delword="selection">
+            按勾选项删词
+            <span class="mi-desc">仅对已勾选的 Listing 发起删词</span>
+          </div>
+        </div>
+      </div>
       <button class="btn btn-primary" id="btnExport" type="button">导出</button>
     </div>
 
@@ -283,6 +298,7 @@
       <table>
         <thead>
           <tr>
+            <th style="width:48px"><input type="checkbox" id="detailCheckAll" /></th>
             <th>listing 信息</th>
             <th>店铺信息</th>
             <th>配送类型</th>
@@ -325,6 +341,18 @@
   <div class="modal result-modal">
     <div class="modal-head"><span>处理结果</span><span class="x" data-close-result>×</span></div>
     <div class="modal-body" id="resultBody"></div>
+  </div>
+</div>
+
+<!-- 一键删词确认 -->
+<div class="overlay" id="delWordOverlay">
+  <div class="modal">
+    <div class="modal-head"><span id="delWordTitle">确认删词</span><span class="x" data-close-delword>×</span></div>
+    <div class="modal-body" id="delWordBody"></div>
+    <div class="modal-foot">
+      <button class="btn" data-close-delword>取消</button>
+      <button class="btn btn-primary" id="delWordOk">确定删词</button>
+    </div>
   </div>
 </div>
 
@@ -472,6 +500,9 @@ const TASKS = [
 let taskFilters = { keyword:'', asin:'', status:'', operator:'' };
 let routeState = { taskId:null, filter:null };
 let detailProcFilters = new Set();
+let currentDetailListings = [];
+let pendingDelWordMode = null;
+let pendingDelWordListings = [];
 
 function toast(msg){
   const t = document.getElementById('toast');
@@ -596,9 +627,11 @@ function renderDetail(){
     `任务 #${task.id} · 敏感词：<b>${task.keyword}</b>` +
     (filter ? `<span class="filter-tag">${filterLabel}</span>` : '');
 
+  currentDetailListings = listings;
   document.getElementById('detailTbody').innerHTML = listings.map((l, i) => {
     const ps = getListingStatus(l);
     return `<tr data-i="${i}">
+      <td><input type="checkbox" class="detail-rowck" data-i="${i}" /></td>
       <td>
         <div class="listing">
           <div class="thumb">${l.img}</div>
@@ -620,9 +653,16 @@ function renderDetail(){
       <td>${procStatusPill(ps)}<br><span class="link" data-result="${i}">查看详情</span></td>
       <td><div class="time">${task.addTime}<br>${task.addTime}</div></td>
     </tr>`;
-  }).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:32px">暂无数据</td></tr>`;
+  }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:32px">暂无数据</td></tr>`;
 
   document.getElementById('detailTotal').textContent = listings.length;
+  const checkAll = document.getElementById('detailCheckAll');
+  if(checkAll){
+    checkAll.checked = false;
+    checkAll.onchange = (e) => {
+      document.querySelectorAll('.detail-rowck').forEach(c => { c.checked = e.target.checked; });
+    };
+  }
 
   const listingMap = listings;
   document.querySelectorAll('[data-copy]').forEach(el => {
@@ -727,6 +767,66 @@ function gotoTaskList(){
   location.hash = '#/TaskList';
 }
 
+function getCheckedDetailListings(){
+  return [...document.querySelectorAll('.detail-rowck:checked')].map(c => currentDetailListings[+c.dataset.i]).filter(Boolean);
+}
+function hideDelWordMenu(){
+  document.getElementById('delWordMenu')?.classList.remove('show');
+}
+function closeDelWordModal(){
+  document.getElementById('delWordOverlay').classList.remove('show');
+  pendingDelWordMode = null;
+  pendingDelWordListings = [];
+}
+function applyDelWordToListings(listings){
+  const nowId = () => 'Q' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 90 + 10);
+  listings.forEach(l => {
+    if(!l.results) l.results = [];
+    ['title','bullet','desc','keyword'].forEach(type => {
+      const hit = l.results.find(r => r.type === type);
+      if(hit){
+        if(hit.status !== 'success') hit.status = 'deleting';
+      } else {
+        l.results.push({ queueId: nowId(), type, status: 'deleting' });
+      }
+    });
+  });
+}
+function openDelWordModal(mode){
+  pendingDelWordMode = mode;
+  const titleEl = document.getElementById('delWordTitle');
+  const bodyEl = document.getElementById('delWordBody');
+  const okBtn = document.getElementById('delWordOk');
+  if(mode === 'condition'){
+    pendingDelWordListings = currentDetailListings.slice();
+    titleEl.textContent = '按条件删词';
+    bodyEl.innerHTML = `<p>将对<strong>当前筛选条件下</strong>的全部 Listing 发起删词，预计影响 <b>${pendingDelWordListings.length}</b> 条（含其他分页数据）。</p>
+      <p style="margin-top:10px;font-size:12px;color:var(--danger)">操作不可撤销，请确认筛选范围无误后再提交。</p>`;
+    okBtn.textContent = '确定删词';
+    okBtn.disabled = !pendingDelWordListings.length;
+  } else {
+    pendingDelWordListings = getCheckedDetailListings();
+    if(!pendingDelWordListings.length){
+      titleEl.textContent = '提示';
+      bodyEl.innerHTML = `<p>请先在列表中勾选需要删词的 Listing，再选择「按勾选项删词」。</p>
+        <p style="margin-top:8px;font-size:12px;color:var(--text-3)">可使用表头全选快速勾选当前页数据。</p>`;
+      okBtn.textContent = '知道了';
+      okBtn.disabled = false;
+    } else {
+      const preview = pendingDelWordListings.slice(0, 5).map(l => `<li>${l.asin}</li>`).join('');
+      const more = pendingDelWordListings.length > 5 ? `<li>… 等共 ${pendingDelWordListings.length} 条</li>` : '';
+      titleEl.textContent = '按勾选项删词';
+      bodyEl.innerHTML = `<p>将对已勾选的 <b>${pendingDelWordListings.length}</b> 条 Listing 发起删词。</p>
+        <p style="margin-top:8px;font-size:12px;color:var(--text-3)">仅处理勾选记录，不影响未勾选数据。</p>
+        <p style="margin-top:10px;font-size:12px"><b>勾选 ASIN 预览：</b></p>
+        <ul style="margin:6px 0 0 18px;font-size:12px;line-height:1.7">${preview}${more}</ul>`;
+      okBtn.textContent = '确定删词';
+      okBtn.disabled = false;
+    }
+  }
+  document.getElementById('delWordOverlay').classList.add('show');
+}
+
 window.addEventListener('hashchange', applyRoute);
 
 document.getElementById('btnBackList').onclick = gotoTaskList;
@@ -767,8 +867,36 @@ document.getElementById('importFileInput').onchange = (e) => {
   renderTaskList();
 };
 
-document.addEventListener('click', () => { hideProcStatusPanel(); });
-window.addEventListener('scroll', () => { hideProcStatusPanel(); }, true);
+document.getElementById('btnDelWordToggle').onclick = (e) => {
+  e.stopPropagation();
+  hideProcStatusPanel();
+  document.getElementById('delWordMenu').classList.toggle('show');
+};
+document.getElementById('delWordMenu').onclick = e => e.stopPropagation();
+document.querySelectorAll('#delWordMenu [data-delword]').forEach(mi => {
+  mi.onclick = (e) => {
+    e.stopPropagation();
+    hideDelWordMenu();
+    openDelWordModal(mi.dataset.delword);
+  };
+});
+document.querySelectorAll('[data-close-delword]').forEach(b => b.onclick = closeDelWordModal);
+document.getElementById('delWordOk').onclick = () => {
+  if(pendingDelWordMode === 'selection' && !pendingDelWordListings.length){
+    closeDelWordModal();
+    return;
+  }
+  if(pendingDelWordListings.length){
+    applyDelWordToListings(pendingDelWordListings);
+    renderDetail();
+    renderTaskList();
+    toast(`已提交删词 ${pendingDelWordListings.length} 条，状态更新为「删词中」`);
+  }
+  closeDelWordModal();
+};
+
+document.addEventListener('click', () => { hideProcStatusPanel(); hideDelWordMenu(); });
+window.addEventListener('scroll', () => { hideProcStatusPanel(); hideDelWordMenu(); }, true);
 
 document.getElementById('procStatusTrigger').onclick = (e) => {
   e.stopPropagation();
@@ -822,7 +950,8 @@ PrototypeAnnotate.init({
     asinOverlay: '全部 ASIN',
     copyOverlay: 'listing 文案',
     resultOverlay: '处理结果',
-    importOverlay: '导入数据'
+    importOverlay: '导入数据',
+    delWordOverlay: '一键删词确认'
   },
   builtins: [],
   toast,
