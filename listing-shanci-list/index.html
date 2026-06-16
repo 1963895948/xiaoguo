@@ -368,7 +368,7 @@
     <div class="modal-body">
       <div class="import-field">
         <label for="importKeyword">检索敏感词<span class="req">*</span></label>
-        <input class="ctrl" id="importKeyword" placeholder="请输入检索敏感词，组合词用 && 连接，如 Mercury&&Lead" />
+        <input class="ctrl" id="importKeyword" placeholder="请输入检索敏感词，组合词用分号连接，如 Mercury;Lead" />
         <div class="import-field-tip">先填写敏感词，再导入 Excel；表格中的数据表示该词下待删词的 Listing</div>
       </div>
       <div class="import-actions">
@@ -388,7 +388,7 @@
         <p>2、请按照下载模板的格式导入，表头不可修改</p>
         <p>3、数据记录不要超过20000条</p>
         <p>4、检索敏感词在上方手动填写；Excel 仅填写待删词的 Listing（店铺名称、检索 ASIN 等）</p>
-        <p>5、组合词用 <code>&&</code> 连接，如 <code>Mercury&&Lead</code> 会拆成两条独立任务</p>
+        <p>5、组合词用分号 <code>;</code> 连接，如 <code>Mercury;Lead</code> 会拆成两条独立任务</p>
         <p>6、Excel 内「店铺名称 + 检索 ASIN」<strong>不可重复</strong>；系统中已存在的词<strong>不可再次导入</strong></p>
       </div>
     </div>
@@ -502,11 +502,11 @@ const TASKS = [
     listings: [DETAIL_LISTINGS[4]] },
   { id:28, keyword:'Mercury', asins:['B0CCC000001'],
     listingCount:5, status:'doing', searchTotal:3, hasWord:1, noWord:2,
-    remark:'Mercury&&Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
+    remark:'Mercury;Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
     listings: DETAIL_LISTINGS.slice(2,3) },
   { id:27, keyword:'Lead', asins:['B0CCC000001'],
     listingCount:5, status:'wait', searchTotal:0, hasWord:0, noWord:0,
-    remark:'Mercury&&Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
+    remark:'Mercury;Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
     listings: [] },
   { id:26, keyword:'Disney', asins:['B0DDD000001','B0DDD000002','B0DDD000003','B0DDD000004'],
     listingCount:20, status:'wait', searchTotal:0, hasWord:0, noWord:0,
@@ -893,7 +893,7 @@ document.getElementById('importFileInput').onchange = (e) => {
     return;
   }
   document.getElementById('importOverlay').classList.remove('show');
-  const words = keyword.split('&&').map(w => w.trim()).filter(Boolean);
+  const words = keyword.split(';').map(w => w.trim()).filter(Boolean);
   const wordTip = words.length > 1 ? `已拆成 ${words.length} 个词任务：${words.join('、')}` : `敏感词：${words[0]}`;
   toast(`导入成功：${file.name} · ${wordTip} · 已按 Excel 中的 Listing 创建任务`);
   renderTaskList();
