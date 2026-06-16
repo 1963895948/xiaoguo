@@ -81,6 +81,7 @@
   .st-done{ background:#f0f9f3; color:#16b364; }
   .st-queue{ background:#f9f0ff; color:#722ed1; }
   .st-proc-doing{ background:#e6f4ff; color:#2f6bff; }
+  .st-proc-pending{ background:#fff7e6; color:#fa8c16; }
   .st-proc-ok{ background:#f0f9f3; color:#16b364; }
   .st-proc-fail{ background:#fff1f0; color:#f5455c; }
   .status-multi{ position:relative; display:inline-block; }
@@ -268,6 +269,7 @@
             <span id="procStatusLabel">处理状态</span>
           </button>
           <div class="status-multi-panel" id="procStatusPanel">
+            <label class="status-multi-opt"><input type="checkbox" value="pending" />未处理</label>
             <label class="status-multi-opt"><input type="checkbox" value="deleting" />删词中</label>
             <label class="status-multi-opt"><input type="checkbox" value="success" />删词成功</label>
             <label class="status-multi-opt"><input type="checkbox" value="fail" />删词失败</label>
@@ -394,16 +396,19 @@ const SEARCH_STATUS = {
 const FILTER_LABEL = {
   hasWord: '有词',
   noWord: '无词',
+  pending: '未处理',
   deleting: '删词中',
   success: '删词成功',
   fail: '删词失败'
 };
 const PROC_STATUS = {
+  pending: '未处理',
   deleting: '删词中',
   success: '删词成功',
   fail: '删词失败'
 };
 const PROC_PILL = {
+  pending: 'st-proc-pending',
   deleting: 'st-proc-doing',
   success: 'st-proc-ok',
   fail: 'st-proc-fail'
@@ -453,27 +458,37 @@ const DETAIL_LISTINGS = [
       { queueId:'Q20260527010', type:'bullet', status:'success' },
       { queueId:'Q20260527011', type:'desc', status:'success' },
       { queueId:'Q20260527012', type:'keyword', status:'success' }
-    ] }
+    ] },
+  { asin:'B0F6JY5G6H', sku:'10123461', msku:'MSKU001234567895', img:'🌿',
+    title:'PlantMate Biodegradable Garden Stakes 100 Pack',
+    store:'Amazon-Z011231-US', gold:'柯栋', fbm:'-', normalStore:true,
+    copy:{ title:'PlantMate Biodegradable Garden Stakes', bullet:'Eco garden stakes biodegradable', keywords:'garden;stakes;biodegradable', desc:'100 pack biodegradable garden stakes' },
+    results:[] },
+  { asin:'B0F6JY5G7I', sku:'10123462', msku:'MSKU001234567896', img:'🪻',
+    title:'FloraPack Biodegradable Flower Pots Set',
+    store:'Amazon-Z011232-US', gold:'贾旭杨', fbm:'-', normalStore:true,
+    copy:{ title:'FloraPack Biodegradable Flower Pots', bullet:'Biodegradable flower pots set', keywords:'flower;pot;biodegradable', desc:'Biodegradable flower pots for home garden' },
+    results:[] }
 ];
 
-/** listing 状态由全部队列聚合（检出后自动删词，无「未处理」） */
+/** listing 状态：检索后有词但未一键删词为「未处理」，触发删词后按队列聚合 */
 function getListingStatus(listing){
   const rs = listing.results || [];
-  if(!rs.length) return 'deleting';
+  if(!rs.length) return 'pending';
   if(rs.some(r => r.status === 'fail')) return 'fail';
   if(rs.some(r => r.status === 'deleting' || r.status === 'pending')) return 'deleting';
   if(rs.every(r => r.status === 'success')) return 'success';
   return 'deleting';
 }
 function countByListingStatus(listings){
-  const c = { deleting:0, success:0, fail:0 };
+  const c = { pending:0, deleting:0, success:0, fail:0 };
   listings.forEach(l => { c[getListingStatus(l)]++; });
   return c;
 }
 function isTaskProcComplete(task){
   if(task.status !== 'done' || !task.hasWord) return false;
   const c = countByListingStatus(task.listings);
-  return c.deleting === 0;
+  return c.pending === 0 && c.deleting === 0;
 }
 function procStatusPill(status){
   return `<span class="pill ${PROC_PILL[status]}">${PROC_STATUS[status]}</span>`;
@@ -563,7 +578,8 @@ function renderTaskList(){
       <td><div class="sub-info">${(() => {
         const c = countByListingStatus(t.listings);
         const doneTag = isTaskProcComplete(t) ? '<span class="proc-done-tag">处理完成</span>' : '';
-        return `删词中listing数量：${numLink(t.id,'deleting',c.deleting)}<br>
+        return `待处理listing数量：${numLink(t.id,'pending',c.pending)}<br>
+        删词中listing数量：${numLink(t.id,'deleting',c.deleting)}<br>
         删词成功listing数量：${numLink(t.id,'success',c.success)}<br>
         删词失败listing数量：${numLink(t.id,'fail',c.fail)}<br>
         ${doneTag}`;
@@ -591,7 +607,7 @@ function bindTaskLinks(){
 function filterListingsByRoute(task, filter){
   if(filter === 'noWord') return [];
   if(filter === 'hasWord' || !filter) return task.listings.slice();
-  if(['deleting','success','fail'].includes(filter)){
+  if(['pending','deleting','success','fail'].includes(filter)){
     return task.listings.filter(l => getListingStatus(l) === filter);
   }
   return task.listings.slice();
@@ -696,6 +712,13 @@ function renderFailReason(r){
   return '<td><span class="dash">-</span></td>';
 }
 function openResultDetail(listing){
+  const ps = getListingStatus(listing);
+  if(ps === 'pending'){
+    document.getElementById('resultBody').innerHTML = `
+      <p class="result-tip">该 Listing 检索已检出敏感词，尚未执行一键删词，暂无删词队列记录。</p>`;
+    document.getElementById('resultOverlay').classList.add('show');
+    return;
+  }
   const submitted = (listing.results || []).filter(r => r.status !== 'pending');
   const rows = (submitted.length ? submitted : listing.results || []).map(r => `<tr>
     <td>${r.queueId || '<span class="dash">-</span>'}</td>
@@ -752,7 +775,7 @@ function applyRoute(){
     renderTaskList();
   } else {
     routeState = { taskId:r.taskId, filter:r.filter };
-    if(['deleting','success','fail'].includes(r.filter)){
+    if(['pending','deleting','success','fail'].includes(r.filter)){
       detailProcFilters = new Set([r.filter]);
       updateProcStatusLabel();
       syncProcStatusChecks();
