@@ -101,9 +101,6 @@
   .import-actions{ display:flex; align-items:center; gap:20px; margin-bottom:14px; }
   .link-dl{ color:var(--link); cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:4px; }
   .link-dl:hover{ text-decoration:underline; }
-  .tpl-table{ width:100%; border-collapse:collapse; margin:0 0 14px; font-size:12px; }
-  .tpl-table th,.tpl-table td{ border:1px solid var(--border); padding:8px 10px; text-align:left; }
-  .tpl-table th{ background:#f6f8fb; color:var(--text-2); font-weight:600; }
   .import-rules{ background:#f6f8fb; border-radius:4px; padding:14px 16px; font-size:12px; color:var(--text-2); line-height:1.9; }
   .import-rules p{ margin:0; }
 
@@ -376,20 +373,11 @@
         <span class="link-dl" id="btnDownloadTpl">↓ 下载模板</span>
         <input type="file" id="importFileInput" accept=".xls,.xlsx" hidden />
       </div>
-      <table class="tpl-table">
-        <thead><tr><th>店铺名称</th><th>检索 ASIN</th><th>备注</th></tr></thead>
-        <tbody>
-          <tr><td>Amazon-Z011227-US</td><td>B0GN8XGYT9</td><td>选填</td></tr>
-          <tr><td>Amazon-Z011228-US</td><td>B0GNCYDD86</td><td>—</td></tr>
-        </tbody>
-      </table>
       <div class="import-rules">
         <p>1、支持导入格式为xls，xlsx的文件（手动修改文件后缀无效）</p>
         <p>2、请按照下载模板的格式导入，表头不可修改</p>
         <p>3、数据记录不要超过20000条</p>
         <p>4、检索敏感词在上方手动填写；Excel 仅填写待删词的 Listing（店铺名称、检索 ASIN 等）</p>
-        <p>5、组合词用分号 <code>;</code> 连接，如 <code>Mercury;Lead</code> 会拆成两条独立任务</p>
-        <p>6、Excel 内「店铺名称 + 检索 ASIN」<strong>不可重复</strong>；系统中已存在的词<strong>不可再次导入</strong></p>
       </div>
     </div>
   </div>
@@ -500,14 +488,10 @@ const TASKS = [
     listingCount:402, status:'done', searchTotal:402, hasWord:1, noWord:401,
     remark:'李新华', addTime:'2026-05-25 19:52:33', addBy:'贾旭杨',
     listings: [DETAIL_LISTINGS[4]] },
-  { id:28, keyword:'Mercury', asins:['B0CCC000001'],
+  { id:28, keyword:'Mercury;Lead', asins:['B0CCC000001'],
     listingCount:5, status:'doing', searchTotal:3, hasWord:1, noWord:2,
-    remark:'Mercury;Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
+    remark:'-', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
     listings: DETAIL_LISTINGS.slice(2,3) },
-  { id:27, keyword:'Lead', asins:['B0CCC000001'],
-    listingCount:5, status:'wait', searchTotal:0, hasWord:0, noWord:0,
-    remark:'Mercury;Lead 拆分', addTime:'2026-05-25 11:08:00', addBy:'贾旭杨',
-    listings: [] },
   { id:26, keyword:'Disney', asins:['B0DDD000001','B0DDD000002','B0DDD000003','B0DDD000004'],
     listingCount:20, status:'wait', searchTotal:0, hasWord:0, noWord:0,
     remark:'-', addTime:'2026-05-24 16:45:12', addBy:'戴怡',
@@ -865,6 +849,25 @@ document.getElementById('btnResetTask').onclick = () => {
   renderTaskList();
   toast('已重置');
 };
+function addTaskFromImport(keyword){
+  const newId = Math.max(...TASKS.map(t => t.id), 0) + 1;
+  TASKS.unshift({
+    id: newId,
+    keyword,
+    asins: ['B0IMPORT001', 'B0IMPORT002'],
+    listingCount: 2,
+    status: 'wait',
+    searchTotal: 0,
+    hasWord: 0,
+    noWord: 0,
+    remark: '-',
+    addTime: nowStr(),
+    addBy: '演示用户',
+    listings: []
+  });
+  return newId;
+}
+
 document.getElementById('btnBatchImport').onclick = () => {
   document.getElementById('importKeyword').value = '';
   document.getElementById('importFileInput').value = '';
@@ -893,9 +896,8 @@ document.getElementById('importFileInput').onchange = (e) => {
     return;
   }
   document.getElementById('importOverlay').classList.remove('show');
-  const words = keyword.split(';').map(w => w.trim()).filter(Boolean);
-  const wordTip = words.length > 1 ? `已拆成 ${words.length} 个词任务：${words.join('、')}` : `敏感词：${words[0]}`;
-  toast(`导入成功：${file.name} · ${wordTip} · 已按 Excel 中的 Listing 创建任务`);
+  addTaskFromImport(keyword);
+  toast(`导入成功：${file.name} · 已创建 1 条任务「${keyword}」`);
   renderTaskList();
 };
 
