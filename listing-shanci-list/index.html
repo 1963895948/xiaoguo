@@ -300,7 +300,7 @@
 
     <div class="table-wrap">
       <table>
-        <thead>
+        <thead id="detailThead">
           <tr>
             <th style="width:48px"><input type="checkbox" id="detailCheckAll" /></th>
             <th>listing 信息</th>
@@ -308,6 +308,7 @@
             <th>配送类型</th>
             <th>处理结果</th>
             <th>添加时间/更新时间</th>
+            <th>操作人/操作时间</th>
           </tr>
         </thead>
         <tbody id="detailTbody"></tbody>
@@ -420,6 +421,7 @@ const DETAIL_LISTINGS = [
   { asin:'B0F6JY5G1C', sku:'10123456', msku:'MSKU001234567890', img:'🪴',
     title:'Happyyami 100pcs Paper Pot Biodegradable Nursery Pots for Seedlings',
     store:'Amazon-Z011227-US', gold:'戴怡', fbm:'-', normalStore:true,
+    addTime:'2026-05-25 19:52:33', updTime:'2026-05-26 10:15:22', operator:'贾旭杨', opTime:'2026-05-26 10:15:22',
     copy:{ title:'Happyyami 100pcs Paper Pot Biodegradable Nursery Pots', bullet:'Eco-friendly biodegradable pots', keywords:'biodegradable;nursery;paper pot', desc:'100pcs biodegradable nursery pots for seedlings' },
     results:[
       { queueId:'3411467360', type:'title', status:'fail', reason:'新提交取消' },
@@ -429,6 +431,7 @@ const DETAIL_LISTINGS = [
   { asin:'B0F6JY5G2D', sku:'10123457', msku:'MSKU001234567891', img:'🪴',
     title:'Happyyami Biodegradable Seed Starter Pots 50 Pack',
     store:'Amazon-Z011227-US', gold:'戴怡', fbm:'-', normalStore:true,
+    addTime:'2026-05-25 19:52:33', updTime:'2026-05-26 09:40:11', operator:'贾旭杨', opTime:'2026-05-26 09:40:11',
     copy:{ title:'Happyyami Biodegradable Seed Starter Pots', bullet:'Plant starter cups biodegradable', keywords:'seed;biodegradable;starter', desc:'50 pack biodegradable seed starter pots' },
     results:[
       { queueId:'Q20260527004', type:'title', status:'success' },
@@ -445,6 +448,7 @@ const DETAIL_LISTINGS = [
   { asin:'B0F6JY5G4F', sku:'10123459', msku:'MSKU001234567893', img:'🌱',
     title:'GreenRoot Biodegradable Plant Labels 200pcs',
     store:'Amazon-Z011229-US', gold:'贾旭杨', fbm:'-', normalStore:true,
+    addTime:'2026-05-25 19:52:33', updTime:'2026-05-27 14:08:05', operator:'戴怡', opTime:'2026-05-27 14:08:05',
     copy:{ title:'GreenRoot Biodegradable Plant Labels', bullet:'Weather resistant biodegradable labels', keywords:'plant;label;biodegradable', desc:'200pcs biodegradable plant labels' },
     results:[
       { queueId:'3411467370', type:'keyword', status:'fail', reason:'文案未变更' }
@@ -452,6 +456,7 @@ const DETAIL_LISTINGS = [
   { asin:'B0F6JY5G5G', sku:'10123460', msku:'MSKU001234567894', img:'🍃',
     title:'NatureWay Biodegradable Mulch Film Roll',
     store:'Amazon-Z011230-US', gold:'戴怡', fbm:'-', normalStore:true,
+    addTime:'2026-05-25 19:52:33', updTime:'2026-05-28 11:22:18', operator:'柯栋', opTime:'2026-05-28 11:22:18',
     copy:{ title:'NatureWay Biodegradable Mulch Film', bullet:'Farm grade biodegradable film', keywords:'mulch;biodegradable;film', desc:'Biodegradable mulch film roll for garden' },
     results:[
       { queueId:'Q20260527009', type:'title', status:'success' },
@@ -485,11 +490,15 @@ function countByListingStatus(listings){
   listings.forEach(l => { c[getListingStatus(l)]++; });
   return c;
 }
-function isTaskProcComplete(task){
-  if(task.status !== 'done' || !task.hasWord) return false;
-  const c = countByListingStatus(task.listings);
-  return c.pending === 0 && c.deleting === 0;
+/** 删词失败数量按任务（队列）维度统计，与失败详情页任务维度一致 */
+function countFailedTasks(listings){
+  let n = 0;
+  listings.forEach(l => {
+    (l.results || []).forEach(r => { if(r.status === 'fail') n++; });
+  });
+  return n;
 }
+
 function procStatusPill(status){
   return `<span class="pill ${PROC_PILL[status]}">${PROC_STATUS[status]}</span>`;
 }
@@ -517,6 +526,7 @@ let taskFilters = { keyword:'', asin:'', status:'', operator:'' };
 let routeState = { taskId:null, filter:null };
 let detailProcFilters = new Set();
 let currentDetailListings = [];
+let currentDetailTaskRows = [];
 let pendingDelWordMode = null;
 let pendingDelWordListings = [];
 
@@ -549,6 +559,10 @@ function numLink(taskId, filter, n){
   if(!n) return `<b>0</b>`;
   return `<span class="num-link" data-goto="${taskId}" data-filter="${filter}">${n}</span>`;
 }
+function procCountCell(n, taskId, filter, linkable){
+  if(!n) return `<b>0</b>`;
+  return linkable ? numLink(taskId, filter, n) : `<b>${n}</b>`;
+}
 
 function getFilteredTasks(){
   return TASKS.filter(t => {
@@ -577,11 +591,11 @@ function renderTaskList(){
       </div></td>
       <td><div class="sub-info">${(() => {
         const c = countByListingStatus(t.listings);
-        const doneTag = isTaskProcComplete(t) ? '<span class="proc-done-tag">处理完成</span>' : '';
-        return `待处理listing数量：${numLink(t.id,'pending',c.pending)}<br>
-        删词中listing数量：${numLink(t.id,'deleting',c.deleting)}<br>
-        删词成功listing数量：${numLink(t.id,'success',c.success)}<br>
-        删词失败listing数量：${numLink(t.id,'fail',c.fail)}<br>
+        const failTaskCount = countFailedTasks(t.listings);
+        const doneTag = c.deleting === 0 ? '<span class="proc-done-tag">处理完成</span>' : '';
+        return `删除中数量：${procCountCell(c.deleting, t.id, 'deleting', false)}<br>
+        删词成功数量：${procCountCell(c.success, t.id, 'success', false)}<br>
+        删词失败数量：${procCountCell(failTaskCount, t.id, 'fail', true)}<br>
         ${doneTag}`;
       })()}</div></td>
       <td>${t.remark === '-' ? '<span class="dash">-</span>' : t.remark}</td>
@@ -632,34 +646,106 @@ function hideProcStatusPanel(){
   document.getElementById('procStatusPanel')?.classList.remove('show');
 }
 
-function renderDetail(){
-  const task = TASKS.find(t => t.id === routeState.taskId);
-  if(!task){ gotoTaskList(); return; }
-  const filter = routeState.filter;
-  let listings = filterListingsByRoute(task, filter);
-  listings = filterListingsByProc(listings);
-  const filterLabel = filter ? FILTER_LABEL[filter] : '有词';
+function isTaskDimensionView(filter){
+  return filter === 'fail';
+}
 
-  document.getElementById('detailMeta').innerHTML =
-    `任务 #${task.id} · 敏感词：<b>${task.keyword}</b>` +
-    (filter ? `<span class="filter-tag">${filterLabel}</span>` : '');
+function setDetailTableMode(taskMode){
+  const thead = document.getElementById('detailThead');
+  if(taskMode){
+    thead.innerHTML = `<tr>
+      <th>listing 信息</th>
+      <th>队列ID</th>
+      <th>类型</th>
+      <th>状态</th>
+      <th>失败原因</th>
+      <th>添加时间/更新时间</th>
+      <th>操作人/操作时间</th>
+    </tr>`;
+    return;
+  }
+  thead.innerHTML = `<tr>
+    <th style="width:48px"><input type="checkbox" id="detailCheckAll" /></th>
+    <th>listing 信息</th>
+    <th>店铺信息</th>
+    <th>配送类型</th>
+    <th>处理结果</th>
+    <th>添加时间/更新时间</th>
+    <th>操作人/操作时间</th>
+  </tr>`;
+}
 
-  currentDetailListings = listings;
+function listingInfoCell(l, copyIndex){
+  const copyAttr = copyIndex === null ? '' : ` data-copy="${copyIndex}"`;
+  return `<div class="listing">
+    <div class="thumb">${l.img}</div>
+    <div class="info">
+      <div class="title"${copyAttr}>${l.title}</div>
+      <div class="kv">ASIN：<span class="code">${l.asin}</span></div>
+      <div class="kv">系统SKU：<b>${l.sku}</b></div>
+      <div class="kv">MSKU：<b>${l.msku}</b></div>
+    </div>
+  </div>`;
+}
+
+function expandFailedTaskRows(listings){
+  const rows = [];
+  listings.forEach((l, li) => {
+    (l.results || []).forEach(r => {
+      if(r.status !== 'fail') return;
+      rows.push({ listing: l, listingIndex: li, result: r });
+    });
+  });
+  return rows;
+}
+
+function bindListingCopyActions(listings){
+  document.querySelectorAll('[data-copy]').forEach(el => {
+    el.onclick = () => {
+      const l = listings[+el.dataset.copy];
+      const c = l.copy;
+      document.getElementById('copyBody').innerHTML = `
+        <p><b>标题</b></p><div class="copy-block">${c.title}</div>
+        <p style="margin-top:12px"><b>亮点</b></p><div class="copy-block">${c.bullet}</div>
+        <p style="margin-top:12px"><b>关键词</b></p><div class="copy-block">${c.keywords}</div>
+        <p style="margin-top:12px"><b>描述</b></p><div class="copy-block">${c.desc}</div>`;
+      document.getElementById('copyOverlay').classList.add('show');
+    };
+  });
+}
+
+function operatorTimeCell(l){
+  if(!l.operator) return '<span class="dash">—</span>';
+  return `<div class="time">${l.operator}<br>${l.opTime || l.updTime || '—'}</div>`;
+}
+
+function renderDetailTaskView(task, listings){
+  const taskRows = expandFailedTaskRows(listings);
+  currentDetailTaskRows = taskRows;
+  document.getElementById('detailTbody').innerHTML = taskRows.map((row, i) => {
+    const l = row.listing;
+    const r = row.result;
+    return `<tr data-task-i="${i}">
+      <td>${listingInfoCell(l, row.listingIndex)}</td>
+      <td>${r.queueId || '<span class="dash">-</span>'}</td>
+      <td>${TYPE_LABEL[r.type] || r.type}</td>
+      <td>${renderQueueStatus(r.status)}</td>
+      <td>${r.reason ? `<span class="status-fail">${r.reason}</span>` : '<span class="dash">-</span>'}</td>
+      <td><div class="time">${l.addTime || task.addTime}<br>${l.updTime || task.addTime}</div></td>
+      <td>${operatorTimeCell(l)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:32px">暂无删词失败任务</td></tr>`;
+  document.getElementById('detailTotal').textContent = taskRows.length;
+  bindListingCopyActions(listings);
+}
+
+function renderDetailListingView(task, listings){
+  currentDetailTaskRows = [];
   document.getElementById('detailTbody').innerHTML = listings.map((l, i) => {
     const ps = getListingStatus(l);
     return `<tr data-i="${i}">
       <td><input type="checkbox" class="detail-rowck" data-i="${i}" /></td>
-      <td>
-        <div class="listing">
-          <div class="thumb">${l.img}</div>
-          <div class="info">
-            <div class="title" data-copy="${i}">${l.title}</div>
-            <div class="kv">ASIN：<span class="code">${l.asin}</span></div>
-            <div class="kv">系统SKU：<b>${l.sku}</b></div>
-            <div class="kv">MSKU：<b>${l.msku}</b></div>
-          </div>
-        </div>
-      </td>
+      <td>${listingInfoCell(l, i)}</td>
       <td><div class="store">
         <div class="row"><span class="flag">🇺🇸</span><span class="name">${l.store}</span></div>
         <div class="row">首选业务员：${l.gold}</div>
@@ -668,9 +754,10 @@ function renderDetail(){
       </div></td>
       <td><div class="ship-cell"><span class="tag-amz">amazon</span><span class="tag-ship-self">自发</span></div></td>
       <td>${procStatusPill(ps)}<br><span class="link" data-result="${i}">查看详情</span></td>
-      <td><div class="time">${task.addTime}<br>${task.addTime}</div></td>
+      <td><div class="time">${l.addTime || task.addTime}<br>${l.updTime || task.addTime}</div></td>
+      <td>${operatorTimeCell(l)}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:32px">暂无数据</td></tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:32px">暂无数据</td></tr>`;
 
   document.getElementById('detailTotal').textContent = listings.length;
   const checkAll = document.getElementById('detailCheckAll');
@@ -681,22 +768,31 @@ function renderDetail(){
     };
   }
 
-  const listingMap = listings;
-  document.querySelectorAll('[data-copy]').forEach(el => {
-    el.onclick = () => {
-      const l = listingMap[+el.dataset.copy];
-      const c = l.copy;
-      document.getElementById('copyBody').innerHTML = `
-        <p><b>标题</b></p><div class="copy-block">${c.title}</div>
-        <p style="margin-top:12px"><b>亮点</b></p><div class="copy-block">${c.bullet}</div>
-        <p style="margin-top:12px"><b>关键词</b></p><div class="copy-block">${c.keywords}</div>
-        <p style="margin-top:12px"><b>描述</b></p><div class="copy-block">${c.desc}</div>`;
-      document.getElementById('copyOverlay').classList.add('show');
-    };
-  });
+  bindListingCopyActions(listings);
   document.querySelectorAll('[data-result]').forEach(el => {
-    el.onclick = () => openResultDetail(listingMap[+el.dataset.result]);
+    el.onclick = () => openResultDetail(listings[+el.dataset.result]);
   });
+}
+
+function renderDetail(){
+  const task = TASKS.find(t => t.id === routeState.taskId);
+  if(!task){ gotoTaskList(); return; }
+  const filter = routeState.filter;
+  let listings = filterListingsByRoute(task, filter);
+  if(!isTaskDimensionView(filter)) listings = filterListingsByProc(listings);
+  const filterLabel = filter ? FILTER_LABEL[filter] : '有词';
+  const taskView = isTaskDimensionView(filter);
+
+  document.getElementById('detailMeta').innerHTML =
+    `任务 #${task.id} · 敏感词：<b>${task.keyword}</b>` +
+    (filter ? `<span class="filter-tag">${filterLabel}</span>` : '') +
+    (taskView ? '<span class="filter-tag">任务维度</span>' : '');
+
+  currentDetailListings = listings;
+  setDetailTableMode(taskView);
+  document.getElementById('delWordDropdown').style.display = taskView ? 'none' : '';
+  if(taskView) renderDetailTaskView(task, listings);
+  else renderDetailListingView(task, listings);
 }
 
 function renderQueueStatus(status){
@@ -804,6 +900,8 @@ function closeDelWordModal(){
 }
 function applyDelWordToListings(listings){
   const nowId = () => 'Q' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 90 + 10);
+  const op = '演示用户';
+  const ts = nowStr();
   listings.forEach(l => {
     if(!l.results) l.results = [];
     ['title','bullet','desc','keyword'].forEach(type => {
@@ -814,6 +912,10 @@ function applyDelWordToListings(listings){
         l.results.push({ queueId: nowId(), type, status: 'deleting' });
       }
     });
+    l.operator = op;
+    l.opTime = ts;
+    l.updTime = ts;
+    if(!l.addTime) l.addTime = ts;
   });
 }
 function openDelWordModal(mode){
