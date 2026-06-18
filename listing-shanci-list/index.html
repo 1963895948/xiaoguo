@@ -264,17 +264,13 @@
       <div class="filter-row">
         <select class="ctrl"><option>全部销售人员</option></select>
         <select class="ctrl"><option>全部 FBA/FBM 业务员</option></select>
-        <div class="status-multi" id="procStatusWrap">
-          <button type="button" class="ctrl status-multi-trigger" id="procStatusTrigger">
-            <span id="procStatusLabel">处理状态</span>
-          </button>
-          <div class="status-multi-panel" id="procStatusPanel">
-            <label class="status-multi-opt"><input type="checkbox" value="pending" />未处理</label>
-            <label class="status-multi-opt"><input type="checkbox" value="deleting" />删词中</label>
-            <label class="status-multi-opt"><input type="checkbox" value="success" />删词成功</label>
-            <label class="status-multi-opt"><input type="checkbox" value="fail" />删词失败</label>
-          </div>
-        </div>
+        <select class="ctrl" id="fDetailType">
+          <option value="">全部类型</option>
+          <option value="title">标题</option>
+          <option value="bullet">亮点</option>
+          <option value="desc">描述</option>
+          <option value="keyword">关键词</option>
+        </select>
         <button class="btn btn-primary" id="btnDetailSearch" type="button">搜索</button>
         <button class="btn" id="btnDetailReset" type="button">重置</button>
         <button class="btn" type="button">保存快捷键</button>
@@ -408,12 +404,6 @@ const PROC_STATUS = {
   success: '删词成功',
   fail: '删词失败'
 };
-const PROC_PILL = {
-  pending: 'st-proc-pending',
-  deleting: 'st-proc-doing',
-  success: 'st-proc-ok',
-  fail: 'st-proc-fail'
-};
 const EXPORT_FIELDS = ['店铺','ASIN','MSKU','SKU','首选业务员','店铺状态','检索敏感词','类型','处理状态','失败原因'];
 const TYPE_LABEL = { title: '标题', bullet: '亮点', desc: '描述', keyword: '关键词' };
 
@@ -499,10 +489,6 @@ function countFailedTasks(listings){
   return n;
 }
 
-function procStatusPill(status){
-  return `<span class="pill ${PROC_PILL[status]}">${PROC_STATUS[status]}</span>`;
-}
-
 const TASKS = [
   { id:30, keyword:'Biodegradable', asins:['B0GN8XGYT9','B0GNCYDD86','B0GN8XGYTA','B0GN8XGYTB','B0GN8XGYTC','B0GN8XGYTD','B0GN8XGYTE','B0GN8XGYTF','B0GN8XGYTG','B0GN8XGYTH','B0GN8XGYTI','B0GN8XGYTJ'],
     listingCount:988, status:'done', searchTotal:988, hasWord:105, noWord:883,
@@ -523,8 +509,8 @@ const TASKS = [
 ];
 
 let taskFilters = { keyword:'', asin:'', status:'', operator:'' };
+let detailFilters = { type:'' };
 let routeState = { taskId:null, filter:null };
-let detailProcFilters = new Set();
 let currentDetailListings = [];
 let currentDetailTaskRows = [];
 let pendingDelWordMode = null;
@@ -626,25 +612,6 @@ function filterListingsByRoute(task, filter){
   }
   return task.listings.slice();
 }
-function filterListingsByProc(listings){
-  if(!detailProcFilters.size) return listings;
-  return listings.filter(l => detailProcFilters.has(getListingStatus(l)));
-}
-
-function syncProcStatusChecks(){
-  document.querySelectorAll('#procStatusPanel input[type=checkbox]').forEach(el => {
-    el.checked = detailProcFilters.has(el.value);
-  });
-}
-function updateProcStatusLabel(){
-  const el = document.getElementById('procStatusLabel');
-  if(!detailProcFilters.size){ el.textContent = '处理状态'; return; }
-  const names = [...detailProcFilters].map(k => PROC_STATUS[k]);
-  el.textContent = names.length <= 2 ? names.join('、') : `处理状态（${names.length}）`;
-}
-function hideProcStatusPanel(){
-  document.getElementById('procStatusPanel')?.classList.remove('show');
-}
 
 function isTaskDimensionView(filter){
   return filter === 'fail';
@@ -655,6 +622,8 @@ function setDetailTableMode(taskMode){
   if(taskMode){
     thead.innerHTML = `<tr>
       <th>listing 信息</th>
+      <th>店铺信息</th>
+      <th>配送类型</th>
       <th>队列ID</th>
       <th>类型</th>
       <th>状态</th>
@@ -688,11 +657,30 @@ function listingInfoCell(l, copyIndex){
   </div>`;
 }
 
-function expandFailedTaskRows(listings){
+function storeInfoCell(l){
+  return `<div class="store">
+    <div class="row"><span class="flag">🇺🇸</span><span class="name">${l.store}</span></div>
+    <div class="row">首选业务员：${l.gold}</div>
+    <div class="row">FBM业务员：${l.fbm}</div>
+    <div class="row">店铺状态：${l.normalStore ? '正常' : '异常'}</div>
+  </div>`;
+}
+
+function shipTypeCell(){
+  return `<div class="ship-cell"><span class="tag-amz">amazon</span><span class="tag-ship-self">自发</span></div>`;
+}
+
+function filterListingsByType(listings, type){
+  if(!type) return listings;
+  return listings.filter(l => (l.results || []).some(r => r.type === type));
+}
+
+function expandFailedTaskRows(listings, type){
   const rows = [];
   listings.forEach((l, li) => {
     (l.results || []).forEach(r => {
       if(r.status !== 'fail') return;
+      if(type && r.type !== type) return;
       rows.push({ listing: l, listingIndex: li, result: r });
     });
   });
@@ -719,14 +707,16 @@ function operatorTimeCell(l){
   return `<div class="time">${l.operator}<br>${l.opTime || l.updTime || '—'}</div>`;
 }
 
-function renderDetailTaskView(task, listings){
-  const taskRows = expandFailedTaskRows(listings);
+function renderDetailTaskView(task, listings, typeFilter){
+  const taskRows = expandFailedTaskRows(listings, typeFilter);
   currentDetailTaskRows = taskRows;
   document.getElementById('detailTbody').innerHTML = taskRows.map((row, i) => {
     const l = row.listing;
     const r = row.result;
     return `<tr data-task-i="${i}">
       <td>${listingInfoCell(l, row.listingIndex)}</td>
+      <td>${storeInfoCell(l)}</td>
+      <td>${shipTypeCell()}</td>
       <td>${r.queueId || '<span class="dash">-</span>'}</td>
       <td>${TYPE_LABEL[r.type] || r.type}</td>
       <td>${renderQueueStatus(r.status)}</td>
@@ -734,7 +724,7 @@ function renderDetailTaskView(task, listings){
       <td><div class="time">${l.addTime || task.addTime}<br>${l.updTime || task.addTime}</div></td>
       <td>${operatorTimeCell(l)}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:32px">暂无删词失败任务</td></tr>`;
+  }).join('') || `<tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:32px">暂无删词失败任务</td></tr>`;
   document.getElementById('detailTotal').textContent = taskRows.length;
   bindListingCopyActions(listings);
 }
@@ -742,18 +732,12 @@ function renderDetailTaskView(task, listings){
 function renderDetailListingView(task, listings){
   currentDetailTaskRows = [];
   document.getElementById('detailTbody').innerHTML = listings.map((l, i) => {
-    const ps = getListingStatus(l);
     return `<tr data-i="${i}">
       <td><input type="checkbox" class="detail-rowck" data-i="${i}" /></td>
       <td>${listingInfoCell(l, i)}</td>
-      <td><div class="store">
-        <div class="row"><span class="flag">🇺🇸</span><span class="name">${l.store}</span></div>
-        <div class="row">首选业务员：${l.gold}</div>
-        <div class="row">FBM业务员：${l.fbm}</div>
-        <div class="row">店铺状态：${l.normalStore ? '正常' : '异常'}</div>
-      </div></td>
-      <td><div class="ship-cell"><span class="tag-amz">amazon</span><span class="tag-ship-self">自发</span></div></td>
-      <td>${procStatusPill(ps)}<br><span class="link" data-result="${i}">查看详情</span></td>
+      <td>${storeInfoCell(l)}</td>
+      <td>${shipTypeCell()}</td>
+      <td><span class="link" data-result="${i}">查看详情</span></td>
       <td><div class="time">${l.addTime || task.addTime}<br>${l.updTime || task.addTime}</div></td>
       <td>${operatorTimeCell(l)}</td>
     </tr>`;
@@ -779,19 +763,20 @@ function renderDetail(){
   if(!task){ gotoTaskList(); return; }
   const filter = routeState.filter;
   let listings = filterListingsByRoute(task, filter);
-  if(!isTaskDimensionView(filter)) listings = filterListingsByProc(listings);
   const filterLabel = filter ? FILTER_LABEL[filter] : '有词';
   const taskView = isTaskDimensionView(filter);
+  if(!taskView) listings = filterListingsByType(listings, detailFilters.type);
 
   document.getElementById('detailMeta').innerHTML =
     `任务 #${task.id} · 敏感词：<b>${task.keyword}</b>` +
     (filter ? `<span class="filter-tag">${filterLabel}</span>` : '') +
-    (taskView ? '<span class="filter-tag">任务维度</span>' : '');
+    (taskView ? '<span class="filter-tag">任务维度</span>' : '') +
+    (detailFilters.type ? `<span class="filter-tag">${TYPE_LABEL[detailFilters.type]}</span>` : '');
 
   currentDetailListings = listings;
   setDetailTableMode(taskView);
   document.getElementById('delWordDropdown').style.display = taskView ? 'none' : '';
-  if(taskView) renderDetailTaskView(task, listings);
+  if(taskView) renderDetailTaskView(task, listings, detailFilters.type);
   else renderDetailListingView(task, listings);
 }
 
@@ -823,9 +808,6 @@ function openResultDetail(listing){
     ${renderFailReason(r)}
   </tr>`).join('');
   document.getElementById('resultBody').innerHTML = `
-    <p class="result-tip">
-      同一 listing 有几个类型提交删词，就展示几条记录；列表状态由全部队列聚合为「${PROC_STATUS[getListingStatus(listing)]}」
-    </p>
     <div class="result-table-wrap">
       <table class="detail-table">
         <thead><tr><th>队列ID</th><th>类型</th><th>状态</th><th>失败原因</th></tr></thead>
@@ -866,16 +848,9 @@ function applyRoute(){
   document.getElementById('viewDetail').classList.toggle('active', r.page === 'detail');
   if(r.page === 'list'){
     routeState = { taskId:null, filter:null };
-    detailProcFilters = new Set();
-    updateProcStatusLabel();
     renderTaskList();
   } else {
     routeState = { taskId:r.taskId, filter:r.filter };
-    if(['pending','deleting','success','fail'].includes(r.filter)){
-      detailProcFilters = new Set([r.filter]);
-      updateProcStatusLabel();
-      syncProcStatusChecks();
-    }
     renderDetail();
   }
 }
@@ -1028,7 +1003,6 @@ document.getElementById('importFileInput').onchange = (e) => {
 
 document.getElementById('btnDelWordToggle').onclick = (e) => {
   e.stopPropagation();
-  hideProcStatusPanel();
   document.getElementById('delWordMenu').classList.toggle('show');
 };
 document.getElementById('delWordMenu').onclick = e => e.stopPropagation();
@@ -1054,37 +1028,26 @@ document.getElementById('delWordOk').onclick = () => {
   closeDelWordModal();
 };
 
-document.addEventListener('click', () => { hideProcStatusPanel(); hideDelWordMenu(); });
-window.addEventListener('scroll', () => { hideProcStatusPanel(); hideDelWordMenu(); }, true);
+document.addEventListener('click', () => { hideDelWordMenu(); });
+window.addEventListener('scroll', () => { hideDelWordMenu(); }, true);
 
-document.getElementById('procStatusTrigger').onclick = (e) => {
-  e.stopPropagation();
-  syncProcStatusChecks();
-  document.getElementById('procStatusPanel').classList.toggle('show');
-};
-document.getElementById('procStatusPanel').onclick = e => e.stopPropagation();
 document.getElementById('btnDetailSearch').onclick = () => {
-  detailProcFilters = new Set(
-    [...document.querySelectorAll('#procStatusPanel input:checked')].map(el => el.value)
-  );
-  updateProcStatusLabel();
-  hideProcStatusPanel();
+  detailFilters.type = document.getElementById('fDetailType').value;
   renderDetail();
-  toast(detailProcFilters.size ? `已筛选处理状态，共 ${document.getElementById('detailTotal').textContent} 条` : '已显示全部处理状态');
+  toast(`已搜索，共 ${document.getElementById('detailTotal').textContent} 条`);
 };
 document.getElementById('btnDetailReset').onclick = () => {
-  detailProcFilters = new Set();
-  document.querySelectorAll('#procStatusPanel input').forEach(el => { el.checked = false; });
-  updateProcStatusLabel();
-  hideProcStatusPanel();
+  document.getElementById('fDetailType').value = '';
+  detailFilters = { type:'' };
   renderDetail();
-  toast('已重置详情筛选');
+  toast('已重置');
 };
 document.getElementById('btnExport').onclick = () => {
   const task = TASKS.find(t => t.id === routeState.taskId);
   if(!task){ toast('请在检索结果详情页导出'); return; }
   let listings = filterListingsByRoute(task, routeState.filter);
-  listings = filterListingsByProc(listings);
+  const taskView = isTaskDimensionView(routeState.filter);
+  if(!taskView) listings = filterListingsByType(listings, detailFilters.type);
   const rows = buildExportRows(task, listings);
   if(!rows.length){ toast('当前无数据可导出'); return; }
   toast(`已导出 ${rows.length} 条 listing · 字段：${EXPORT_FIELDS.join('、')}`);
