@@ -264,7 +264,7 @@
       <div class="filter-row">
         <select class="ctrl"><option>全部销售人员</option></select>
         <select class="ctrl"><option>全部 FBA/FBM 业务员</option></select>
-        <select class="ctrl" id="fDetailType">
+        <select class="ctrl" id="fDetailType" style="display:none">
           <option value="">全部类型</option>
           <option value="title">标题</option>
           <option value="bullet">亮点</option>
@@ -765,13 +765,18 @@ function renderDetail(){
   let listings = filterListingsByRoute(task, filter);
   const filterLabel = filter ? FILTER_LABEL[filter] : '有词';
   const taskView = isTaskDimensionView(filter);
-  if(!taskView) listings = filterListingsByType(listings, detailFilters.type);
+  const typeEl = document.getElementById('fDetailType');
+  typeEl.style.display = taskView ? '' : 'none';
+  if(!taskView){
+    typeEl.value = '';
+    detailFilters.type = '';
+  }
 
   document.getElementById('detailMeta').innerHTML =
     `任务 #${task.id} · 敏感词：<b>${task.keyword}</b>` +
     (filter ? `<span class="filter-tag">${filterLabel}</span>` : '') +
     (taskView ? '<span class="filter-tag">任务维度</span>' : '') +
-    (detailFilters.type ? `<span class="filter-tag">${TYPE_LABEL[detailFilters.type]}</span>` : '');
+    (taskView && detailFilters.type ? `<span class="filter-tag">${TYPE_LABEL[detailFilters.type]}</span>` : '');
 
   currentDetailListings = listings;
   setDetailTableMode(taskView);
@@ -1032,7 +1037,9 @@ document.addEventListener('click', () => { hideDelWordMenu(); });
 window.addEventListener('scroll', () => { hideDelWordMenu(); }, true);
 
 document.getElementById('btnDetailSearch').onclick = () => {
-  detailFilters.type = document.getElementById('fDetailType').value;
+  if(isTaskDimensionView(routeState.filter)){
+    detailFilters.type = document.getElementById('fDetailType').value;
+  }
   renderDetail();
   toast(`已搜索，共 ${document.getElementById('detailTotal').textContent} 条`);
 };
@@ -1046,8 +1053,6 @@ document.getElementById('btnExport').onclick = () => {
   const task = TASKS.find(t => t.id === routeState.taskId);
   if(!task){ toast('请在检索结果详情页导出'); return; }
   let listings = filterListingsByRoute(task, routeState.filter);
-  const taskView = isTaskDimensionView(routeState.filter);
-  if(!taskView) listings = filterListingsByType(listings, detailFilters.type);
   const rows = buildExportRows(task, listings);
   if(!rows.length){ toast('当前无数据可导出'); return; }
   toast(`已导出 ${rows.length} 条 listing · 字段：${EXPORT_FIELDS.join('、')}`);
