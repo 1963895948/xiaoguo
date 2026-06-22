@@ -1,0 +1,2864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>合规品管理 - 全链路原型</title>
+  <style>
+    :root{
+      --bg:#f0f2f5;--panel:#fff;--line:#e8ebf0;--text:#1f2733;--sub:#5b6577;
+      --pri:#2f6bff;--ok:#16b364;--warn:#fa8c16;--danger:#f5455c;
+      --header-h:48px;--side-w:210px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font:13px/1.5 "Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text)}
+
+    /* 顶栏 */
+    .header{
+      height:var(--header-h);background:#fff;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;padding:0 12px 0 0;position:sticky;top:0;z-index:20;
+    }
+    .brand{
+      width:var(--side-w);flex:none;padding:0 16px;font-weight:700;font-size:15px;
+      display:flex;align-items:center;gap:6px;border-right:1px solid var(--line);height:100%;
+    }
+    .brand .caret{color:#97a0b0;font-size:12px}
+    .page-tabs{
+      flex:1;display:flex;align-items:flex-end;gap:2px;padding:0 12px;height:100%;overflow:auto;
+    }
+    .ptab{
+      display:flex;align-items:center;gap:6px;padding:0 14px;height:36px;margin-top:11px;
+      border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;
+      background:transparent;color:var(--sub);cursor:pointer;white-space:nowrap;font-size:13px;
+    }
+    .ptab:hover{color:var(--pri)}
+    .ptab.on{background:var(--bg);border-color:var(--line);color:var(--pri);font-weight:600}
+    .ptab .x{font-size:11px;color:#b0b8c4;padding:2px 4px;border-radius:4px}
+    .ptab .x:hover{background:#eef2f8;color:var(--text)}
+    .user{
+      flex:none;display:flex;align-items:center;gap:8px;padding:0 8px;color:var(--text);font-size:13px;
+    }
+    .avatar{
+      width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6ea8ff,#2f6bff);
+      color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+    }
+
+    /* 主体 */
+    .body{display:flex;min-height:calc(100vh - var(--header-h))}
+    .sidenav{
+      width:var(--side-w);flex:none;background:#fff;border-right:1px solid var(--line);
+      padding:8px 0;overflow:auto;
+    }
+    .nav-item,.nav-module-head{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px 14px;cursor:pointer;color:var(--text);user-select:none;
+    }
+    .nav-item:hover,.nav-module-head:hover{background:#f6f8fb}
+    .nav-item.muted{color:var(--sub)}
+    .nav-module-head{font-weight:600}
+    .nav-module-head .arrow,.nav-item .arrow{color:#97a0b0;font-size:11px;transition:transform .2s}
+    .nav-module.collapsed .nav-module-body{display:none}
+    .nav-module.collapsed .nav-module-head .arrow{transform:rotate(-90deg)}
+    .sub-group{border-top:1px solid #f0f2f5}
+    .sub-head{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:8px 14px 8px 22px;cursor:pointer;font-weight:600;font-size:12px;color:var(--sub);
+    }
+    .sub-head:hover{background:#fafbfd}
+    .sub-head .arrow{font-size:10px;color:#97a0b0;transition:transform .2s}
+    .sub-group.collapsed .sub-body{display:none}
+    .sub-group.collapsed .sub-head .arrow{transform:rotate(-90deg)}
+    .item{
+      padding:8px 14px 8px 34px;cursor:pointer;color:var(--sub);font-size:12px;
+    }
+    .item:hover{background:#f6f8fb}
+    .item.active{background:#eaf0ff;color:var(--pri);font-weight:700}
+
+    .content{flex:1;padding:12px;overflow:auto}
+    .page{background:var(--panel);min-height:calc(100vh - var(--header-h) - 24px)}
+    .route{display:none;padding:16px 20px 24px}
+    .route.active{display:block}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+    .input,.sel{
+      height:32px;border:1px solid var(--line);border-radius:4px;padding:0 10px;
+      background:#fff;min-width:160px;font-size:12px;
+    }
+    .btn{
+      height:32px;border:1px solid var(--line);background:#fff;border-radius:4px;
+      padding:0 14px;cursor:pointer;font-size:12px;
+    }
+    .btn:hover{border-color:var(--pri);color:var(--pri)}
+    .btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+    .btn.pri:hover{filter:brightness(.95);color:#fff}
+    .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+    .btn:disabled,.btn.disabled{
+      opacity:.45;cursor:not-allowed;pointer-events:none;
+      border-color:var(--line);color:var(--sub);background:#f6f8fb;
+    }
+    .btn.pri:disabled,.btn.pri.disabled{
+      background:#a8c4ff;border-color:#a8c4ff;color:#fff;
+    }
+    .tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-bottom:14px}
+    .tab{padding:10px 2px;cursor:pointer;color:var(--sub);font-size:13px}
+    .tab.on{color:var(--pri);border-bottom:2px solid var(--pri);font-weight:600;margin-bottom:-1px}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th,td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:top}
+    th{background:#fafafa;color:var(--sub);font-weight:600}
+    .tag{display:inline-block;padding:1px 8px;border-radius:11px;font-size:11px}
+    .t-w{background:#fff7e6;color:var(--warn)}
+    .t-d{background:#fff1f0;color:var(--danger)}
+    .t-y{background:#f0f9f3;color:var(--ok)}
+    .link{color:var(--pri);cursor:pointer}
+    .link:hover{text-decoration:underline}
+    .flow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+    .step{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:12px}
+    .step.on{border-color:#b9ccff;color:var(--pri);font-weight:600}
+    .toolbar{padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:12px}
+    .pager{
+      display:flex;justify-content:flex-end;align-items:center;gap:8px;
+      padding:12px 0 0;color:var(--sub);font-size:12px;
+    }
+
+    /* 创建回扫任务 · 对齐禁售品表单 */
+    .task-form{max-width:1180px}
+    .form-top{
+      display:flex;gap:24px;flex-wrap:wrap;padding-bottom:16px;
+      border-bottom:1px solid var(--line);margin-bottom:16px;
+    }
+    .form-field{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}
+    .form-field > label{
+      flex:none;width:118px;text-align:right;padding-top:6px;color:var(--text);font-size:12px;
+    }
+    .form-field .ctl{flex:1;min-width:0}
+    .req{color:var(--danger);margin-right:2px}
+    .hint{color:var(--sub);font-size:11px;margin-top:4px}
+    .form-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+    @media(max-width:960px){.form-cols{grid-template-columns:1fr}}
+    .form-panel{border:1px solid var(--line);border-radius:4px;padding:14px 16px 8px;background:#fff}
+    .panel-title{
+      font-weight:600;font-size:13px;margin:0 0 14px;padding-bottom:10px;
+      border-bottom:1px solid #f0f2f5;
+    }
+    .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f0f2f5}
+    .panel-head .panel-title{margin:0;padding:0;border:none}
+    .input.block,.sel.block,.textarea{width:100%;min-width:0}
+    .textarea{
+      min-height:88px;border:1px solid var(--line);border-radius:4px;padding:8px 10px;
+      font:12px/1.5 inherit;resize:vertical;
+    }
+    .textarea.lg{min-height:120px}
+    .radio-group,.check-group{display:flex;flex-wrap:wrap;gap:16px;padding-top:4px}
+    .radio-group label,.check-group label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px}
+    .date-range{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .date-range .input{min-width:140px}
+    .add-chip{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:28px;height:28px;border:1px dashed var(--line);border-radius:4px;
+      color:var(--sub);cursor:pointer;font-size:16px;line-height:1;
+    }
+    .add-chip:hover{border-color:var(--pri);color:var(--pri)}
+    .picked{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .picked .chip{
+      display:inline-flex;align-items:center;gap:4px;padding:2px 8px;
+      background:#f4f6fa;border-radius:4px;font-size:11px;color:var(--sub);
+    }
+    .rte{border:1px solid var(--line);border-radius:4px;overflow:hidden}
+    .rte-bar{
+      display:flex;flex-wrap:wrap;gap:2px;padding:6px 8px;background:#fafafa;
+      border-bottom:1px solid var(--line);
+    }
+    .rte-bar span{
+      padding:2px 6px;border:1px solid transparent;border-radius:3px;
+      color:var(--sub);font-size:11px;cursor:default;
+    }
+    .rte-body{
+      min-height:140px;padding:10px;color:var(--sub);font-size:12px;line-height:1.6;
+    }
+    .form-footer{
+      display:flex;align-items:center;justify-content:flex-end;gap:12px;
+      margin-top:20px;padding-top:16px;border-top:1px solid var(--line);
+    }
+    .form-footer .left{margin-right:auto;display:flex;align-items:center;gap:8px;color:var(--sub);font-size:12px}
+    .help-icon{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:14px;height:14px;border-radius:50%;background:#e8ebf0;
+      color:var(--sub);font-size:10px;cursor:help;vertical-align:middle;margin-left:4px;
+    }
+    .scope-hidden{display:none!important}
+    .sku-box{position:relative;border:1px solid var(--line);border-radius:4px;background:#fff}
+    .sku-box textarea{
+      width:100%;min-height:200px;border:none;border-radius:4px 4px 0 0;
+      padding:10px 10px 28px;font:12px/1.5 inherit;resize:vertical;outline:none;
+    }
+    .sku-box .counter{
+      position:absolute;right:10px;bottom:8px;font-size:11px;color:var(--sub);pointer-events:none;
+    }
+    .scope-by-time .scope-time-only{display:flex}
+    .scope-by-sku .scope-time-only{display:none!important}
+
+    /* 快速关联 · 平台与站点 */
+    .modal-mask{
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;
+      align-items:center;justify-content:center;padding:24px;
+    }
+    .modal-mask.show{display:flex}
+    .modal-box{
+      width:min(920px,96vw);max-height:90vh;background:#fff;border-radius:6px;
+      display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.15);
+    }
+    .modal-box.sm{width:min(480px,92vw)}
+    .modal-form .form-field > label{width:88px}
+    .modal-hd{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 18px;border-bottom:1px solid var(--line);font-weight:600;font-size:14px;
+    }
+    .modal-x{
+      border:none;background:none;font-size:20px;line-height:1;color:#999;cursor:pointer;padding:0 4px;
+    }
+    .modal-x:hover{color:var(--text)}
+    .modal-bd{padding:14px 18px;overflow:auto;flex:1}
+    .modal-ft{
+      padding:12px 18px;border-top:1px solid var(--line);
+      display:flex;justify-content:flex-end;gap:10px;
+    }
+    .ps-summary{font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.8}
+    .ps-summary .cur{color:var(--text)}
+    .ps-bulk{
+      display:flex;flex-wrap:wrap;gap:16px;padding:10px 0 14px;
+      border-bottom:1px solid #f0f2f5;margin-bottom:12px;
+    }
+    .ps-bulk label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;white-space:nowrap}
+    .ps-platform{margin-bottom:14px}
+    .ps-platform-hd{
+      display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;
+      padding-bottom:8px;border-bottom:1px dashed #eef1f6;
+    }
+    .ps-platform-name{
+      flex:none;width:72px;font-weight:600;font-size:12px;padding-top:2px;
+    }
+    .ps-platform-name label{display:flex;align-items:center;gap:6px;cursor:pointer}
+    .ps-sites{
+      flex:1;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px 12px;
+    }
+    @media(max-width:760px){.ps-sites{grid-template-columns:repeat(3,1fr)}}
+    .ps-sites label{
+      display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .chip .x-chip{
+      cursor:pointer;color:#999;margin-left:2px;font-size:13px;line-height:1;
+    }
+    .chip .x-chip:hover{color:var(--danger)}
+    .cell-ellipsis{
+      max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .form-page-title{font-size:15px;font-weight:600;margin:0 0 16px}
+    .form-readonly{
+      height:32px;line-height:32px;padding:0 10px;background:#f6f8fb;
+      border:1px solid var(--line);border-radius:4px;color:var(--sub);font-size:12px;
+    }
+    .toast{
+      position:fixed;top:60px;left:50%;transform:translateX(-50%);
+      background:#1f2733;color:#fff;padding:10px 18px;border-radius:6px;
+      font-size:13px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.15);
+      opacity:0;pointer-events:none;transition:opacity .25s;
+    }
+    .toast.show{opacity:1}
+    .toast.warn{
+      background:#fff;color:var(--text);border:1px solid #ffe7ba;
+      box-shadow:0 4px 16px rgba(0,0,0,.12);display:flex;align-items:center;gap:8px;
+    }
+    .toast.warn .warn-ico{
+      color:#fa8c16;font-size:16px;line-height:1;flex:none;
+    }
+    .task-banner{
+      background:#f6f8fb;border:1px solid var(--line);border-radius:4px;
+      padding:10px 14px;margin-bottom:12px;font-size:12px;
+      display:flex;gap:20px 32px;flex-wrap:wrap;color:var(--sub);
+    }
+    .task-banner b{color:var(--text);font-weight:600}
+    .stat-tabs{
+      display:flex;gap:0;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:12px 0 0;
+    }
+    .stat-tab{
+      padding:10px 14px;cursor:pointer;color:var(--sub);font-size:13px;
+      border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
+    }
+    .stat-tab.on{color:var(--pri);border-bottom-color:var(--pri);font-weight:600}
+    .stat-tab em{font-style:normal;margin-left:2px}
+    .site-icons{display:inline-flex;gap:3px;flex-wrap:wrap;vertical-align:middle}
+    .site-icon{
+      width:24px;height:24px;border-radius:4px;background:#eef1f6;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-size:9px;font-weight:700;color:#8892a0;position:relative;
+    }
+    .site-icon.ok{background:#e8f8ee;color:var(--ok)}
+    .site-icon.risk{background:#fff1f0;color:var(--danger)}
+    .cell-sites{font-size:11px;color:var(--sub);line-height:1.5;max-width:200px}
+    .thumb{width:48px;height:48px;background:#eef1f6;border-radius:4px;flex:none}
+
+    /* 合规性提交检测 */
+    .detect-pane{display:none}
+    .detect-pane.active{display:block}
+    .detect-form{max-width:1180px}
+    .img-upload-row{display:flex;gap:8px;margin-bottom:8px}
+    .img-dropzone{
+      min-height:160px;border:1px dashed var(--line);border-radius:4px;
+      background:#fafbfd;display:flex;align-items:center;justify-content:center;
+      color:var(--sub);font-size:12px;
+    }
+    .detect-submit-bar{
+      display:flex;justify-content:center;padding:24px 0 8px;
+      border-top:1px solid var(--line);margin-top:8px;
+    }
+    .btn.lg{height:36px;padding:0 32px;font-size:13px}
+    .detect-batch-hd{
+      display:flex;align-items:center;justify-content:space-between;
+      flex-wrap:wrap;gap:8px;margin-bottom:12px;
+    }
+    .detect-note{
+      color:var(--danger);font-size:12px;line-height:1.8;margin:12px 0 0;
+    }
+    .detect-note p{margin:0 0 6px}
+    .detect-sku-pane{max-width:720px}
+    .detect-batch-pane{max-width:720px}
+
+    /* 合规品检测结果 */
+    .detect-filter{
+      background:#fafafa;border:1px solid var(--line);border-radius:4px;
+      padding:12px 14px 4px;margin-bottom:12px;
+    }
+    .detect-filter .row{margin-bottom:8px}
+    .detect-filter-actions{
+      display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;
+      padding:4px 0 8px;
+    }
+    .cell-meta{font-size:11px;color:var(--sub);line-height:1.7;white-space:nowrap}
+    .cell-meta b{color:var(--text);font-weight:500}
+    .cell-desc{max-width:200px;font-size:11px;color:var(--sub);line-height:1.5}
+    .op-more{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:24px;height:24px;border:1px solid var(--line);border-radius:4px;
+      color:var(--sub);cursor:pointer;font-size:14px;line-height:1;
+    }
+    .op-more:hover{border-color:var(--pri);color:var(--pri)}
+    .op-cell{position:relative;display:inline-block}
+    .op-menu{
+      display:none;position:absolute;right:0;top:calc(100% + 4px);z-index:30;
+      background:#fff;border:1px solid var(--line);border-radius:4px;
+      box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:108px;padding:4px 0;
+    }
+    .op-menu.show{display:block}
+    .op-menu button{
+      display:block;width:100%;border:none;background:none;text-align:left;
+      padding:8px 14px;font-size:12px;cursor:pointer;color:var(--text);
+    }
+    .op-menu button:hover{background:#f6f8fb;color:var(--pri)}
+    .modal-box.lg{width:min(960px,96vw)}
+    .detail-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+    @media(max-width:760px){.detail-cols{grid-template-columns:1fr}}
+    .detail-block{margin-bottom:14px}
+    .detail-label{color:var(--sub);font-size:11px;margin-bottom:4px}
+    .detail-val{font-size:12px;line-height:1.65;word-break:break-word}
+    .detail-thumb{
+      width:72px;height:72px;background:#eef1f6;border-radius:4px;flex:none;
+    }
+    .detail-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}
+    .log-table{width:100%}
+    .empty-log{text-align:center;padding:48px 16px;color:var(--sub);font-size:12px}
+    .empty-log .ico{font-size:36px;opacity:.35;margin-bottom:8px}
+
+    /* 检测站点 · 树形多选 */
+    .site-filter{
+      position:relative;min-width:220px;flex:1;max-width:280px;
+    }
+    .site-filter-trigger{
+      display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;
+      border:1px solid var(--line);border-radius:4px;background:#fff;cursor:pointer;
+      font-size:12px;color:var(--sub);
+    }
+    .site-filter-trigger:hover,.site-filter.open .site-filter-trigger{border-color:var(--pri)}
+    .site-filter.open .site-filter-trigger{box-shadow:0 0 0 2px rgba(47,107,255,.12)}
+    .site-filter-trigger .val{
+      flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);
+    }
+    .site-filter-trigger .ph{color:var(--sub)}
+    .site-filter-trigger .ico{flex:none;color:#b0b8c4;font-size:13px}
+    .site-filter-panel{
+      display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:40;
+      width:100%;min-width:240px;background:#fff;border:1px solid var(--line);
+      border-radius:4px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:8px 0 6px;
+    }
+    .site-filter.open .site-filter-panel{display:block}
+    .site-filter-search-wrap{
+      padding:0 10px 8px;border-bottom:1px solid #f0f2f5;margin-bottom:4px;
+    }
+    .site-filter-search{
+      width:100%;height:28px;border:1px solid var(--line);border-radius:4px;
+      padding:0 8px;font-size:12px;outline:none;
+    }
+    .site-filter-search:focus{border-color:var(--pri)}
+    .site-tree{max-height:220px;overflow:auto;padding:4px 0}
+    .site-tree-parent{
+      display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;
+      font-size:12px;font-weight:600;user-select:none;
+    }
+    .site-tree-parent:hover{background:#f6f8fb}
+    .site-tree-arrow{
+      width:14px;color:var(--sub);font-size:10px;cursor:pointer;flex:none;
+    }
+    .site-tree-children{padding-left:28px}
+    .site-tree-children label{
+      display:flex;align-items:center;gap:6px;padding:5px 10px 5px 0;
+      font-size:12px;cursor:pointer;user-select:none;
+    }
+    .site-tree-children label:hover{background:#f6f8fb}
+    .site-tree-children label.hidden{display:none}
+
+    /* 操作人 · 组织架构选人 */
+    .org-filter{
+      position:relative;min-width:200px;flex:1;max-width:260px;
+    }
+    .org-filter-trigger{
+      display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;
+      border:1px solid var(--line);border-radius:4px;background:#fff;cursor:pointer;
+      font-size:12px;
+    }
+    .org-filter-trigger:hover,.org-filter.open .org-filter-trigger{border-color:var(--pri)}
+    .org-filter.open .org-filter-trigger{box-shadow:0 0 0 2px rgba(47,107,255,.12)}
+    .org-filter-trigger .val{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .org-filter-trigger .ph{color:var(--sub)}
+    .org-filter-trigger .ico{flex:none;color:#b0b8c4;font-size:11px}
+    .org-filter-panel{
+      display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:40;
+      width:100%;min-width:260px;background:#fff;border:1px solid var(--line);
+      border-radius:4px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:8px 0 6px;
+    }
+    .org-filter.open .org-filter-panel{display:block}
+    .org-tree{max-height:240px;overflow:auto;padding:4px 0;font-size:12px}
+    .org-dept{padding:4px 0}
+    .org-dept-hd{
+      display:flex;align-items:center;gap:6px;padding:6px 10px;font-weight:600;
+      cursor:pointer;user-select:none;
+    }
+    .org-dept-hd:hover{background:#f6f8fb}
+    .org-dept-arrow{width:14px;color:var(--sub);font-size:10px;flex:none}
+    .org-team{padding-left:18px}
+    .org-team-hd{
+      display:flex;align-items:center;gap:6px;padding:5px 10px 5px 14px;
+      color:var(--sub);cursor:pointer;user-select:none;
+    }
+    .org-team-hd:hover{background:#f6f8fb}
+    .org-users{padding-left:42px}
+    .org-user{
+      display:flex;align-items:center;gap:6px;padding:5px 10px 5px 0;
+      cursor:pointer;color:var(--text);user-select:none;
+    }
+    .org-user:hover{background:#eaf0ff;color:var(--pri)}
+    .org-user.on{background:#eaf0ff;color:var(--pri);font-weight:600}
+    .org-user.hidden,.org-dept.hidden,.org-team.hidden{display:none}
+    .detect-operator-row{align-items:center}
+    .detect-operator-row .sel{min-width:100px;flex:none}
+    .detect-time-range{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .detect-time-range .input{min-width:140px}
+    .detect-time-range .sel{min-width:108px;flex:none}
+
+    /* 相似产品 */
+    .sim-count.link{font-weight:600}
+    .cell-sim{font-size:12px;line-height:1.65;white-space:nowrap}
+    .cell-sim .sim-line{display:flex;align-items:center;gap:4px}
+    .cell-sim .sim-label{color:var(--sub);font-size:11px}
+    .cell-sim .sim-max b{color:var(--pri);font-weight:600}
+    .modal-box.xl{width:min(1180px,96vw)}
+    .sim-modal-hd{
+      display:flex;align-items:flex-start;gap:12px;padding-bottom:12px;
+      border-bottom:1px solid var(--line);margin-bottom:14px;
+    }
+    .sim-modal-hd .sim-copy-btn{flex:none;margin-top:4px}
+    .sim-grid{
+      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
+      max-height:58vh;overflow:auto;padding-right:4px;
+    }
+    @media(max-width:1100px){.sim-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:700px){.sim-grid{grid-template-columns:1fr}}
+    .sim-card{
+      border:1px solid var(--line);border-radius:4px;padding:10px 12px;background:#fff;
+    }
+    .sim-card-hd{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      margin-bottom:6px;font-size:12px;
+    }
+    .sim-card-hd .meta{color:var(--sub)}
+    .sim-card-hd .meta b{color:var(--text);font-weight:600}
+    .sim-card-hd .sim-score{color:var(--pri);font-weight:600;font-size:13px}
+    .sim-card-imgs{
+      display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;
+    }
+    .sim-img-cell{position:relative;flex:none;cursor:zoom-in}
+    .sim-img-cell.main .sim-img-box{width:88px;height:88px}
+    .sim-img-thumbs{display:flex;flex-direction:column;gap:6px;flex-wrap:wrap;max-height:88px}
+    .sim-img-cell.sub .sim-img-box{width:40px;height:40px}
+    .sim-img-box{
+      background:#eef1f6;border:1px solid var(--line);border-radius:4px;overflow:hidden;
+    }
+    .sim-img-box img,.sim-seed-img{width:100%;height:100%;object-fit:cover;display:block}
+    .sim-seed-img{border-radius:4px;cursor:zoom-in;border:1px solid var(--line)}
+    .sim-img-score{
+      position:absolute;left:2px;bottom:2px;padding:0 4px;
+      font-size:10px;line-height:16px;background:rgba(255,255,255,.92);
+      border-radius:2px;color:var(--pri);font-weight:600;pointer-events:none;
+    }
+    .sim-card-body{display:block}
+    .sim-card-info{font-size:11px;line-height:1.7;color:var(--sub)}
+    .sim-card-title{
+      font-size:12px;font-weight:600;color:var(--text);line-height:1.5;
+      margin-bottom:6px;
+    }
+    .sim-card-info b{color:var(--text);font-weight:500}
+    .sim-card-img-count{font-size:10px;color:var(--sub);margin-top:4px}
+    .sim-empty{
+      text-align:center;padding:48px 16px;color:var(--sub);font-size:12px;
+    }
+    .img-preview-mask{
+      display:none;position:fixed;inset:0;z-index:3000;
+      background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:32px;
+    }
+    .img-preview-mask.show{display:flex}
+    .img-preview-box{position:relative;max-width:min(92vw,800px);max-height:92vh}
+    .img-preview-box img{
+      display:block;max-width:100%;max-height:88vh;border-radius:6px;
+      background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.35);
+    }
+    .img-preview-x{
+      position:absolute;top:-12px;right:-12px;width:32px;height:32px;
+      border:none;border-radius:50%;background:#fff;color:#333;font-size:20px;
+      line-height:32px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand"><span>风控系统</span><span class="caret">▾</span></div>
+    <div class="page-tabs" id="pageTabs"></div>
+    <div class="user">
+      <div class="avatar">管</div>
+      <span>管理员</span>
+    </div>
+  </header>
+
+  <div class="body">
+    <aside class="sidenav">
+      <div class="nav-item muted"><span>新品风险审核</span></div>
+
+      <div class="nav-module" id="moduleCompliance">
+        <div class="nav-module-head" id="moduleComplianceToggle">
+          <span>合规品管理</span>
+          <span class="arrow">▾</span>
+        </div>
+        <div class="nav-module-body">
+          <div class="sub-group" data-sub="policy">
+            <div class="sub-head"><span>合规政策库</span><span class="arrow">▾</span></div>
+            <div class="sub-body">
+              <div class="item" data-go="policy">政策管理</div>
+            </div>
+          </div>
+          <div class="sub-group" data-sub="detect">
+            <div class="sub-head"><span>合规品检测</span><span class="arrow">▾</span></div>
+            <div class="sub-body">
+              <div class="item active" data-go="detect-submit">合规性提交检测</div>
+              <div class="item" data-go="detect-result">合规品检测结果</div>
+            </div>
+          </div>
+          <div class="sub-group" data-sub="rescan">
+            <div class="sub-head"><span>合规回扫</span><span class="arrow">▾</span></div>
+            <div class="sub-body">
+              <div class="item" data-go="rescan-create">创建回扫任务</div>
+              <div class="item" data-go="rescan-result">合规回扫结果</div>
+              <div class="item" data-go="rescan-detail">合规回扫详情</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-module collapsed">
+        <div class="nav-module-head"><span>禁售品管理</span><span class="arrow">▾</span></div>
+        <div class="nav-module-body">
+          <div class="item muted">禁售品提交检测</div>
+          <div class="item muted">禁售品检测结果</div>
+        </div>
+      </div>
+      <div class="nav-module collapsed">
+        <div class="nav-module-head"><span>专利管理</span><span class="arrow">▾</span></div>
+      </div>
+      <div class="nav-module collapsed">
+        <div class="nav-module-head"><span>版权管理</span><span class="arrow">▾</span></div>
+      </div>
+      <div class="nav-module collapsed">
+        <div class="nav-module-head"><span>刊登队列管理</span><span class="arrow">▾</span></div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="page">
+        <section id="detect-submit" class="route active">
+          <div class="tabs" id="detectTabs">
+            <div class="tab on" data-detect-tab="manual">手动输入</div>
+            <div class="tab" data-detect-tab="sku">上传SKU</div>
+            <div class="tab" data-detect-tab="batch">批量导入</div>
+          </div>
+
+          <!-- 手动输入 -->
+          <div class="detect-pane active" id="detectPaneManual">
+            <div class="detect-form task-form">
+              <div class="form-cols">
+                <div class="form-panel">
+                  <div class="form-field">
+                    <label>图片</label>
+                    <div class="ctl">
+                      <div class="img-upload-row">
+                        <button type="button" class="btn">网图图片上传</button>
+                        <button type="button" class="btn">本地图片上传</button>
+                      </div>
+                      <div class="img-dropzone">支持拖拽、粘贴、链接；png/jpg/jpeg，单张 &lt;10M，最多 4 张</div>
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label><span class="req">*</span>中文产品标题</label>
+                    <div class="ctl">
+                      <textarea class="textarea lg" placeholder="中文/1000字" maxlength="1000"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label><span class="req">*</span>英文产品标题</label>
+                    <div class="ctl">
+                      <textarea class="textarea lg" placeholder="英文/1000字" maxlength="1000"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>产品描述</label>
+                    <div class="ctl">
+                      <textarea class="textarea lg" placeholder="中英文/5000字" maxlength="5000"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>亮点</label>
+                    <div class="ctl">
+                      <textarea class="textarea" placeholder="中英文/5000字" maxlength="5000"></textarea>
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>关键词</label>
+                    <div class="ctl">
+                      <textarea class="textarea" placeholder="中英文/1000字" maxlength="1000"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-panel">
+                  <div class="form-field">
+                    <label>产品材质</label>
+                    <div class="ctl">
+                      <input class="input block" placeholder="中英文/50字" maxlength="50" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>包装清单</label>
+                    <div class="ctl">
+                      <input class="input block" placeholder="中英文/50字" maxlength="50" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>报关名</label>
+                    <div class="ctl">
+                      <input class="input block" placeholder="中英文/50字" maxlength="50" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>报关材质</label>
+                    <div class="ctl">
+                      <input class="input block" placeholder="中英文/50字" maxlength="50" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>报关用途</label>
+                    <div class="ctl">
+                      <input class="input block" placeholder="中英文/50字" maxlength="50" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>sku</label>
+                    <div class="ctl">
+                      <input class="input block" placeholder="请输入" />
+                      <div class="hint">选填；填写后审核=需合规时可同步产品库。</div>
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label><span class="req">*</span>检测平台与站点</label>
+                    <div class="ctl">
+                      <span class="add-chip" id="openDetectPlatformModal" title="快速关联">+</span>
+                      <div class="picked" id="detectPlatformPicked"></div>
+                      <div class="hint">MVP 默认亚马逊美国；可多选站点。</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="detect-submit-bar">
+                <button type="button" class="btn pri lg" data-go="detect-result">提交检测</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 上传 SKU -->
+          <div class="detect-pane" id="detectPaneSku">
+            <div class="detect-sku-pane task-form">
+              <div class="form-field">
+                <label><span class="req">*</span>SKU</label>
+                <div class="ctl">
+                  <div class="sku-box">
+                    <textarea id="detectSkuInput" placeholder="一行一个SKU（最多1000个）"></textarea>
+                    <span class="counter" id="detectSkuCounter">0 / 1000</span>
+                  </div>
+                  <div class="hint">从产品库多套资料拉取标题、图片、描述等；重复或不存在的 SKU 提交时校验阻断。</div>
+                </div>
+              </div>
+              <div class="form-field">
+                <label><span class="req">*</span>检测平台与站点</label>
+                <div class="ctl">
+                  <span class="add-chip" id="openDetectPlatformModal2" title="快速关联">+</span>
+                  <div class="picked" id="detectPlatformPicked2"></div>
+                </div>
+              </div>
+              <div class="detect-submit-bar">
+                <button type="button" class="btn pri lg" data-go="detect-result">提交检测</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 批量导入 -->
+          <div class="detect-pane" id="detectPaneBatch">
+            <div class="detect-batch-pane task-form">
+              <div class="detect-batch-hd">
+                <div class="form-field" style="margin:0;flex:1">
+                  <label><span class="req">*</span>上传文件</label>
+                  <div class="ctl">
+                    <button type="button" class="btn pri">点击上传</button>
+                  </div>
+                </div>
+                <span class="link">下载合规品批量检测导入模板</span>
+              </div>
+              <div class="detect-note">
+                <p>注：1、中文产品标题、英文产品标题、检测平台、站点为必填项；产品图片选填，填写时请使用图片链接；其他字段为非必填项；所有文本内容请使用英文填写。</p>
+                <p>2、平台目前仅支持亚马逊。</p>
+                <p>3、站点多个请用英文分号「;」隔开。</p>
+                <p>4、站点支持：澳大利亚、西班牙、意大利、英国、加拿大、墨西哥、巴西、美国、德国、沙特阿拉伯、阿拉伯联合酋长国、法国、瑞典、荷兰、比利时、土耳其、新加坡、波兰、印度、日本。</p>
+                <p>5、单次最多 5000 条；相同数据去重；失败明细可下载。</p>
+              </div>
+              <div class="detect-submit-bar">
+                <button type="button" class="btn pri lg" data-go="detect-result">提交检测</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="detect-result" class="route">
+          <div class="detect-filter">
+            <div class="row">
+              <select class="sel"><option>系统检测结果</option><option>有合规义务</option><option>无合规义务</option></select>
+              <select class="sel"><option>审核结果</option><option>待审核</option><option>需合规</option><option>无需合规</option></select>
+              <div class="site-filter" id="detectSiteFilter">
+                <div class="site-filter-trigger" id="detectSiteFilterTrigger">
+                  <span class="val ph" id="detectSiteFilterLabel">请选择系统检测需合规站点</span>
+                  <span class="ico">🔍</span>
+                </div>
+                <div class="site-filter-panel" id="detectSiteFilterPanel">
+                  <div class="site-filter-search-wrap">
+                    <input type="text" class="site-filter-search" id="detectSiteFilterSearch" placeholder="搜索站点" />
+                  </div>
+                  <div class="site-tree" id="detectSiteTree"></div>
+                </div>
+              </div>
+              <select class="sel"><option>检测状态</option><option>待检测</option><option>检测中</option><option>检测完成</option><option>检测失败</option></select>
+              <input class="input" placeholder="SKU" style="min-width:140px" />
+            </div>
+            <div class="row detect-operator-row">
+              <select class="sel" id="detectOperatorRole">
+                <option value="submit">提交人</option>
+                <option value="audit">审核人</option>
+              </select>
+              <div class="org-filter" id="detectOperatorFilter">
+                <div class="org-filter-trigger" id="detectOperatorTrigger">
+                  <span class="val ph" id="detectOperatorLabel">请选择</span>
+                  <span class="ico">▾</span>
+                </div>
+                <div class="org-filter-panel" id="detectOperatorPanel">
+                  <div class="site-filter-search-wrap">
+                    <input type="text" class="site-filter-search" id="detectOperatorSearch" placeholder="搜索人员/部门" />
+                  </div>
+                  <div class="org-tree" id="detectOperatorTree"></div>
+                </div>
+              </div>
+              <div class="detect-time-range">
+                <select class="sel" id="detectTimeType">
+                  <option value="submit">提交时间</option>
+                  <option value="audit">审核时间</option>
+                  <option value="detect_done">检测完成</option>
+                  <option value="sync">同步时间</option>
+                </select>
+                <input class="input" type="date" placeholder="开始日期" />
+                <span style="color:var(--sub)">→</span>
+                <input class="input" type="date" placeholder="结束日期" />
+              </div>
+            </div>
+            <div class="detect-filter-actions">
+              <button class="btn pri">搜索</button>
+              <button class="btn">重置</button>
+              <button class="btn">保存快捷搜索</button>
+            </div>
+          </div>
+
+          <div class="stat-tabs" id="detectStatTabs">
+            <div class="stat-tab on">全部<em>(556)</em></div>
+            <div class="stat-tab">待审核<em>(554)</em></div>
+            <div class="stat-tab">需合规<em>(0)</em></div>
+            <div class="stat-tab">无需合规<em>(0)</em></div>
+          </div>
+
+          <div class="toolbar row">
+            <button type="button" class="btn disabled" id="batchAuditBtn" disabled>批量审核</button>
+            <button class="btn pri" data-go="detect-submit">合规品检测</button>
+            <button class="btn">导出</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="detectSelectAll" /></th>
+                <th>产品图</th><th>SKU</th><th>产品相似度</th><th>中文标题</th><th>检测状态</th>
+                <th>系统检测需合规站点</th><th>系统检测无需合规站点</th>
+                <th>系统检测结果</th><th>系统检测结果说明</th>
+                <th>审核结果</th><th>操作人</th><th>时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="detectResultBody">
+              <tr class="detect-data-row" data-sku="1941272"
+                  data-title-cn="不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭"
+                  data-title-en="Stainless Steel Candle Snuffer with Handle for Birthday Candles"
+                  data-sys-result="有合规义务" data-sys-desc="命中儿童产品相关关键词，建议核实 CPC 资质路径"
+                  data-risk-sites="亚马逊：澳大利亚"
+                  data-safe-sites="亚马逊：美国、英国、加拿大、法国、德国、日本"
+                  data-audit="待审核" data-status="检测完成">
+                <td><input type="checkbox" class="detect-row-cb" /></td>
+                <td><div class="thumb"></div></td>
+                <td>1941272</td>
+                <td class="cell-sim">
+                  <div class="sim-line"><span class="sim-label">相似SKU</span><span class="link sim-count" data-sim-sku="1941272">4</span></div>
+                  <div class="sim-line"><span class="sim-label">最高相似度</span><span class="sim-max"><b>0.91</b></span></div>
+                </td>
+                <td class="cell-ellipsis" title="不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭">不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭</td>
+                <td><span class="tag t-y">检测完成</span></td>
+                <td class="cell-sites">亚马逊：澳大利亚</td>
+                <td class="cell-sites">亚马逊：美国、英国、加拿大…</td>
+                <td><span class="tag t-d">有合规义务</span></td>
+                <td class="cell-desc">命中儿童产品相关关键词，建议核实 CPC 资质路径</td>
+                <td><span class="tag t-w">待审核</span></td>
+                <td class="cell-meta"><div><b>提交</b> 张三</div><div><b>审核</b> —</div></td>
+                <td class="cell-meta">
+                  <div><b>提交</b> 2026-06-12 10:20</div>
+                  <div><b>检测完成</b> 2026-06-12 10:21</div>
+                  <div><b>审核</b> —</div>
+                </td>
+                <td>
+                  <div class="op-cell">
+                    <span class="op-more" title="操作">☰</span>
+                    <div class="op-menu">
+                      <button type="button" data-act="copy">复制检测</button>
+                      <button type="button" data-act="audit">审核</button>
+                      <button type="button" data-act="detail">查看详情</button>
+                      <button type="button" data-act="log">日志</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="detect-data-row" data-sku="SKU-A1001"
+                  data-title-cn="儿童毛绒玩具套装 带音乐功能"
+                  data-title-en="Plush Toy Set with Music for Kids"
+                  data-sys-result="有合规义务" data-sys-desc="玩具类目，命中 CPC 义务类型"
+                  data-risk-sites="亚马逊：美国" data-safe-sites="—"
+                  data-audit="待审核" data-status="检测完成">
+                <td><input type="checkbox" class="detect-row-cb" /></td>
+                <td><div class="thumb"></div></td>
+                <td>SKU-A1001</td>
+                <td class="cell-sim">
+                  <div class="sim-line"><span class="sim-label">相似SKU</span><span class="link sim-count" data-sim-sku="SKU-A1001">12</span></div>
+                  <div class="sim-line"><span class="sim-label">最高相似度</span><span class="sim-max"><b>0.93</b></span></div>
+                </td>
+                <td class="cell-ellipsis" title="儿童毛绒玩具套装 带音乐功能">儿童毛绒玩具套装 带音乐功能</td>
+                <td><span class="tag t-y">检测完成</span></td>
+                <td class="cell-sites">亚马逊：美国</td>
+                <td class="cell-sites">—</td>
+                <td><span class="tag t-d">有合规义务</span></td>
+                <td class="cell-desc">玩具类目，命中 CPC 义务类型</td>
+                <td><span class="tag t-w">待审核</span></td>
+                <td class="cell-meta"><div><b>提交</b> 李四</div><div><b>审核</b> —</div></td>
+                <td class="cell-meta">
+                  <div><b>提交</b> 2026-06-11 15:08</div>
+                  <div><b>检测完成</b> 2026-06-11 15:09</div>
+                  <div><b>审核</b> —</div>
+                </td>
+                <td>
+                  <div class="op-cell">
+                    <span class="op-more" title="操作">☰</span>
+                    <div class="op-menu">
+                      <button type="button" data-act="copy">复制检测</button>
+                      <button type="button" data-act="audit">审核</button>
+                      <button type="button" data-act="detail">查看详情</button>
+                      <button type="button" data-act="log">日志</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="detect-data-row" data-sku="SKU-A1002"
+                  data-title-cn="不锈钢厨房收纳架 三层"
+                  data-title-en="3-Tier Stainless Steel Kitchen Storage Rack"
+                  data-sys-result="无合规义务" data-sys-desc="当前检测站点下未识别合规义务"
+                  data-risk-sites="—"
+                  data-safe-sites="亚马逊：美国、英国、德国、法国、日本"
+                  data-audit="无需合规" data-status="检测完成">
+                <td><input type="checkbox" class="detect-row-cb" /></td>
+                <td><div class="thumb"></div></td>
+                <td>SKU-A1002</td>
+                <td>—</td>
+                <td class="cell-ellipsis" title="不锈钢厨房收纳架 三层">不锈钢厨房收纳架 三层</td>
+                <td><span class="tag t-y">检测完成</span></td>
+                <td class="cell-sites">—</td>
+                <td class="cell-sites">亚马逊：美国、英国、德国…</td>
+                <td><span class="tag t-y">无合规义务</span></td>
+                <td class="cell-desc">当前检测站点下未识别合规义务</td>
+                <td>无需合规</td>
+                <td class="cell-meta"><div><b>提交</b> 王五</div><div><b>审核</b> 王五</div></td>
+                <td class="cell-meta">
+                  <div><b>提交</b> 2026-06-10 09:30</div>
+                  <div><b>检测完成</b> 2026-06-10 09:31</div>
+                  <div><b>审核</b> 2026-06-10 11:20</div>
+                </td>
+                <td>
+                  <div class="op-cell">
+                    <span class="op-more" title="操作">☰</span>
+                    <div class="op-menu">
+                      <button type="button" data-act="copy">复制检测</button>
+                      <button type="button" data-act="detail">查看详情</button>
+                      <button type="button" data-act="log">日志</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr class="detect-data-row" data-sku="—"
+                  data-title-cn="手动提交-无SKU样例"
+                  data-title-en="Manual submit sample without SKU"
+                  data-sys-result="—" data-sys-desc="模型服务超时，请重新检测"
+                  data-risk-sites="—" data-safe-sites="—"
+                  data-audit="—" data-status="检测失败">
+                <td><input type="checkbox" class="detect-row-cb" /></td>
+                <td><div class="thumb"></div></td>
+                <td>—</td>
+                <td>—</td>
+                <td class="cell-ellipsis" title="手动提交-无SKU样例">手动提交-无SKU样例</td>
+                <td><span class="tag t-d">检测失败</span></td>
+                <td class="cell-sites">—</td>
+                <td class="cell-sites">—</td>
+                <td>—</td>
+                <td class="cell-desc">模型服务超时，请重新检测</td>
+                <td>—</td>
+                <td class="cell-meta"><div><b>提交</b> 赵六</div></td>
+                <td class="cell-meta">
+                  <div><b>提交</b> 2026-06-09 16:45</div>
+                  <div><b>检测完成</b> —</div>
+                </td>
+                <td>
+                  <div class="op-cell">
+                    <span class="op-more" title="操作">☰</span>
+                    <div class="op-menu">
+                      <button type="button" data-act="copy">复制检测</button>
+                      <button type="button" data-act="detail">查看详情</button>
+                      <button type="button" data-act="log">日志</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pager">共 556 条 · 20 条/页 · 1 2 3 … 28</div>
+        </section>
+
+        <section id="rescan-create" class="route">
+          <div class="task-form">
+            <div class="form-top">
+              <div class="form-field" style="flex:1;min-width:280px;margin:0">
+                <label><span class="req">*</span>任务名称</label>
+                <div class="ctl">
+                  <input class="input block" placeholder="60字以内" maxlength="60" value="儿童玩具-CPC 存量回扫" />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-cols">
+              <div class="form-panel scope-by-time" id="productScopePanel">
+                <h3 class="panel-title">产品范围</h3>
+
+                <div class="form-field task-period-only scope-hidden" id="fieldRescanFreq">
+                  <label><span class="req">*</span>回扫频率</label>
+                  <div class="ctl">
+                    <select class="sel block" id="rescanFreqSelect">
+                      <option value="">请选择</option>
+                      <option>每天</option>
+                      <option>每周</option>
+                      <option>每月</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label><span class="req">*</span>回扫SKU</label>
+                  <div class="ctl">
+                    <div class="radio-group" id="rescanSkuMode">
+                      <label><input type="radio" name="skuMode" value="time" checked /> 指定开发时间</label>
+                      <label><input type="radio" name="skuMode" value="sku" /> 指定SKU</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-field scope-time-only" id="fieldDevTime">
+                  <label><span class="req">*</span>开发时间</label>
+                  <div class="ctl">
+                    <div class="date-range">
+                      <input class="input" type="date" value="2024-01-01" />
+                      <span>至</span>
+                      <input class="input" type="date" value="2026-06-12" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-field scope-hidden" id="fieldSpecifySku">
+                  <label><span class="req">*</span>指定SKU</label>
+                  <div class="ctl">
+                    <div class="sku-box">
+                      <textarea id="specifySkuInput" placeholder="一行一个SKU(最多20000个)"></textarea>
+                      <span class="counter" id="specifySkuCounter">0 / 20000</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-field scope-time-only">
+                  <label><span class="req">*</span>组合SKU</label>
+                  <div class="ctl">
+                    <select class="sel block"><option>否</option><option>是</option></select>
+                  </div>
+                </div>
+
+                <div class="form-field scope-time-only">
+                  <label><span class="req">*</span>产品状态</label>
+                  <div class="ctl">
+                    <div class="check-group">
+                      <label><input type="checkbox" checked /> 正常</label>
+                      <label><input type="checkbox" /> 停产</label>
+                      <label><input type="checkbox" /> 锁定</label>
+                      <label><input type="checkbox" /> 暂时缺货</label>
+                      <label><input type="checkbox" /> 清库</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-field scope-time-only">
+                  <label><span class="req">*</span>回扫产品类目</label>
+                  <div class="ctl">
+                    <span class="add-chip" title="选择类目">+</span>
+                    <div class="picked">
+                      <span class="chip">玩具和游戏 ×</span>
+                      <span class="chip">婴儿用品 ×</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label><span class="req">*</span>检测平台与站点</label>
+                  <div class="ctl">
+                    <span class="add-chip" id="openPlatformModal" title="快速关联">+</span>
+                    <div class="picked" id="platformPicked"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-panel">
+                <div class="form-field">
+                  <label><span class="req">*</span>任务类型<span class="help-icon" title="非定期：单次执行；定期：按频率在任务起止时间内重复执行">?</span></label>
+                  <div class="ctl">
+                    <select class="sel block" id="taskTypeSelect">
+                      <option value="once">非定期</option>
+                      <option value="periodic">定期</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-field task-period-only scope-hidden" id="fieldTaskPeriod">
+                  <label><span class="req">*</span>任务开始与结束时间</label>
+                  <div class="ctl">
+                    <div class="date-range">
+                      <input class="input" type="date" placeholder="开始日期" />
+                      <span>至</span>
+                      <input class="input" type="date" placeholder="结束日期" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel-head" style="margin-top:4px">
+                  <h3 class="panel-title">合规政策与回扫规则</h3>
+                  <span class="link">选择历史规则</span>
+                </div>
+
+                <div class="form-field">
+                  <label><span class="req">*</span>合规政策或邮件</label>
+                  <div class="ctl">
+                    <div class="rte">
+                      <div class="rte-bar">
+                        <span>↺</span><span>↻</span><span>正文</span><span>14px</span>
+                        <span><b>B</b></span><span><i>I</i></span><span><u>U</u></span>
+                        <span>≡</span><span>☰</span><span>🔗</span>
+                      </div>
+                      <div class="rte-body">Amazon US 儿童产品需符合 CPSIA，12 岁以下玩具须提供 CPC 及第三方测试报告；产品页需展示合规信息…</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label><span class="req">*</span>规则名称</label>
+                  <div class="ctl">
+                    <input class="input block" maxlength="30" value="儿童玩具 CPC 资质要求" />
+                    <div class="hint">≤30 字，不可重复</div>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label><span class="req">*</span>规则内容</label>
+                  <div class="ctl">
+                    <textarea class="textarea lg">CPC;children toy;儿童产品;CPSIA;第三方测试;FCC</textarea>
+                    <div class="hint"><span class="link">规则内容填写示例</span> · 词语之间用分号分隔，义务触发关键词/规则描述</div>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label>是否保存规则</label>
+                  <div class="ctl">
+                    <div class="radio-group">
+                      <label><input type="radio" name="saveRule" value="yes" checked /> 是</label>
+                      <label><input type="radio" name="saveRule" value="no" /> 否</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-footer">
+              <div class="left">
+                <button class="btn" type="button">清除产品范围</button>
+              </div>
+              <button class="btn" type="button">取消</button>
+              <button class="btn pri" type="button" data-go="rescan-result">提交</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="rescan-result" class="route">
+          <p class="hint" style="margin:0 0 12px">统一展示<strong>存量回扫任务</strong>与<strong>增量回扫任务</strong>（一个回扫队列批次 = 一条任务）。</p>
+          <div class="row">
+            <input class="input" placeholder="任务编号 / 任务名称" />
+            <select class="sel"><option>回扫类型</option><option>存量非定期</option><option>存量定期</option><option>增量政策回扫 SKU</option><option>增量 SKU 回扫政策</option></select>
+            <select class="sel"><option>回扫状态</option><option>待回扫</option><option>回扫中</option><option>回扫完成</option></select>
+            <select class="sel"><option>任务处理状态</option><option>待处理</option><option>处理中</option><option>处理完成</option></select>
+            <input class="input" placeholder="生成时间起" />
+            <input class="input" placeholder="生成时间止" />
+            <button class="btn pri">搜索</button>
+            <button class="btn">重置</button>
+          </div>
+          <div class="toolbar row">
+            <button class="btn pri" data-go="rescan-create">添加回扫任务</button>
+            <button class="btn">分配规则</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>任务编号</th><th>任务名称</th><th>回扫类型</th><th>平台/站点</th>
+                <th>回扫状态</th><th>任务处理状态</th><th>回扫数量</th><th>回扫结果</th>
+                <th>生成时间</th><th>回扫完成时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>100001</td>
+                <td>儿童玩具-CPC 存量回扫</td>
+                <td>存量非定期</td>
+                <td>亚马逊：美国</td>
+                <td><span class="tag t-y">回扫完成</span></td>
+                <td><span class="tag t-w">待分配</span></td>
+                <td><span class="link" data-go="rescan-detail">总数 1200 / 需合规 137</span></td>
+                <td>—</td>
+                <td>2026-06-10 14:20</td>
+                <td>2026-06-11 09:05</td>
+                <td>
+                  <span class="link" data-go="rescan-detail">回扫详情</span> ｜ 执行分配
+                </td>
+              </tr>
+              <tr>
+                <td>100002</td>
+                <td>儿童玩具-CPC 定期回扫</td>
+                <td>存量定期</td>
+                <td>亚马逊：美国</td>
+                <td><span class="tag t-w">回扫中</span></td>
+                <td>处理中</td>
+                <td>856</td>
+                <td>—</td>
+                <td>2026-06-01 08:00</td>
+                <td>—</td>
+                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+              </tr>
+              <tr>
+                <td>200008</td>
+                <td>增量政策回扫-2026W24</td>
+                <td>增量政策回扫 SKU</td>
+                <td>亚马逊：美国</td>
+                <td><span class="tag t-y">回扫完成</span></td>
+                <td><span class="tag t-w">待处理</span></td>
+                <td><span class="link" data-go="rescan-detail">1,286</span></td>
+                <td>成功 1,280 / 失败 6</td>
+                <td>2026-06-05 02:00</td>
+                <td>2026-06-05 06:18</td>
+                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+              </tr>
+              <tr>
+                <td>200009</td>
+                <td>增量SKU回扫-2026W24</td>
+                <td>增量 SKU 回扫政策</td>
+                <td>亚马逊：美国</td>
+                <td><span class="tag t-w">回扫中</span></td>
+                <td>处理中</td>
+                <td>342</td>
+                <td>—</td>
+                <td>2026-06-12 02:00</td>
+                <td>—</td>
+                <td>查看详情</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pager">共 4 条 · 20 条/页 · 1</div>
+        </section>
+
+        <section id="rescan-detail" class="route">
+          <div class="task-banner">
+            <span>任务编号：<b>200008</b></span>
+            <span>任务名称：<b>增量政策回扫-2026W24</b></span>
+            <span>回扫类型：<b>增量政策回扫 SKU</b></span>
+            <span>平台/站点：<b>亚马逊 · 美国</b></span>
+            <span class="link" data-go="rescan-result">← 返回任务列表</span>
+          </div>
+
+          <div class="row">
+            <input class="input" placeholder="任务编号" value="200008" style="min-width:120px" />
+            <select class="sel"><option>系统检测结果</option><option>有合规义务</option><option>无合规义务</option></select>
+            <select class="sel"><option>审核结果</option><option>待审核</option><option>需合规</option><option>无需合规</option></select>
+            <select class="sel"><option>审核人</option></select>
+            <select class="sel"><option>分配人</option></select>
+            <input class="input" placeholder="请输入 SKU" style="min-width:140px" />
+            <input class="input" placeholder="审核开始时间" />
+            <input class="input" placeholder="审核结束时间" />
+            <select class="sel"><option>是否同步</option><option>是</option><option>否</option></select>
+            <button class="btn pri">搜索</button>
+            <button class="btn">重置</button>
+          </div>
+
+          <div class="stat-tabs">
+            <div class="stat-tab on">全部<em>(1286)</em></div>
+            <div class="stat-tab">待审核<em>(1180)</em></div>
+            <div class="stat-tab">需合规<em>(86)</em></div>
+            <div class="stat-tab">无需合规<em>(920)</em></div>
+            <div class="stat-tab">已同步产品库<em>(12)</em></div>
+            <div class="stat-tab">待同步产品库<em>(74)</em></div>
+          </div>
+
+          <div class="toolbar row">
+            <button class="btn">批量操作 ▾</button>
+            <button class="btn">批量提取 SKU</button>
+            <button class="btn pri">审核统计</button>
+            <button class="btn pri">按筛选条件同步结果</button>
+            <button class="btn pri">按筛选条件导出</button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th><input type="checkbox" /></th>
+                <th>编号</th><th>产品图</th><th>SKU</th><th>产品相似度</th><th>产品名称</th><th>产品类目</th>
+                <th>合规/需合规站点</th><th>回扫站点</th><th>系统检测结果</th><th>审核结果</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="rescan-data-row" data-sku="23110438" data-title-cn="不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭">
+                <td><input type="checkbox" /></td>
+                <td>200008-01</td>
+                <td><div class="thumb"></div></td>
+                <td>23110438</td>
+                <td class="cell-sim">
+                  <div class="sim-line"><span class="sim-label">相似SKU</span><span class="link sim-count" data-sim-sku="23110438">4</span></div>
+                  <div class="sim-line"><span class="sim-label">最高相似度</span><span class="sim-max"><b>0.91</b></span></div>
+                </td>
+                <td>不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭</td>
+                <td class="cell-ellipsis" title="Home & Kitchen › Home Decor › Candles & Holders">Home & Kitchen › Home Decor › …</td>
+                <td>
+                  <span class="site-icons">
+                    <span class="site-icon risk" title="亚马逊美国-需合规">A</span>
+                    <span class="site-icon ok" title="合规">✓</span>
+                    <span class="site-icon ok">✓</span>
+                    <span class="site-icon ok">✓</span>
+                  </span>
+                </td>
+                <td class="cell-sites">需合规：亚马逊美国、阿联酋、澳大利亚…</td>
+                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-w">待审核</span></td>
+                <td><span class="link">审核</span></td>
+              </tr>
+              <tr class="rescan-data-row" data-sku="SKU-D3301" data-title-cn="儿童毛绒玩具套装 带音乐功能">
+                <td><input type="checkbox" /></td>
+                <td>200008-02</td>
+                <td><div class="thumb"></div></td>
+                <td>SKU-D3301</td>
+                <td class="cell-sim">
+                  <div class="sim-line"><span class="sim-label">相似SKU</span><span class="link sim-count" data-sim-sku="SKU-D3301">12</span></div>
+                  <div class="sim-line"><span class="sim-label">最高相似度</span><span class="sim-max"><b>0.93</b></span></div>
+                </td>
+                <td>儿童毛绒玩具套装 带音乐功能</td>
+                <td>Toys & Games › Stuffed Animals</td>
+                <td>
+                  <span class="site-icons">
+                    <span class="site-icon risk">A</span>
+                    <span class="site-icon risk">A</span>
+                  </span>
+                </td>
+                <td class="cell-sites">需合规：亚马逊美国 · 命中 CPC</td>
+                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-w">待审核</span></td>
+                <td><span class="link">审核</span></td>
+              </tr>
+              <tr class="rescan-data-row" data-sku="SKU-D3302" data-title-cn="不锈钢厨房收纳架 三层">
+                <td><input type="checkbox" /></td>
+                <td>200008-03</td>
+                <td><div class="thumb"></div></td>
+                <td>SKU-D3302</td>
+                <td>—</td>
+                <td>不锈钢厨房收纳架 三层</td>
+                <td>Home & Kitchen › Storage</td>
+                <td>
+                  <span class="site-icons">
+                    <span class="site-icon ok">✓</span>
+                    <span class="site-icon ok">✓</span>
+                    <span class="site-icon ok">✓</span>
+                  </span>
+                </td>
+                <td class="cell-sites">无合规义务</td>
+                <td><span class="tag t-y">无合规义务</span></td>
+                <td>无需合规</td>
+                <td><span class="link">查看</span></td>
+              </tr>
+              <tr class="rescan-data-row" data-sku="SKU-C8821" data-title-cn="儿童学习桌 可调节高度">
+                <td><input type="checkbox" /></td>
+                <td>200008-04</td>
+                <td><div class="thumb"></div></td>
+                <td>SKU-C8821</td>
+                <td class="cell-sim">
+                  <div class="sim-line"><span class="sim-label">相似SKU</span><span class="link sim-count" data-sim-sku="SKU-C8821">3</span></div>
+                  <div class="sim-line"><span class="sim-label">最高相似度</span><span class="sim-max"><b>0.85</b></span></div>
+                </td>
+                <td>儿童学习桌 可调节高度</td>
+                <td>Home & Kitchen › Kids Furniture</td>
+                <td><span class="site-icon risk">A</span></td>
+                <td class="cell-sites">需合规：亚马逊美国</td>
+                <td><span class="tag t-d">有合规义务</span></td>
+                <td>需合规</td>
+                <td><span class="link">同步</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pager">共 1286 条 · 20 条/页 · 1 … 65</div>
+        </section>
+
+        <section id="policy" class="route">
+          <div class="row">
+            <input class="input" placeholder="政策名称" />
+            <select class="sel"><option selected>亚马逊</option></select>
+            <select class="sel"><option>站点</option><option selected>美国</option><option>英国</option><option>加拿大</option></select>
+            <button class="btn pri">搜索</button>
+            <button class="btn">重置</button>
+          </div>
+          <div class="toolbar row">
+            <button class="btn pri" data-go="policy-add">新增政策</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>政策名称</th><th>政策内容</th><th>平台</th><th>站点</th>
+              </tr>
+            </thead>
+            <tbody id="policyTableBody">
+              <tr>
+                <td>儿童玩具 CPC 资质要求</td>
+                <td class="cell-ellipsis" title="本政策涵盖与「儿童玩具」相关的商品，面向儿童使用场景，包括但不限于：感官和创意游戏产品、游戏和益智玩具、假装和角色扮演、婴儿、幼儿和毛绒玩具…">本政策涵盖与「儿童玩具」相关的商品，面向儿童使用场景，包括但不限于：感官和创意游戏产品、游戏和益智玩具、假装和角色扮演、婴儿、幼儿和毛绒玩具…</td>
+                <td>亚马逊</td>
+                <td>美国</td>
+              </tr>
+              <tr>
+                <td>儿童睡衣易燃性标准</td>
+                <td class="cell-ellipsis" title="儿童睡衣尺码 0 个月至 14 码：儿童睡衣包括任何服装，例如睡袍、睡衣、长袍或家居服，主要供 12 岁或以下儿童在睡觉或与睡眠相关的活动中穿着。">儿童睡衣尺码 0 个月至 14 码：儿童睡衣包括任何服装，例如睡袍、睡衣、长袍或家居服，主要供 12 岁或以下儿童在睡觉或与睡眠相关的活动中穿着。</td>
+                <td>亚马逊</td>
+                <td>美国</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pager" id="policyPager">共 2 条 · 20 条/页 · 1</div>
+        </section>
+
+        <section id="policy-add" class="route">
+          <div class="task-form" style="max-width:720px">
+            <h3 class="form-page-title">新增政策</h3>
+
+            <div class="form-field">
+              <label><span class="req">*</span>政策名称</label>
+              <div class="ctl">
+                <input class="input block" id="policyNameInput" placeholder="50字以内" maxlength="50" />
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label><span class="req">*</span>政策内容</label>
+              <div class="ctl">
+                <textarea class="textarea lg" id="policyContentInput" placeholder="填写政策适用范围、产品定义、法规/认证要求等（对应 scope_definition）"></textarea>
+                <div class="hint">列表过长时省略展示；支持换行。</div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label><span class="req">*</span>平台</label>
+              <div class="ctl">
+                <div class="form-readonly">亚马逊（MVP 默认，不可改）</div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label><span class="req">*</span>站点</label>
+              <div class="ctl">
+                <span class="add-chip" id="openPolicySiteModal" title="选择站点">+</span>
+                <div class="picked" id="policySitePicked"></div>
+                <div class="hint">至少选择一个站点；仅展示亚马逊下属站点。</div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>政策链接</label>
+              <div class="ctl">
+                <input class="input block" id="policyLinkInput" placeholder="https://sellercentral.amazon.com/..." />
+                <div class="hint">选填；平台政策原文链接。</div>
+              </div>
+            </div>
+
+            <p class="hint" style="margin:8px 0 0">提交成功后，新政策将自动进入 <strong>增量政策回扫 SKU</strong> 队列。</p>
+
+            <div class="form-footer">
+              <button type="button" class="btn" data-go="policy">取消</button>
+              <button type="button" class="btn pri" id="submitPolicyBtn">提交</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 快速关联 · 检测平台与站点 -->
+  <div class="modal-mask" id="platformModal" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-labelledby="platformModalTitle">
+      <div class="modal-hd">
+        <span id="platformModalTitle">快速关联</span>
+        <button type="button" class="modal-x" id="closePlatformModal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd">
+        <div class="ps-summary">
+          <div>当前选择：<span class="cur" id="psCurrentText">—</span></div>
+          <div>新增选择：</div>
+        </div>
+        <div class="ps-bulk" id="psBulk"></div>
+        <div class="ps-list" id="psList"></div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" id="cancelPlatformModal">取消</button>
+        <button type="button" class="btn pri" id="confirmPlatformModal">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量审核 -->
+  <div class="modal-mask" id="batchAuditModal" aria-hidden="true">
+    <div class="modal-box sm" role="dialog" aria-labelledby="batchAuditModalTitle">
+      <div class="modal-hd">
+        <span id="batchAuditModalTitle">批量审核</span>
+        <button type="button" class="modal-x" id="closeBatchAuditModal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd modal-form">
+        <div class="form-field">
+          <label><span class="req">*</span>审核结果</label>
+          <div class="ctl">
+            <select class="sel block" id="batchAuditResult">
+              <option value="">请选择</option>
+              <option value="合规品">合规品</option>
+              <option value="非违规品">非违规品</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>审核明细</label>
+          <div class="ctl">
+            <textarea class="textarea" id="batchAuditDetail" placeholder="最多500个文字" maxlength="500"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" id="cancelBatchAuditModal">取消</button>
+        <button type="button" class="btn pri" id="confirmBatchAuditModal">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 查看详情 -->
+  <div class="modal-mask" id="detectDetailModal" aria-hidden="true">
+    <div class="modal-box lg" role="dialog" aria-labelledby="detectDetailTitle">
+      <div class="modal-hd">
+        <span id="detectDetailTitle">查看详情</span>
+        <button type="button" class="modal-x" id="closeDetectDetailModal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd">
+        <div class="detail-head">
+          <div class="detail-thumb"></div>
+          <div>
+            <div class="detail-block" style="margin:0">
+              <div class="detail-label">SKU</div>
+              <div class="detail-val" id="detailSku">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-cols">
+          <div>
+            <div class="detail-block">
+              <div class="detail-label">中文产品标题</div>
+              <div class="detail-val" id="detailTitleCn">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">英文产品标题</div>
+              <div class="detail-val" id="detailTitleEn">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">系统检测结果</div>
+              <div class="detail-val" id="detailSysResult">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">系统检测结果说明</div>
+              <div class="detail-val" id="detailSysDesc">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">系统检测需合规站点</div>
+              <div class="detail-val" id="detailRiskSites">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">系统检测无需合规站点</div>
+              <div class="detail-val" id="detailSafeSites">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">审核结果</div>
+              <div class="detail-val" id="detailAudit">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">产品描述</div>
+              <div class="detail-val muted" style="color:var(--sub)">—</div>
+            </div>
+          </div>
+          <div>
+            <div class="detail-block">
+              <div class="detail-label">亮点</div>
+              <div class="detail-val" style="color:var(--sub)">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">关键词</div>
+              <div class="detail-val" style="color:var(--sub)">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">产品材质</div>
+              <div class="detail-val" style="color:var(--sub)">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">包装清单</div>
+              <div class="detail-val" style="color:var(--sub)">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">报关名</div>
+              <div class="detail-val" style="color:var(--sub)">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">报关材质</div>
+              <div class="detail-val" style="color:var(--sub)">—</div>
+            </div>
+            <div class="detail-block">
+              <div class="detail-label">报关用途</div>
+              <div class="detail-val" style="color:var(--sub)">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn pri" id="closeDetectDetailBtn">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作日志 -->
+  <div class="modal-mask" id="detectLogModal" aria-hidden="true">
+    <div class="modal-box sm" role="dialog" aria-labelledby="detectLogTitle">
+      <div class="modal-hd">
+        <span id="detectLogTitle">操作日志</span>
+        <button type="button" class="modal-x" id="closeDetectLogModal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd" style="padding:0">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>操作人</th><th>操作时间</th><th>操作内容</th>
+            </tr>
+          </thead>
+          <tbody id="detectLogBody"></tbody>
+        </table>
+        <div class="empty-log" id="detectLogEmpty">
+          <div class="ico">📭</div>
+          <div>暂无数据</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 相似产品明细 -->
+  <div class="modal-mask" id="similarProductsModal" aria-hidden="true">
+    <div class="modal-box xl" role="dialog" aria-labelledby="similarProductsTitle">
+      <div class="modal-hd">
+        <span id="similarProductsTitle">相似产品明细</span>
+        <button type="button" class="modal-x" id="closeSimilarProductsModal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd">
+        <div class="sim-modal-hd">
+          <div class="thumb sim-seed-wrap" id="simSeedThumb" style="width:56px;height:56px" title="点击放大"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:var(--sub);margin-bottom:4px">
+              种子 SKU：<b id="simSeedSku" style="color:var(--text)">—</b>
+            </div>
+            <div class="cell-ellipsis" id="simSeedTitle" style="font-size:13px;font-weight:600" title="">—</div>
+          </div>
+          <button type="button" class="btn pri sim-copy-btn" id="copySimilarSkusBtn">复制SKU</button>
+        </div>
+        <div class="sim-grid" id="similarProductsGrid"></div>
+        <div class="sim-empty" id="similarProductsEmpty" style="display:none">
+          <div>暂无相似产品</div>
+        </div>
+        <div class="sim-card-img-count" id="simResultHint" style="margin-top:8px;display:none">
+          图搜按图片维度返回 TOP 结果，同一 SKU 可能命中多张产品图，已合并展示
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" id="closeSimilarProductsBtn">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图片放大预览 -->
+  <div class="img-preview-mask" id="imgPreviewMask" aria-hidden="true">
+    <div class="img-preview-box">
+      <button type="button" class="img-preview-x" id="closeImgPreview" aria-label="关闭">×</button>
+      <img id="imgPreviewEl" src="" alt="产品图预览" />
+    </div>
+  </div>
+
+  <script>
+    const routeMeta = {
+      'detect-submit': { title: '合规性提交检测', sub: 'detect' },
+      'detect-result': { title: '合规品检测结果', sub: 'detect' },
+      'rescan-create': { title: '创建回扫任务', sub: 'rescan' },
+      'rescan-result': { title: '合规回扫结果', sub: 'rescan' },
+      'rescan-detail': { title: '合规回扫详情', sub: 'rescan' },
+      'increscan-result': { title: '合规回扫详情', sub: 'rescan' },
+      'increscan-queue': { title: '合规回扫结果', sub: 'rescan' },
+      'policy': { title: '政策管理', sub: 'policy' },
+      'policy-add': { title: '新增政策', sub: 'policy' }
+    };
+
+    const routes = [...document.querySelectorAll('.route')];
+    const items = [...document.querySelectorAll('.item[data-go]')];
+    const jumpers = [...document.querySelectorAll('[data-go]')];
+    const pageTabs = document.getElementById('pageTabs');
+    const moduleCompliance = document.getElementById('moduleCompliance');
+    const subGroups = [...document.querySelectorAll('.sub-group')];
+    const openTabs = new Set(['detect-submit']);
+
+    document.getElementById('moduleComplianceToggle').addEventListener('click', () => {
+      moduleCompliance.classList.toggle('collapsed');
+    });
+    subGroups.forEach(group => {
+      group.querySelector('.sub-head').addEventListener('click', () => {
+        group.classList.toggle('collapsed');
+      });
+    });
+    document.querySelectorAll('.nav-module-head').forEach(head => {
+      if (head.id === 'moduleComplianceToggle') return;
+      head.addEventListener('click', () => {
+        head.parentElement.classList.toggle('collapsed');
+      });
+    });
+
+    function renderTabs(activeId){
+      pageTabs.innerHTML = '';
+      openTabs.forEach(id => {
+        const meta = routeMeta[id];
+        if (!meta) return;
+        const tab = document.createElement('div');
+        tab.className = 'ptab' + (id === activeId ? ' on' : '');
+        tab.innerHTML = `<span>${meta.title}</span>` + (openTabs.size > 1 ? `<span class="x" data-close="${id}">×</span>` : '');
+        tab.addEventListener('click', e => {
+          if (e.target.dataset.close) return;
+          go(id, false);
+        });
+        tab.querySelector('.x')?.addEventListener('click', e => {
+          e.stopPropagation();
+          const closing = e.target.dataset.close;
+          openTabs.delete(closing);
+          if (activeId === closing) {
+            const next = [...openTabs].pop() || 'detect-submit';
+            openTabs.add(next);
+            go(next, false);
+          } else {
+            renderTabs(activeId);
+          }
+        });
+        pageTabs.appendChild(tab);
+      });
+    }
+
+    function expandForRoute(id){
+      moduleCompliance.classList.remove('collapsed');
+      const sub = routeMeta[id]?.sub;
+      subGroups.forEach(g => {
+        if (g.dataset.sub === sub) g.classList.remove('collapsed');
+      });
+    }
+
+    function go(id, addTab = true){
+      if (id === 'increscan-queue') id = 'rescan-result';
+      if (id === 'increscan-result') id = 'rescan-detail';
+      if (!routeMeta[id]) return;
+      if (addTab) openTabs.add(id);
+      routes.forEach(v => v.classList.toggle('active', v.id === id));
+      items.forEach(v => v.classList.toggle('active', v.dataset.go === id));
+      expandForRoute(id);
+      renderTabs(id);
+      location.hash = id;
+      document.title = routeMeta[id].title + ' - 合规品管理';
+    }
+
+    jumpers.forEach(v => v.addEventListener('click', e => {
+      if (!v.dataset.go) return;
+      e.preventDefault();
+      go(v.dataset.go);
+    }));
+
+    items.forEach(v => v.addEventListener('click', () => go(v.dataset.go)));
+
+    const init = location.hash.replace('#', '') || 'detect-submit';
+    openTabs.clear();
+    openTabs.add(init);
+    go(init, false);
+
+    /* 创建回扫任务：指定开发时间 / 指定SKU 切换 */
+    const productScopePanel = document.getElementById('productScopePanel');
+    const fieldDevTime = document.getElementById('fieldDevTime');
+    const fieldSpecifySku = document.getElementById('fieldSpecifySku');
+    const specifySkuInput = document.getElementById('specifySkuInput');
+    const specifySkuCounter = document.getElementById('specifySkuCounter');
+    const platformPicked = document.getElementById('platformPicked');
+
+    function countSkus(text){
+      return text.split(/\r?\n/).map(s => s.trim()).filter(Boolean).length;
+    }
+    function updateSkuCounter(){
+      if (!specifySkuInput || !specifySkuCounter) return;
+      const n = countSkus(specifySkuInput.value);
+      specifySkuCounter.textContent = `${n} / 20000`;
+    }
+    function setRescanSkuMode(mode){
+      const bySku = mode === 'sku';
+      productScopePanel?.classList.toggle('scope-by-sku', bySku);
+      productScopePanel?.classList.toggle('scope-by-time', !bySku);
+      fieldDevTime?.classList.toggle('scope-hidden', bySku);
+      fieldSpecifySku?.classList.toggle('scope-hidden', !bySku);
+    }
+    document.querySelectorAll('#rescanSkuMode input[name="skuMode"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (radio.checked) setRescanSkuMode(radio.value);
+      });
+    });
+    specifySkuInput?.addEventListener('input', updateSkuCounter);
+    setRescanSkuMode(document.querySelector('#rescanSkuMode input[name="skuMode"]:checked')?.value || 'time');
+
+    /* 任务类型：非定期 / 定期 */
+    const taskTypeSelect = document.getElementById('taskTypeSelect');
+    const fieldTaskPeriod = document.getElementById('fieldTaskPeriod');
+    const fieldRescanFreq = document.getElementById('fieldRescanFreq');
+    function setTaskType(mode){
+      const periodic = mode === 'periodic';
+      fieldTaskPeriod?.classList.toggle('scope-hidden', !periodic);
+      fieldRescanFreq?.classList.toggle('scope-hidden', !periodic);
+    }
+    taskTypeSelect?.addEventListener('change', () => setTaskType(taskTypeSelect.value));
+    setTaskType(taskTypeSelect?.value || 'once');
+
+    /* 快速关联 · 检测平台与站点 */
+    const PLATFORM_SITES = [
+      { id: 'amazon', name: '亚马逊', sites: ['美国','加拿大','英国','墨西哥','瑞典','埃及','阿联酋','德国','印度','荷兰','新加坡','爱尔兰','澳大利亚','西班牙','意大利','波兰','土耳其','巴西','法国','日本','沙特','比利时'] },
+      { id: 'ebay', name: 'Ebay', sites: ['美国','西班牙','澳大利亚','法国','加拿大','英国','德国','意大利'] },
+      { id: 'lazada', name: 'LAZADA', sites: ['印度尼西亚','新加坡','马来西亚','菲律宾','泰国','越南'] },
+      { id: 'shopee', name: 'SHOPEE', sites: ['巴西','墨西哥','智利','台湾','波兰','泰国','哥伦比亚','法国','菲律宾','西班牙','印度尼西亚','马来西亚','新加坡','越南'] },
+      { id: 'onbuy', name: 'OnBuy', sites: ['波兰','瑞士','荷兰','葡萄牙','希腊','英国','丹麦','法国','捷克','瑞典','匈牙利','奥地利','芬兰','罗马尼亚','斯洛伐克','意大利','德国','比利时','挪威','西班牙','爱尔兰'] },
+      { id: 'tiktok', name: 'Tiktok', sites: ['菲律宾','英国','越南','泰国','马来西亚','墨西哥','新加坡','美国'] }
+    ];
+    const AMAZON_EU_UK = ['英国','德国','法国','意大利','西班牙','荷兰','波兰','瑞典','比利时','爱尔兰'];
+    const AMAZON_EU = ['德国','法国','意大利','西班牙','荷兰','波兰','瑞典','比利时'];
+    const AMAZON_EUROPE = [...AMAZON_EU_UK, '土耳其'];
+
+    let confirmedSites = new Set(['亚马逊|美国']);
+    let detectSites = new Set(['亚马逊|美国']);
+    let draftSites = new Set();
+    let modalTarget = 'rescan';
+    let policySiteNames = new Set(['美国']);
+
+    function siteKey(p, s){ return `${p}|${s}` }
+    function parseKey(k){ const i = k.indexOf('|'); return { platform: k.slice(0, i), site: k.slice(i + 1) }; }
+    function formatLabel(k){ const { platform, site } = parseKey(k); return `${platform}：${site}`; }
+    function allSiteKeys(){
+      const keys = [];
+      PLATFORM_SITES.forEach(p => p.sites.forEach(s => keys.push(siteKey(p.name, s))));
+      return keys;
+    }
+    function amazonKeys(filterFn){
+      const am = PLATFORM_SITES.find(p => p.id === 'amazon');
+      return am.sites.filter(filterFn).map(s => siteKey(am.name, s));
+    }
+
+    function renderPlatformPicked(){
+      if (!platformPicked) return;
+      platformPicked.innerHTML = '';
+      [...confirmedSites].sort().forEach(k => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.innerHTML = `${formatLabel(k)} <span class="x-chip" data-rm="${k}">×</span>`;
+        platformPicked.appendChild(chip);
+      });
+      platformPicked.querySelectorAll('.x-chip').forEach(el => {
+        el.addEventListener('click', () => {
+          confirmedSites.delete(el.dataset.rm);
+          renderPlatformPicked();
+        });
+      });
+    }
+
+    function renderDetectPlatformPicked(){
+      const html = [...detectSites].sort().map(k =>
+        `<span class="chip">${formatLabel(k)} <span class="x-chip" data-rm="${k}">×</span></span>`
+      ).join('');
+      ['detectPlatformPicked', 'detectPlatformPicked2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = html;
+        el.querySelectorAll('.x-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            detectSites.delete(chip.dataset.rm);
+            renderDetectPlatformPicked();
+          });
+        });
+      });
+    }
+
+    function updatePsCurrentText(){
+      const el = document.getElementById('psCurrentText');
+      if (!el) return;
+      if (modalTarget === 'policy') {
+        el.textContent = policySiteNames.size
+          ? [...policySiteNames].sort().map(s => `亚马逊：${s}`).join('、')
+          : '—';
+      } else if (modalTarget === 'detect') {
+        el.textContent = detectSites.size
+          ? [...detectSites].sort().map(formatLabel).join('、')
+          : '—';
+      } else {
+        el.textContent = confirmedSites.size
+          ? [...confirmedSites].sort().map(formatLabel).join('、')
+          : '—';
+      }
+    }
+
+    function renderPlatformModal(){
+      const bulk = document.getElementById('psBulk');
+      const list = document.getElementById('psList');
+      if (!bulk || !list) return;
+
+      const amazonOnly = modalTarget === 'policy';
+      const platforms = amazonOnly
+        ? PLATFORM_SITES.filter(p => p.id === 'amazon')
+        : PLATFORM_SITES;
+
+      const bulkDefs = amazonOnly
+        ? [
+            { label: '全选-Amazon全部站点', keys: amazonKeys(() => true) },
+            { label: '全选-Amazon欧英', keys: amazonKeys(s => AMAZON_EU_UK.includes(s)) },
+            { label: '全选-Amazon欧盟', keys: amazonKeys(s => AMAZON_EU.includes(s)) },
+            { label: '全选-Amazon欧洲', keys: amazonKeys(s => AMAZON_EUROPE.includes(s)) }
+          ]
+        : [
+            { label: '全选-所有平台', keys: allSiteKeys() },
+            { label: '全选-Amazon欧英', keys: amazonKeys(s => AMAZON_EU_UK.includes(s)) },
+            { label: '全选-Amazon欧盟', keys: amazonKeys(s => AMAZON_EU.includes(s)) },
+            { label: '全选-Amazon欧洲', keys: amazonKeys(s => AMAZON_EUROPE.includes(s)) }
+          ];
+      bulk.innerHTML = bulkDefs.map((b, i) =>
+        `<label><input type="checkbox" class="ps-bulk-cb" data-bulk="${i}" /> ${b.label}</label>`
+      ).join('');
+
+      list.innerHTML = platforms.map(p => {
+        const siteCells = p.sites.map(s => {
+          const k = siteKey(p.name, s);
+          const checked = draftSites.has(k) ? 'checked' : '';
+          return `<label title="${p.name}：${s}"><input type="checkbox" class="ps-site-cb" data-key="${k}" data-platform="${p.name}" ${checked} /> ${s}</label>`;
+        }).join('');
+        const platChecked = p.sites.every(s => draftSites.has(siteKey(p.name, s)));
+        const platInd = !platChecked && p.sites.some(s => draftSites.has(siteKey(p.name, s)));
+        return `<div class="ps-platform" data-platform-id="${p.id}">
+          <div class="ps-platform-hd">
+            <div class="ps-platform-name">
+              <label><input type="checkbox" class="ps-plat-cb" data-platform="${p.name}" ${platChecked ? 'checked' : ''} ${platInd ? 'data-indeterminate="1"' : ''} /> ${p.name}</label>
+            </div>
+            <div class="ps-sites">${siteCells}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      bulk.querySelectorAll('.ps-bulk-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const keys = bulkDefs[+cb.dataset.bulk].keys;
+          if (cb.checked) keys.forEach(k => draftSites.add(k));
+          else keys.forEach(k => draftSites.delete(k));
+          renderPlatformModal();
+        });
+      });
+
+      list.querySelectorAll('.ps-plat-cb').forEach(cb => {
+        if (cb.dataset.indeterminate) cb.indeterminate = true;
+        cb.addEventListener('change', () => {
+          const plat = PLATFORM_SITES.find(p => p.name === cb.dataset.platform);
+          plat.sites.forEach(s => {
+            const k = siteKey(plat.name, s);
+            if (cb.checked) draftSites.add(k); else draftSites.delete(k);
+          });
+          renderPlatformModal();
+        });
+      });
+
+      list.querySelectorAll('.ps-site-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          if (cb.checked) draftSites.add(cb.dataset.key);
+          else draftSites.delete(cb.dataset.key);
+          renderPlatformModal();
+        });
+      });
+    }
+
+    function openPlatformModal(target = 'rescan'){
+      modalTarget = target;
+      if (target === 'policy') {
+        draftSites = new Set([...policySiteNames].map(s => siteKey('亚马逊', s)));
+        document.getElementById('platformModalTitle').textContent = '选择站点（亚马逊）';
+      } else if (target === 'detect') {
+        draftSites = new Set(detectSites);
+        document.getElementById('platformModalTitle').textContent = '快速关联';
+      } else {
+        draftSites = new Set(confirmedSites);
+        document.getElementById('platformModalTitle').textContent = '快速关联';
+      }
+      updatePsCurrentText();
+      renderPlatformModal();
+      document.getElementById('platformModal')?.classList.add('show');
+    }
+    function closePlatformModal(){
+      document.getElementById('platformModal')?.classList.remove('show');
+    }
+
+    document.getElementById('openPlatformModal')?.addEventListener('click', () => openPlatformModal('rescan'));
+    document.getElementById('openDetectPlatformModal')?.addEventListener('click', () => openPlatformModal('detect'));
+    document.getElementById('openDetectPlatformModal2')?.addEventListener('click', () => openPlatformModal('detect'));
+    document.getElementById('openPolicySiteModal')?.addEventListener('click', () => openPlatformModal('policy'));
+    document.getElementById('closePlatformModal')?.addEventListener('click', closePlatformModal);
+    document.getElementById('cancelPlatformModal')?.addEventListener('click', closePlatformModal);
+    document.getElementById('confirmPlatformModal')?.addEventListener('click', () => {
+      if (modalTarget === 'policy') {
+        policySiteNames = new Set(
+          [...draftSites]
+            .filter(k => k.startsWith('亚马逊|'))
+            .map(k => parseKey(k).site)
+        );
+        renderPolicySitePicked();
+      } else if (modalTarget === 'detect') {
+        detectSites = new Set(draftSites);
+        renderDetectPlatformPicked();
+      } else {
+        confirmedSites = new Set(draftSites);
+        renderPlatformPicked();
+      }
+      closePlatformModal();
+    });
+    document.getElementById('platformModal')?.addEventListener('click', e => {
+      if (e.target.id === 'platformModal') closePlatformModal();
+    });
+
+    renderPlatformPicked();
+    renderDetectPlatformPicked();
+
+    /* 合规性提交检测 · Tab 切换 */
+    const detectTabMap = { manual: 'detectPaneManual', sku: 'detectPaneSku', batch: 'detectPaneBatch' };
+    document.querySelectorAll('#detectTabs .tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const key = tab.dataset.detectTab;
+        document.querySelectorAll('#detectTabs .tab').forEach(t => t.classList.toggle('on', t === tab));
+        Object.entries(detectTabMap).forEach(([k, id]) => {
+          document.getElementById(id)?.classList.toggle('active', k === key);
+        });
+      });
+    });
+
+    const detectSkuInput = document.getElementById('detectSkuInput');
+    const detectSkuCounter = document.getElementById('detectSkuCounter');
+    function updateDetectSkuCounter(){
+      if (!detectSkuInput || !detectSkuCounter) return;
+      const n = countSkus(detectSkuInput.value);
+      detectSkuCounter.textContent = `${n} / 1000`;
+    }
+    detectSkuInput?.addEventListener('input', updateDetectSkuCounter);
+    updateDetectSkuCounter();
+
+    /* 合规品检测结果 · 检测站点树形多选 */
+    const detectSiteFilter = document.getElementById('detectSiteFilter');
+    const detectSiteFilterLabel = document.getElementById('detectSiteFilterLabel');
+    const detectFilterSites = new Set();
+
+    function getAmazonSites(){
+      return PLATFORM_SITES.find(p => p.id === 'amazon')?.sites || [];
+    }
+    function renderDetectSiteTree(){
+      const tree = document.getElementById('detectSiteTree');
+      if (!tree) return;
+      const sites = getAmazonSites();
+      const allChecked = sites.length && sites.every(s => detectFilterSites.has(s));
+      const someChecked = sites.some(s => detectFilterSites.has(s));
+      tree.innerHTML = `
+        <div class="site-tree-node">
+          <label class="site-tree-parent">
+            <span class="site-tree-arrow" id="detectSiteTreeToggle">▾</span>
+            <input type="checkbox" id="detectSitePlatCb" ${allChecked ? 'checked' : ''} />
+            <span>亚马逊</span>
+          </label>
+          <div class="site-tree-children" id="detectSiteChildren">
+            ${sites.map(s => {
+              const checked = detectFilterSites.has(s) ? 'checked' : '';
+              return `<label data-site-label="${s}"><input type="checkbox" class="detect-site-cb" data-site="${s}" ${checked} /> ${s}</label>`;
+            }).join('')}
+          </div>
+        </div>`;
+      const platCb = document.getElementById('detectSitePlatCb');
+      if (platCb && someChecked && !allChecked) platCb.indeterminate = true;
+
+      platCb?.addEventListener('change', () => {
+        sites.forEach(s => {
+          if (platCb.checked) detectFilterSites.add(s);
+          else detectFilterSites.delete(s);
+        });
+        renderDetectSiteTree();
+        updateDetectSiteFilterLabel();
+      });
+      tree.querySelectorAll('.detect-site-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          if (cb.checked) detectFilterSites.add(cb.dataset.site);
+          else detectFilterSites.delete(cb.dataset.site);
+          renderDetectSiteTree();
+          updateDetectSiteFilterLabel();
+        });
+      });
+      document.getElementById('detectSiteTreeToggle')?.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const children = document.getElementById('detectSiteChildren');
+        const arrow = document.getElementById('detectSiteTreeToggle');
+        if (!children || !arrow) return;
+        const hidden = children.style.display === 'none';
+        children.style.display = hidden ? '' : 'none';
+        arrow.textContent = hidden ? '▾' : '▸';
+      });
+    }
+    function updateDetectSiteFilterLabel(){
+      if (!detectSiteFilterLabel) return;
+      if (!detectFilterSites.size) {
+        detectSiteFilterLabel.textContent = '请选择系统检测需合规站点';
+        detectSiteFilterLabel.classList.add('ph');
+        return;
+      }
+      const text = [...detectFilterSites].sort().map(s => `亚马逊：${s}`).join('、');
+      detectSiteFilterLabel.textContent = text.length > 28 ? text.slice(0, 28) + '…' : text;
+      detectSiteFilterLabel.classList.remove('ph');
+    }
+    function closeDetectSiteFilter(){
+      detectSiteFilter?.classList.remove('open');
+    }
+    document.getElementById('detectSiteFilterTrigger')?.addEventListener('click', e => {
+      e.stopPropagation();
+      detectSiteFilter?.classList.toggle('open');
+    });
+    document.getElementById('detectSiteFilterSearch')?.addEventListener('input', e => {
+      const q = e.target.value.trim();
+      document.querySelectorAll('#detectSiteChildren label').forEach(label => {
+        const name = label.dataset.siteLabel || '';
+        label.classList.toggle('hidden', q && !name.includes(q));
+      });
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#detectSiteFilter')) closeDetectSiteFilter();
+    });
+    renderDetectSiteTree();
+
+    /* 合规品检测结果 · 操作人组织架构选人 */
+    const ORG_TREE = [
+      {
+        id: 'sc', name: '供应链管理中心',
+        teams: [
+          { id: 'sc-risk', name: '风控部', users: ['张三', '李四', '王五'] },
+          { id: 'sc-compliance', name: '合规审核组', users: ['赵六', '孙七'] }
+        ]
+      },
+      {
+        id: 'pd', name: '产品中心',
+        teams: [
+          { id: 'pd-cat', name: '品类管理组', users: ['周八', '吴九'] },
+          { id: 'pd-dev', name: '产品开发组', users: ['郑十', '钱一'] }
+        ]
+      },
+      {
+        id: 'sale', name: '销售中心',
+        teams: [
+          { id: 'sale-amz', name: '亚马逊运营部', users: ['陈二', '林三'] }
+        ]
+      }
+    ];
+    const detectOperatorFilter = document.getElementById('detectOperatorFilter');
+    const detectOperatorLabel = document.getElementById('detectOperatorLabel');
+    const detectOperatorRole = document.getElementById('detectOperatorRole');
+    const selectedOperators = new Set();
+
+    function getDeptUsers(dept){
+      return dept.teams.flatMap(team => team.users);
+    }
+    function renderDetectOperatorTree(){
+      const tree = document.getElementById('detectOperatorTree');
+      if (!tree) return;
+      tree.innerHTML = ORG_TREE.map(dept => {
+        const deptUsers = getDeptUsers(dept);
+        const deptAll = deptUsers.length && deptUsers.every(u => selectedOperators.has(u));
+        return `
+        <div class="org-dept" data-dept="${dept.name}">
+          <div class="org-dept-hd" data-dept-toggle="${dept.id}">
+            <span class="org-dept-arrow">▾</span>
+            <input type="checkbox" class="org-dept-cb" data-dept-cb="${dept.id}" ${deptAll ? 'checked' : ''} />
+            <span>${dept.name}</span>
+          </div>
+          <div class="org-team-wrap" data-dept-body="${dept.id}">
+            ${dept.teams.map(team => `
+              <div class="org-team" data-team="${team.name}">
+                <div class="org-team-hd" data-team-toggle="${team.id}">
+                  <span class="org-dept-arrow">▾</span><span>${team.name}</span>
+                </div>
+                <div class="org-users" data-team-body="${team.id}">
+                  ${team.users.map(u => `
+                    <label class="org-user${selectedOperators.has(u) ? ' on' : ''}" data-user-label="${u}">
+                      <input type="checkbox" class="org-user-cb" data-user="${u}" ${selectedOperators.has(u) ? 'checked' : ''} />
+                      <span>${u}</span>
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+      }).join('');
+
+      tree.querySelectorAll('[data-dept-toggle]').forEach(el => {
+        el.addEventListener('click', e => {
+          if (e.target.closest('.org-dept-cb')) return;
+          e.stopPropagation();
+          const body = tree.querySelector(`[data-dept-body="${el.dataset.deptToggle}"]`);
+          const arrow = el.querySelector('.org-dept-arrow');
+          if (!body) return;
+          const hidden = body.style.display === 'none';
+          body.style.display = hidden ? '' : 'none';
+          if (arrow) arrow.textContent = hidden ? '▾' : '▸';
+        });
+      });
+      tree.querySelectorAll('[data-team-toggle]').forEach(el => {
+        el.addEventListener('click', e => {
+          e.stopPropagation();
+          const body = tree.querySelector(`[data-team-body="${el.dataset.teamToggle}"]`);
+          const arrow = el.querySelector('.org-dept-arrow');
+          if (!body) return;
+          const hidden = body.style.display === 'none';
+          body.style.display = hidden ? '' : 'none';
+          if (arrow) arrow.textContent = hidden ? '▾' : '▸';
+        });
+      });
+      tree.querySelectorAll('.org-dept-cb').forEach(cb => {
+        cb.addEventListener('change', e => {
+          e.stopPropagation();
+          const dept = ORG_TREE.find(d => d.id === cb.dataset.deptCb);
+          if (!dept) return;
+          getDeptUsers(dept).forEach(u => {
+            if (cb.checked) selectedOperators.add(u);
+            else selectedOperators.delete(u);
+          });
+          updateDetectOperatorLabel();
+          renderDetectOperatorTree();
+        });
+      });
+      tree.querySelectorAll('.org-user-cb').forEach(cb => {
+        cb.addEventListener('change', e => {
+          e.stopPropagation();
+          if (cb.checked) selectedOperators.add(cb.dataset.user);
+          else selectedOperators.delete(cb.dataset.user);
+          updateDetectOperatorLabel();
+          renderDetectOperatorTree();
+        });
+      });
+    }
+    function updateDetectOperatorLabel(){
+      if (!detectOperatorLabel) return;
+      const role = detectOperatorRole?.selectedOptions[0]?.text || '提交人';
+      if (!selectedOperators.size) {
+        detectOperatorLabel.textContent = '请选择';
+        detectOperatorLabel.classList.add('ph');
+        return;
+      }
+      const names = [...selectedOperators].sort();
+      const short = names.slice(0, 2).join('、');
+      const suffix = names.length > 2 ? ` 等${names.length}人` : '';
+      detectOperatorLabel.textContent = `${role}：${short}${suffix}`;
+      detectOperatorLabel.classList.remove('ph');
+    }
+    function closeDetectOperatorFilter(){
+      detectOperatorFilter?.classList.remove('open');
+    }
+    document.getElementById('detectOperatorTrigger')?.addEventListener('click', e => {
+      e.stopPropagation();
+      detectOperatorFilter?.classList.toggle('open');
+    });
+    detectOperatorRole?.addEventListener('change', updateDetectOperatorLabel);
+    document.getElementById('detectOperatorSearch')?.addEventListener('input', e => {
+      const q = e.target.value.trim();
+      document.querySelectorAll('#detectOperatorTree .org-dept').forEach(dept => {
+        let deptMatch = false;
+        dept.querySelectorAll('.org-team').forEach(team => {
+          let teamMatch = false;
+          team.querySelectorAll('.org-user').forEach(user => {
+            const name = user.dataset.userLabel || '';
+            const teamName = team.dataset.team || '';
+            const deptName = dept.dataset.dept || '';
+            const match = !q || name.includes(q) || teamName.includes(q) || deptName.includes(q);
+            user.classList.toggle('hidden', !match);
+            if (match) teamMatch = true;
+          });
+          team.classList.toggle('hidden', !teamMatch && q);
+          if (teamMatch) deptMatch = true;
+        });
+        dept.classList.toggle('hidden', !deptMatch && q);
+      });
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#detectOperatorFilter')) closeDetectOperatorFilter();
+    });
+    renderDetectOperatorTree();
+
+    /* 合规品检测结果 · 勾选后启用批量审核 */
+    const batchAuditBtn = document.getElementById('batchAuditBtn');
+    const detectSelectAll = document.getElementById('detectSelectAll');
+    const detectResultSection = document.getElementById('detect-result');
+    const rescanDetailSection = document.getElementById('rescan-detail');
+
+    function handleSimCountClick(e, rowSelector){
+      const simLink = e.target.closest('.sim-count[data-sim-sku]');
+      if (!simLink) return false;
+      e.preventDefault();
+      const row = simLink.closest(rowSelector);
+      openSimilarProductsModal(row, simLink.dataset.simSku);
+      return true;
+    }
+
+    function getDetectRowCbs(){
+      return detectResultSection
+        ? [...detectResultSection.querySelectorAll('.detect-row-cb')]
+        : [];
+    }
+    function getCheckedDetectRows(){
+      return getDetectRowCbs()
+        .filter(cb => cb.checked)
+        .map(cb => cb.closest('.detect-data-row'))
+        .filter(Boolean);
+    }
+    function canAuditRow(row){
+      if (!row) return false;
+      return row.dataset.status === '检测完成'
+        && row.dataset.sysResult
+        && row.dataset.sysResult !== '—';
+    }
+    function updateBatchAuditBtn(){
+      if (!batchAuditBtn) return;
+      const rows = getCheckedDetectRows();
+      const canBatch = rows.length > 0 && rows.every(canAuditRow);
+      batchAuditBtn.disabled = !canBatch;
+      batchAuditBtn.classList.toggle('disabled', !canBatch);
+    }
+    function setDetectSelectAll(checked){
+      getDetectRowCbs().forEach(cb => { cb.checked = checked; });
+      if (detectSelectAll) {
+        detectSelectAll.checked = checked;
+        detectSelectAll.indeterminate = false;
+      }
+      updateBatchAuditBtn();
+    }
+    detectSelectAll?.addEventListener('change', () => {
+      setDetectSelectAll(detectSelectAll.checked);
+    });
+    getDetectRowCbs().forEach(cb => {
+      cb.addEventListener('change', () => {
+        const rows = getDetectRowCbs();
+        const n = rows.filter(r => r.checked).length;
+        if (detectSelectAll) {
+          detectSelectAll.checked = n > 0 && n === rows.length;
+          detectSelectAll.indeterminate = n > 0 && n < rows.length;
+        }
+        updateBatchAuditBtn();
+      });
+    });
+    batchAuditBtn?.addEventListener('click', () => {
+      const rows = getCheckedDetectRows();
+      if (!rows.length) return;
+      if (rows.some(r => !canAuditRow(r))) {
+        showWarnToast('系统检测有结果后才可以操作！');
+        return;
+      }
+      openBatchAuditModal('batch');
+    });
+    updateBatchAuditBtn();
+
+    const batchAuditModal = document.getElementById('batchAuditModal');
+    const batchAuditResult = document.getElementById('batchAuditResult');
+    const batchAuditDetail = document.getElementById('batchAuditDetail');
+    let auditMode = 'batch';
+    let auditSingleSku = '';
+
+    function resetBatchAuditForm(){
+      if (batchAuditResult) batchAuditResult.value = '';
+      if (batchAuditDetail) batchAuditDetail.value = '';
+    }
+    function openBatchAuditModal(mode = 'batch', row = null){
+      if (mode === 'single' && !canAuditRow(row)) {
+        showWarnToast('系统检测有结果后才可以操作！');
+        return;
+      }
+      if (mode === 'batch') {
+        const rows = getCheckedDetectRows();
+        if (rows.some(r => !canAuditRow(r))) {
+          showWarnToast('系统检测有结果后才可以操作！');
+          return;
+        }
+      }
+      auditMode = mode;
+      auditSingleSku = row?.dataset.sku || '';
+      const titleEl = document.getElementById('batchAuditModalTitle');
+      if (titleEl) titleEl.textContent = mode === 'single' ? '审核' : '批量审核';
+      resetBatchAuditForm();
+      batchAuditModal?.classList.add('show');
+    }
+    function closeBatchAuditModal(){
+      batchAuditModal?.classList.remove('show');
+      auditMode = 'batch';
+      auditSingleSku = '';
+    }
+    document.getElementById('closeBatchAuditModal')?.addEventListener('click', closeBatchAuditModal);
+    document.getElementById('cancelBatchAuditModal')?.addEventListener('click', closeBatchAuditModal);
+    batchAuditModal?.addEventListener('click', e => {
+      if (e.target.id === 'batchAuditModal') closeBatchAuditModal();
+    });
+    document.getElementById('confirmBatchAuditModal')?.addEventListener('click', () => {
+      const result = batchAuditResult?.value.trim();
+      if (!result) {
+        showToast('请选择审核结果');
+        batchAuditResult?.focus();
+        return;
+      }
+      const n = auditMode === 'single'
+        ? 1
+        : getDetectRowCbs().filter(cb => cb.checked).length;
+      const label = auditMode === 'single' ? (auditSingleSku || '当前记录') : `${n} 条`;
+      closeBatchAuditModal();
+      showToast(`已对 ${label} 审核为「${result}」`);
+    });
+
+    /* 合规品检测结果 · 行内操作菜单 */
+    function closeAllOpMenus(){
+      document.querySelectorAll('.op-menu.show').forEach(m => m.classList.remove('show'));
+    }
+    function formatSysResultTag(text){
+      if (!text || text === '—') return '—';
+      if (text === '有合规义务') return '<span class="tag t-d">有合规义务</span>';
+      if (text === '无合规义务') return '<span class="tag t-y">无合规义务</span>';
+      return text;
+    }
+    function openDetectDetailModal(row){
+      if (!row) return;
+      document.getElementById('detailSku').textContent = row.dataset.sku || '—';
+      document.getElementById('detailTitleCn').textContent = row.dataset.titleCn || '—';
+      document.getElementById('detailTitleEn').textContent = row.dataset.titleEn || '—';
+      document.getElementById('detailSysResult').innerHTML = formatSysResultTag(row.dataset.sysResult);
+      document.getElementById('detailSysDesc').textContent = row.dataset.sysDesc || '—';
+      document.getElementById('detailRiskSites').textContent = row.dataset.riskSites || '—';
+      document.getElementById('detailSafeSites').textContent = row.dataset.safeSites || '—';
+      document.getElementById('detailAudit').textContent = row.dataset.audit || '—';
+      document.getElementById('detectDetailModal')?.classList.add('show');
+    }
+    function closeDetectDetailModal(){
+      document.getElementById('detectDetailModal')?.classList.remove('show');
+    }
+    document.getElementById('closeDetectDetailModal')?.addEventListener('click', closeDetectDetailModal);
+    document.getElementById('closeDetectDetailBtn')?.addEventListener('click', closeDetectDetailModal);
+    document.getElementById('detectDetailModal')?.addEventListener('click', e => {
+      if (e.target.id === 'detectDetailModal') closeDetectDetailModal();
+    });
+
+    const detectLogBody = document.getElementById('detectLogBody');
+    const detectLogEmpty = document.getElementById('detectLogEmpty');
+    const detectLogTitle = document.getElementById('detectLogTitle');
+    function openDetectLogModal(row){
+      if (!row) return;
+      const sku = row.dataset.sku || '—';
+      detectLogTitle.textContent = `操作日志 · ${sku}`;
+      const logs = row.dataset.audit === '无需合规'
+        ? [
+            { who: '王五', time: '2026-06-10 09:30:12', what: '提交检测' },
+            { who: '系统', time: '2026-06-10 09:31:05', what: '检测完成' },
+            { who: '王五', time: '2026-06-10 11:20:33', what: '审核：非违规品' }
+          ]
+        : [];
+      if (detectLogBody) {
+        detectLogBody.innerHTML = logs.map(l =>
+          `<tr><td>${l.who}</td><td>${l.time}</td><td>${l.what}</td></tr>`
+        ).join('');
+      }
+      if (detectLogEmpty) detectLogEmpty.style.display = logs.length ? 'none' : 'block';
+      document.getElementById('detectLogModal')?.classList.add('show');
+    }
+    function closeDetectLogModal(){
+      document.getElementById('detectLogModal')?.classList.remove('show');
+    }
+    document.getElementById('closeDetectLogModal')?.addEventListener('click', closeDetectLogModal);
+    document.getElementById('detectLogModal')?.addEventListener('click', e => {
+      if (e.target.id === 'detectLogModal') closeDetectLogModal();
+    });
+
+    const SIMILAR_PRODUCTS = {
+      '1941272': [
+        { sku: '1941288', title: '不锈钢灭烛罩 带长柄 蜡烛安全熄灭工具', parentId: '10028401', category: '家居用品', images: [{ score: 0.91, src: 'snuffer-a' }, { score: 0.87, src: 'snuffer-b' }, { score: 0.84, src: 'candle-set' }] },
+        { sku: '1941305', title: '金属灭烛罩 派对蜡烛熄灭罩', parentId: '10028401', category: '家居用品', images: [{ score: 0.87, src: 'snuffer-b' }, { score: 0.82, src: 'snuffer-c' }] },
+        { sku: '7132100', title: '蜡烛熄灭罩 不锈钢防烫手柄', parentId: '10029102', category: '家居用品', images: [{ score: 0.84, src: 'snuffer-c' }] },
+        { sku: '7138444', title: '派对蜡烛安全熄灭工具 灭烛罩套装', parentId: '10029102', category: '家居用品', images: [{ score: 0.81, src: 'candle-set' }, { score: 0.78, src: 'snuffer-a' }, { score: 0.75, src: 'snuffer-d' }, { score: 0.72, src: 'snuffer-b' }] }
+      ],
+      'SKU-A1001': [
+        { sku: 'SKU-A1020', title: '儿童毛绒兔子 带音乐安抚功能', parentId: '20001001', category: '儿童玩具', images: [{ score: 0.93, src: 'plush-rabbit' }, { score: 0.91, src: 'plush-rabbit-2' }, { score: 0.88, src: 'plush-bear' }] },
+        { sku: 'SKU-A1033', title: '婴儿安抚毛绒玩具 可水洗', parentId: '20001001', category: '儿童玩具', images: [{ score: 0.90, src: 'plush-bear' }, { score: 0.86, src: 'plush-elephant' }] },
+        { sku: 'SKU-A1045', title: '儿童音乐毛绒熊 早教玩具', parentId: '20001008', category: '儿童玩具', images: [{ score: 0.88, src: 'plush-bear-2' }] },
+        { sku: 'SKU-A1056', title: '毛绒玩偶套装 生日派对礼物', parentId: '20001008', category: '儿童玩具', images: [{ score: 0.86, src: 'plush-set' }, { score: 0.83, src: 'plush-dog' }] },
+        { sku: 'SKU-A1067', title: '卡通动物毛绒玩具 带灯光', parentId: '20001102', category: '儿童玩具', images: [{ score: 0.84, src: 'plush-dog' }, { score: 0.80, src: 'plush-rabbit' }, { score: 0.77, src: 'plush-bear' }] },
+        { sku: 'SKU-A1078', title: '儿童安抚玩偶 柔软面料', parentId: '20001102', category: '儿童玩具', images: [{ score: 0.82, src: 'plush-elephant' }] },
+        { sku: 'SKU-A1089', title: '音乐毛绒狗 儿童礼物', parentId: '20001200', category: '儿童玩具', images: [{ score: 0.80, src: 'plush-dog-2' }, { score: 0.76, src: 'plush-dog' }] },
+        { sku: 'SKU-A1090', title: '毛绒大象 婴儿床伴', parentId: '20001200', category: '儿童玩具', images: [{ score: 0.79, src: 'plush-elephant' }] },
+        { sku: 'SKU-A1101', title: '儿童毛绒玩具 可拆卸清洗', parentId: '20001215', category: '儿童玩具', images: [{ score: 0.78, src: 'plush-set' }, { score: 0.74, src: 'plush-bear-2' }] },
+        { sku: 'SKU-A1112', title: '安抚毛绒猫 带摇篮曲', parentId: '20001215', category: '儿童玩具', images: [{ score: 0.76, src: 'plush-cat' }] },
+        { sku: 'SKU-A1123', title: '派对毛绒玩具 混色套装', parentId: '20001300', category: '儿童玩具', images: [{ score: 0.75, src: 'plush-set' }, { score: 0.71, src: 'plush-rabbit-2' }, { score: 0.68, src: 'plush-cat' }] },
+        { sku: 'SKU-A1134', title: '儿童毛绒公仔 迷你款', parentId: '20001300', category: '儿童玩具', images: [{ score: 0.73, src: 'plush-rabbit' }] }
+      ],
+      'SKU-C8821': [
+        { sku: 'SKU-C8825', title: '儿童学习桌椅套装 可升降', parentId: '30001001', category: '儿童家具', images: [{ score: 0.85, src: 'plush-set' }, { score: 0.80, src: 'plush-bear' }] },
+        { sku: 'SKU-C8830', title: '小学生书桌 带收纳抽屉', parentId: '30001001', category: '儿童家具', images: [{ score: 0.82, src: 'plush-bear-2' }] },
+        { sku: 'SKU-C8842', title: '可调节儿童写字桌', parentId: '30001008', category: '儿童家具', images: [{ score: 0.79, src: 'plush-elephant' }, { score: 0.75, src: 'plush-cat' }] }
+      ]
+    };
+
+    SIMILAR_PRODUCTS['23110438'] = SIMILAR_PRODUCTS['1941272'];
+    SIMILAR_PRODUCTS['SKU-D3301'] = SIMILAR_PRODUCTS['SKU-A1001'];
+
+    const SIM_SEED_IMGS = {
+      '1941272': 'candle-seed',
+      'SKU-A1001': 'toy-seed',
+      '23110438': 'candle-seed',
+      'SKU-D3301': 'toy-seed',
+      'SKU-C8821': 'toy-seed'
+    };
+
+    function simDemoImg(key, w = 200, h = 200){
+      const presets = {
+        'candle-seed': { bg: '#f8f0e8', fg: '#6b4c35', text: '灭烛罩\n种子图' },
+        'toy-seed': { bg: '#fde8f0', fg: '#b84d7a', text: '毛绒玩具\n种子图' },
+        'snuffer-a': { bg: '#eceff4', fg: '#4a5568', text: '灭烛罩 A' },
+        'snuffer-b': { bg: '#e8eef5', fg: '#3d5a80', text: '灭烛罩 B' },
+        'snuffer-c': { bg: '#edf2f7', fg: '#2d3748', text: '灭烛罩 C' },
+        'snuffer-d': { bg: '#f0f4f8', fg: '#4a5568', text: '灭烛罩 D' },
+        'candle-set': { bg: '#fff5e6', fg: '#c05621', text: '蜡烛套装' },
+        'plush-rabbit': { bg: '#fce7f3', fg: '#be185d', text: '毛绒兔' },
+        'plush-rabbit-2': { bg: '#fbcfe8', fg: '#9d174d', text: '毛绒兔-2' },
+        'plush-bear': { bg: '#fef3c7', fg: '#b45309', text: '毛绒熊' },
+        'plush-bear-2': { bg: '#fde68a', fg: '#92400e', text: '毛绒熊-2' },
+        'plush-dog': { bg: '#e0e7ff', fg: '#4338ca', text: '毛绒狗' },
+        'plush-dog-2': { bg: '#c7d2fe', fg: '#3730a3', text: '毛绒狗-2' },
+        'plush-elephant': { bg: '#e5e7eb', fg: '#374151', text: '毛绒象' },
+        'plush-cat': { bg: '#f3e8ff', fg: '#7e22ce', text: '毛绒猫' },
+        'plush-set': { bg: '#ffe4e6', fg: '#be123c', text: '玩偶套装' }
+      };
+      const p = presets[key] || { bg: '#eef1f6', fg: '#64748b', text: '产品图' };
+      const parts = p.text.split('\n');
+      const lineH = 18;
+      const startY = h / 2 - ((parts.length - 1) * lineH) / 2;
+      const lines = parts.map((line, i) =>
+        `<tspan x="50%" dy="${i === 0 ? 0 : lineH}">${line}</tspan>`
+      ).join('');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+        <rect width="${w}" height="${h}" fill="${p.bg}"/>
+        <rect x="8" y="8" width="${w - 16}" height="${h - 16}" rx="8" fill="#fff" fill-opacity=".45"/>
+        <text x="50%" y="${startY}" text-anchor="middle" dominant-baseline="middle" fill="${p.fg}" font-size="15" font-family="Microsoft YaHei,sans-serif" font-weight="600">${lines}</text>
+      </svg>`;
+      return 'data:image/svg+xml,' + encodeURIComponent(svg);
+    }
+
+    function resolveSimImgSrc(key, large = false){
+      const size = large ? 640 : 200;
+      return simDemoImg(key, size, size);
+    }
+
+    let simCurrentSku = '';
+    let simCurrentSeedImg = '';
+
+    function openImgPreview(src){
+      const mask = document.getElementById('imgPreviewMask');
+      const img = document.getElementById('imgPreviewEl');
+      if (!mask || !img || !src) return;
+      img.src = src;
+      mask.classList.add('show');
+      mask.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeImgPreview(){
+      const mask = document.getElementById('imgPreviewMask');
+      const img = document.getElementById('imgPreviewEl');
+      mask?.classList.remove('show');
+      mask?.setAttribute('aria-hidden', 'true');
+      if (img) img.src = '';
+    }
+
+    document.getElementById('closeImgPreview')?.addEventListener('click', closeImgPreview);
+    document.getElementById('imgPreviewMask')?.addEventListener('click', e => {
+      if (e.target.id === 'imgPreviewMask') closeImgPreview();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeImgPreview();
+    });
+
+    function getSimSummary(sku){
+      const list = SIMILAR_PRODUCTS[sku];
+      if (!list?.length) return null;
+      let maxScore = 0;
+      list.forEach(item => {
+        (item.images || []).forEach(img => {
+          if (img.score > maxScore) maxScore = img.score;
+        });
+      });
+      return { count: list.length, maxScore };
+    }
+
+    function renderSimImageCell(img, isMain){
+      const cls = isMain ? 'main' : 'sub';
+      const key = img.src || 'plush-rabbit';
+      const thumb = resolveSimImgSrc(key, false);
+      const large = resolveSimImgSrc(key, true);
+      return `<div class="sim-img-cell ${cls}" title="点击放大 · 相似度 ${img.score.toFixed(2)}" data-preview-src="${large}">
+        <div class="sim-img-box"><img src="${thumb}" alt="产品图" /></div>
+        <span class="sim-img-score">${img.score.toFixed(2)}</span>
+      </div>`;
+    }
+
+    function renderSimImages(images){
+      const sorted = [...images].sort((a, b) => b.score - a.score);
+      const [main, ...rest] = sorted;
+      const mainHtml = renderSimImageCell(main, true);
+      const thumbsHtml = rest.map(img => renderSimImageCell(img, false)).join('');
+      return `<div class="sim-card-imgs">${mainHtml}${rest.length ? `<div class="sim-img-thumbs">${thumbsHtml}</div>` : ''}</div>`;
+    }
+
+    function renderSimilarCard(item){
+      const images = item.images?.length ? item.images : [{ score: 0 }];
+      const topScore = Math.max(...images.map(i => i.score));
+      return `<div class="sim-card">
+        <div class="sim-card-hd">
+          <span class="meta">SKU：<b>${item.sku}</b></span>
+          <span class="sim-score">相似度 ${topScore.toFixed(2)}</span>
+        </div>
+        <div class="sim-card-title cell-ellipsis" title="${item.title}">${item.title}</div>
+        <div class="sim-card-body">
+          ${renderSimImages(images)}
+          <div class="sim-card-info">
+            <div>母体ID：<b>${item.parentId}</b></div>
+            <div>合规标识：<b><span class="tag t-d">需合规</span></b></div>
+            <div>类目：<b>${item.category}</b></div>
+            ${images.length > 1 ? `<div class="sim-card-img-count">命中 ${images.length} 张产品图</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function renderSimilarProductsGrid(){
+      const grid = document.getElementById('similarProductsGrid');
+      const empty = document.getElementById('similarProductsEmpty');
+      const hint = document.getElementById('simResultHint');
+      const list = SIMILAR_PRODUCTS[simCurrentSku] || [];
+      if (!grid || !empty) return;
+      if (!list.length) {
+        grid.innerHTML = '';
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        if (hint) hint.style.display = 'none';
+        return;
+      }
+      grid.style.display = 'grid';
+      empty.style.display = 'none';
+      if (hint) hint.style.display = 'block';
+      grid.innerHTML = list.map(renderSimilarCard).join('');
+    }
+
+    function openSimilarProductsModal(row, skuOverride){
+      const sku = skuOverride || row?.dataset.sku || '—';
+      if (sku === '—') return;
+      simCurrentSku = sku;
+      document.getElementById('simSeedSku').textContent = sku;
+      const title = row?.dataset.titleCn || row?.querySelector('.cell-ellipsis')?.getAttribute('title') || '—';
+      const titleEl = document.getElementById('simSeedTitle');
+      if (titleEl) {
+        titleEl.textContent = title;
+        titleEl.title = title;
+      }
+      const seedKey = SIM_SEED_IMGS[sku] || 'toy-seed';
+      simCurrentSeedImg = resolveSimImgSrc(seedKey, true);
+      const seedThumb = document.getElementById('simSeedThumb');
+      if (seedThumb) {
+        seedThumb.innerHTML = `<img class="sim-seed-img" src="${resolveSimImgSrc(seedKey, false)}" alt="种子产品图" data-preview-src="${simCurrentSeedImg}" />`;
+      }
+      renderSimilarProductsGrid();
+      document.getElementById('similarProductsModal')?.classList.add('show');
+    }
+
+    function closeSimilarProductsModal(){
+      document.getElementById('similarProductsModal')?.classList.remove('show');
+    }
+
+    document.getElementById('closeSimilarProductsModal')?.addEventListener('click', closeSimilarProductsModal);
+    document.getElementById('closeSimilarProductsBtn')?.addEventListener('click', closeSimilarProductsModal);
+    document.getElementById('similarProductsModal')?.addEventListener('click', e => {
+      if (e.target.id === 'similarProductsModal') closeSimilarProductsModal();
+      const previewSrc = e.target.closest('[data-preview-src]')?.dataset.previewSrc
+        || e.target.dataset?.previewSrc;
+      if (previewSrc) {
+        e.stopPropagation();
+        openImgPreview(previewSrc);
+      }
+    });
+
+    async function copyTextToClipboard(text){
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    document.getElementById('copySimilarSkusBtn')?.addEventListener('click', async () => {
+      const list = SIMILAR_PRODUCTS[simCurrentSku] || [];
+      if (!list.length) {
+        showWarnToast('暂无相似产品 SKU 可复制');
+        return;
+      }
+      const text = list.map(item => item.sku).join('\n');
+      try {
+        await copyTextToClipboard(text);
+        showToast(`已复制 ${list.length} 个 SKU（换行分隔）`);
+      } catch {
+        showWarnToast('复制失败，请手动选择复制');
+      }
+    });
+
+    detectResultSection?.addEventListener('click', e => {
+      if (handleSimCountClick(e, '.detect-data-row')) return;
+      const more = e.target.closest('.op-more');
+      if (more) {
+        e.stopPropagation();
+        const menu = more.nextElementSibling;
+        const wasOpen = menu?.classList.contains('show');
+        closeAllOpMenus();
+        if (!wasOpen) menu?.classList.add('show');
+        return;
+      }
+      const actBtn = e.target.closest('.op-menu button[data-act]');
+      if (!actBtn) return;
+      const row = actBtn.closest('.detect-data-row');
+      const act = actBtn.dataset.act;
+      closeAllOpMenus();
+      if (act === 'copy') {
+        go('detect-submit');
+        showToast(`已复制到合规性提交检测（${row?.dataset.sku || '—'}）`);
+      } else if (act === 'audit') {
+        if (!canAuditRow(row)) {
+          showWarnToast('系统检测有结果后才可以操作！');
+          return;
+        }
+        openBatchAuditModal('single', row);
+      } else if (act === 'detail') {
+        openDetectDetailModal(row);
+      } else if (act === 'log') {
+        openDetectLogModal(row);
+      }
+    });
+    rescanDetailSection?.addEventListener('click', e => {
+      handleSimCountClick(e, '.rescan-data-row');
+    });
+    document.addEventListener('click', closeAllOpMenus);
+
+    document.querySelectorAll('.stat-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        tab.closest('.stat-tabs')?.querySelectorAll('.stat-tab').forEach(t => t.classList.remove('on'));
+        tab.classList.add('on');
+      });
+    });
+
+    const policySitePicked = document.getElementById('policySitePicked');
+    function renderPolicySitePicked(){
+      if (!policySitePicked) return;
+      policySitePicked.innerHTML = '';
+      [...policySiteNames].sort().forEach(site => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.innerHTML = `${site} <span class="x-chip" data-rm="${site}">×</span>`;
+        policySitePicked.appendChild(chip);
+      });
+      policySitePicked.querySelectorAll('.x-chip').forEach(el => {
+        el.addEventListener('click', () => {
+          policySiteNames.delete(el.dataset.rm);
+          renderPolicySitePicked();
+        });
+      });
+    }
+    renderPolicySitePicked();
+
+    function showToast(msg){
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.className = 'toast';
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    function showWarnToast(msg){
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.className = 'toast warn';
+      t.innerHTML = `<span class="warn-ico">⚠</span><span>${msg}</span>`;
+      t.classList.add('show');
+      setTimeout(() => {
+        t.classList.remove('show');
+        t.className = 'toast';
+      }, 3200);
+    }
+
+    function truncateText(text, max = 48){
+      const s = text.replace(/\s+/g, ' ').trim();
+      return s.length > max ? s.slice(0, max) + '…' : s;
+    }
+
+    function resetPolicyForm(){
+      document.getElementById('policyNameInput').value = '';
+      document.getElementById('policyContentInput').value = '';
+      document.getElementById('policyLinkInput').value = '';
+      policySiteNames = new Set(['美国']);
+      renderPolicySitePicked();
+    }
+
+    document.getElementById('submitPolicyBtn')?.addEventListener('click', () => {
+      const name = document.getElementById('policyNameInput')?.value.trim();
+      const content = document.getElementById('policyContentInput')?.value.trim();
+      if (!name) { showToast('请填写政策名称'); return; }
+      if (!content) { showToast('请填写政策内容'); return; }
+      if (!policySiteNames.size) { showToast('请至少选择一个站点'); return; }
+
+      const tbody = document.getElementById('policyTableBody');
+      const sitesLabel = [...policySiteNames].sort().join('、');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${name.replace(/</g, '&lt;')}</td>
+        <td class="cell-ellipsis" title="${content.replace(/"/g, '&quot;')}">${truncateText(content)}</td>
+        <td>亚马逊</td>
+        <td>${sitesLabel.replace(/</g, '&lt;')}</td>`;
+      tbody?.appendChild(tr);
+
+      const pager = document.getElementById('policyPager');
+      if (pager) {
+        const count = tbody?.querySelectorAll('tr').length || 0;
+        pager.textContent = `共 ${count} 条 · 20 条/页 · 1`;
+      }
+
+      resetPolicyForm();
+      showToast('提交成功，已进入增量政策回扫 SKU 队列');
+      go('policy');
+    });
+  </script>
+</body>
+</html>

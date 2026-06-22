@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>合规回扫详情 - 审核/复核/同步原型</title>
+  <link rel="stylesheet" href="../../import/prototype-annotate.css" />
+  <style>
+    :root{
+      --primary:#2f6bff;
+      --border:#e8ebf0;
+      --bg:#f3f5f8;
+      --text:#1f2733;
+      --text-2:#5b6577;
+      --text-3:#97a0b0;
+      --success:#16b364;
+      --danger:#f5455c;
+      --warn:#fa8c16;
+      --radius:8px;
+    }
+    body{
+      font-family:"Microsoft YaHei",sans-serif;
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-size:13px;
+    }
+    .app{ padding:18px 20px 40px; }
+
+    .topbar{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:14px 16px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:14px;
+    }
+    .title{ font-weight:700; font-size:15px; margin-bottom:6px; }
+    .subtitle{ color:var(--text-2); font-size:12px; }
+
+    .steps{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .step{
+      display:flex; gap:8px; align-items:center;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#fff;
+      color:var(--text-2);
+      white-space:nowrap;
+    }
+    .step .dot{
+      width:22px; height:22px; border-radius:50%;
+      border:2px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:700;
+      color:var(--text-3);
+      background:#fff;
+    }
+    .step.on{
+      border-color:rgba(47,107,255,.35);
+      color:var(--primary);
+    }
+    .step.on .dot{
+      border-color:var(--primary);
+      color:var(--primary);
+      background:rgba(47,107,255,.08);
+    }
+    .step.done{
+      border-color:rgba(22,179,100,.35);
+      color:var(--success);
+    }
+    .step.done .dot{
+      border-color:var(--success);
+      color:var(--success);
+      background:rgba(22,179,100,.10);
+    }
+
+    .actions{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:12px 16px;
+      margin-bottom:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .actions .left, .actions .right{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+
+    .btn{
+      height:34px;
+      padding:0 14px;
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      cursor:pointer;
+      font-size:13px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      white-space:nowrap;
+    }
+    .btn:hover{ border-color:var(--primary); color:var(--primary); }
+    .btn-primary{
+      background:var(--primary);
+      border-color:var(--primary);
+      color:#fff;
+    }
+    .btn-primary:hover{ filter:brightness(.96); }
+    .btn-danger{
+      background:var(--danger);
+      border-color:var(--danger);
+      color:#fff;
+    }
+    .btn-success{
+      background:var(--success);
+      border-color:var(--success);
+      color:#fff;
+    }
+    .btn[disabled]{
+      cursor:not-allowed;
+      opacity:.55;
+    }
+
+    .kv{
+      display:flex; gap:16px; align-items:center; flex-wrap:wrap;
+      color:var(--text-2);
+      font-size:12px;
+    }
+    .kv b{ color:var(--text); font-weight:600; }
+
+    .table-wrap{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      overflow:hidden;
+    }
+    table{ width:100%; border-collapse:collapse; }
+    thead th{
+      background:#f6f8fb;
+      color:var(--text-2);
+      font-weight:600;
+      font-size:12px;
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      white-space:nowrap;
+    }
+    tbody td{
+      padding:12px 10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+      color:var(--text);
+    }
+    tbody tr:hover{ background:#fafbfd; }
+
+    .thumb{
+      width:46px; height:46px;
+      border:1px solid var(--border);
+      border-radius:6px;
+      background:linear-gradient(135deg,#eef1f6,#dfe4ec);
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px;
+      color:#aeb6c4;
+    }
+    .cell-title{
+      display:flex; gap:10px; align-items:center;
+      max-width:420px;
+    }
+    .cell-title .t{
+      min-width:0;
+    }
+    .cell-title .t .name{
+      font-weight:600;
+      font-size:12px;
+      margin-bottom:4px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:260px;
+    }
+    .tag{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
+      border:1px solid var(--border);
+      color:var(--text-2);
+      background:#fff;
+      white-space:nowrap;
+    }
+    .tag.warn{ border-color:rgba(250,140,22,.3); color:var(--warn); background:rgba(250,140,22,.08); }
+    .tag.danger{ border-color:rgba(245,69,92,.25); color:var(--danger); background:rgba(245,69,92,.08); }
+    .tag.success{ border-color:rgba(22,179,100,.25); color:var(--success); background:rgba(22,179,100,.08); }
+
+    .row-actions{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .linklike{
+      color:var(--primary);
+      cursor:pointer;
+      text-decoration:underline;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .empty{
+      color:var(--text-3);
+      font-size:12px;
+      padding:18px 16px;
+    }
+
+    /* 弹窗（必须与 prototype-annotate 结构一致） */
+    .overlay{ position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:100; }
+    .overlay.show{ display:flex; }
+    .modal{
+      background:#fff;
+      border-radius:10px;
+      width:520px;
+      max-width:92vw;
+      padding:18px 18px 14px;
+      position:relative;
+      box-shadow:0 12px 40px rgba(0,0,0,.18);
+    }
+    .modal-head{
+      font-weight:700;
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .x{
+      cursor:pointer;
+      color:var(--text-3);
+      font-size:18px;
+      line-height:1;
+      padding:2px 8px;
+      border-radius:6px;
+    }
+    .x:hover{ background:#f3f6fb; color:var(--text-2); }
+
+    .form{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px 14px;
+      align-items:start;
+    }
+    .form .full{ grid-column:1 / -1; }
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    .field label{ font-size:12px; color:var(--text-2); }
+    .ctrl{
+      height:34px;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:0 10px;
+      outline:none;
+      background:#fff;
+      font-size:13px;
+    }
+    textarea.ctrl{
+      height:92px;
+      padding-top:8px;
+      resize:none;
+    }
+    .modal-foot{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      padding-top:14px;
+    }
+
+    .muted{ color:var(--text-3); font-size:12px; }
+  </style>
+</head>
+
+<body>
+  <div class="app" id="page">
+    <div class="topbar">
+      <div>
+        <div class="title">合规回扫详情</div>
+        <div class="subtitle">审核 → 复核 → 同步 · 任务 SKU 明细（MVP 展示）</div>
+      </div>
+
+      <div class="steps">
+        <div class="step done"><div class="dot">1</div><div>审核</div></div>
+        <div class="step on"><div class="dot">2</div><div>复核</div></div>
+        <div class="step"><div class="dot">3</div><div>同步</div></div>
+      </div>
+    </div>
+
+    <div class="actions" id="auditPanel">
+      <div class="left">
+        <div class="kv">
+          <span>任务ID：<b>1042</b></span>
+          <span>回扫编号：<b>2026W24-04</b></span>
+          <span>状态：<b>回扫完成</b></span>
+        </div>
+      </div>
+      <div class="right">
+        <button class="btn btn-primary" id="btnBatchAudit" type="button">批量审核</button>
+        <button class="btn" id="btnBatchRecheck" type="button">批量复核</button>
+        <button class="btn btn-success" id="btnBatchSync" type="button" disabled>批量同步产品库</button>
+      </div>
+    </div>
+
+    <div class="table-wrap" id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px;"><input type="checkbox" checked/></th>
+            <th style="min-width:220px;">SKU / 产品</th>
+            <th style="width:150px;">需合规站点</th>
+            <th style="width:140px;">义务类型</th>
+            <th style="width:140px;">系统检测结果</th>
+            <th style="width:140px;">审核结果</th>
+            <th style="width:140px;">复核结果</th>
+            <th style="width:120px;">是否同步</th>
+            <th style="min-width:250px;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="checkbox" checked/></td>
+            <td>
+              <div class="cell-title">
+                <div class="thumb">🧸</div>
+                <div class="t">
+                  <div class="name">SKU 1234567 · 儿童毛绒玩具熊</div>
+                  <div class="muted">主图：&nbsp;已上传 / 命中政策：CPC-001</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="tag danger">Amazon US</span></td>
+            <td><span class="tag">TOY_CPC</span></td>
+            <td><span class="tag danger">有合规义务</span></td>
+            <td><span class="tag success">需合规</span></td>
+            <td><span class="tag warn">待复核</span></td>
+            <td><span class="muted">—</span></td>
+            <td>
+              <div class="row-actions">
+                <span class="linklike" onclick="openRecheck()">复核</span>
+                <span class="linklike" style="opacity:.35; pointer-events:none;">同步</span>
+                <span class="linklike" onclick="openLog()">日志</span>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td><input type="checkbox" checked/></td>
+            <td>
+              <div class="cell-title">
+                <div class="thumb">🔋</div>
+                <div class="t">
+                  <div class="name">SKU 2345678 · 锂电池充电器</div>
+                  <div class="muted">主图：&nbsp;命中政策：BATT-UN38</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="tag danger">Amazon US</span></td>
+            <td><span class="tag">BATT_UN38</span></td>
+            <td><span class="tag danger">有合规义务</span></td>
+            <td><span class="tag success">需合规</span></td>
+            <td><span class="tag success">无需合规（示意）</span></td>
+            <td><span class="muted">无需同步</span></td>
+            <td>
+              <div class="row-actions">
+                <span class="linklike" onclick="openRecheck()">复核（只读/待确认）</span>
+                <span class="linklike" style="opacity:.35; pointer-events:none;">同步</span>
+                <span class="linklike" onclick="openLog()">日志</span>
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td><input type="checkbox"/></td>
+            <td>
+              <div class="cell-title">
+                <div class="thumb">🎮</div>
+                <div class="t">
+                  <div class="name">SKU 3456789 · 儿童互动玩具（待确认）</div>
+                  <div class="muted">系统：待确认（阈值未达）</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="tag warn">—</span></td>
+            <td><span class="muted">—</span></td>
+            <td><span class="tag warn">待确认</span></td>
+            <td><span class="muted">待审核</span></td>
+            <td><span class="muted">—</span></td>
+            <td><span class="muted">—</span></td>
+            <td>
+              <div class="row-actions">
+                <span class="linklike" style="opacity:.35; pointer-events:none;">审核</span>
+                <span class="linklike" style="opacity:.35; pointer-events:none;">复核</span>
+                <span class="linklike" onclick="openLog()">日志</span>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <div class="muted" style="margin-top:12px;">
+      规则：未复核的数据不可同步；复核结果为「需合规」才可同步产品库。
+    </div>
+  </div>
+
+  <!-- 批量审核弹窗 -->
+  <div class="overlay" id="auditOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div>批量审核</div>
+        <div class="x" onclick="closeAll()">×</div>
+      </div>
+      <div class="form">
+        <div class="field">
+          <label>审核结果（必填）</label>
+          <select class="ctrl" id="auditResult">
+            <option value="pending">待确认</option>
+            <option value="yes">需合规</option>
+            <option value="no">无需合规</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>需合规站点（多选）</label>
+          <select class="ctrl" id="auditSites" multiple size="3">
+            <option selected>Amazon US</option>
+            <option>Amazon CA</option>
+            <option>Amazon GB</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>义务类型（多选）</label>
+          <select class="ctrl" id="auditTypes" multiple size="3">
+            <option selected>TOY_CPC</option>
+            <option selected>BATT_UN38</option>
+            <option>COSMET_FDA</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>审核明细说明（非必填）</label>
+          <textarea class="ctrl" id="auditNote" placeholder="例如：命中 CPC-001，儿童向外观..."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="closeAll()">取消</button>
+        <button class="btn btn-primary" onclick="toast('批量审核完成（原型示意）'); closeAll();">确认审核</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量复核弹窗 -->
+  <div class="overlay" id="recheckOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div>批量复核</div>
+        <div class="x" onclick="closeAll()">×</div>
+      </div>
+      <div class="form">
+        <div class="field">
+          <label>复核结果（必填）</label>
+          <select class="ctrl" id="recheckResult">
+            <option value="pending">待确认</option>
+            <option value="yes">需合规</option>
+            <option value="no">无需合规</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>需合规站点（多选）</label>
+          <select class="ctrl" id="recheckSites" multiple size="3">
+            <option selected>Amazon US</option>
+            <option>Amazon CA</option>
+            <option>Amazon GB</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>复核说明（非必填）</label>
+          <textarea class="ctrl" id="recheckNote" placeholder="复核原因/证据（原型示意）"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="closeAll()">取消</button>
+        <button class="btn btn-primary" onclick="toast('批量复核完成（原型示意）'); setSyncEnable(); closeAll();">确认复核</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 同步确认弹窗 -->
+  <div class="overlay" id="syncOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div>同步产品库确认</div>
+        <div class="x" onclick="closeAll()">×</div>
+      </div>
+      <div style="color:var(--text-2); font-size:13px; line-height:1.7;">
+        <div><b style="color:var(--text);">仅</b> 复核结果=「需合规」的 SKU 会同步。</div>
+        <div style="margin-top:10px;" class="muted">同步成功后将回写「是否同步=是」。</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" onclick="closeAll()">取消</button>
+        <button class="btn btn-primary" onclick="toast('同步已发起（原型示意）'); closeAll();">确认同步</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../import/prototype-annotate.js"></script>
+  <script>
+    function toast(msg){
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style.position = 'fixed';
+      t.style.top = '24px';
+      t.style.left = '50%';
+      t.style.transform = 'translateX(-50%)';
+      t.style.background = '#1f2733';
+      t.style.color = '#fff';
+      t.style.padding = '10px 16px';
+      t.style.borderRadius = '10px';
+      t.style.zIndex = 9999;
+      t.style.fontSize = '13px';
+      t.style.boxShadow = '0 10px 30px rgba(0,0,0,.18)';
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(), 1600);
+    }
+    function showOverlay(id){
+      document.getElementById(id).classList.add('show');
+    }
+    function hideOverlay(id){
+      document.getElementById(id).classList.remove('show');
+    }
+    function closeAll(){
+      ['auditOverlay','recheckOverlay','syncOverlay'].forEach(hideOverlay);
+    }
+    function openRecheck(){ showOverlay('recheckOverlay'); }
+    function openLog(){ toast('日志弹窗（原型占位）'); }
+    function setSyncEnable(){
+      document.getElementById('btnBatchSync').disabled = false;
+      toast('可同步（原型示意）');
+    }
+
+    document.getElementById('btnBatchAudit').onclick = () => showOverlay('auditOverlay');
+    document.getElementById('btnBatchRecheck').onclick = () => showOverlay('recheckOverlay');
+    document.getElementById('btnBatchSync').onclick = () => showOverlay('syncOverlay');
+
+    // 初始化：同步按钮默认不可用（表示尚未复核）
+    setSyncEnable = setSyncEnable;
+  </script>
+
+  <script>
+    PrototypeAnnotate.init({
+      storageKey: 'compliance-rescan-detail-annotations',
+      exportTitle: '合规回扫详情 - 原型（审核/复核/同步）',
+      exportFilename: '合规回扫详情-原型标注.md',
+      scopeLabels: {
+        page: '合规回扫详情页',
+        auditOverlay: '批量审核弹窗',
+        recheckOverlay: '批量复核弹窗',
+        syncOverlay: '同步确认弹窗',
+        auditPanel: '操作区'
+      },
+      builtins: [],
+      toast: toast,
+      nowStr: () => new Date().toISOString().slice(0,10)
+    });
+  </script>
+</body>
+</html>
+
