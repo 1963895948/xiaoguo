@@ -130,7 +130,12 @@
     }
     .task-banner b{color:var(--text)}
     .cell-ellipsis{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .cell-sites{max-width:180px;font-size:11px;color:var(--sub)}
+    .cell-sites{max-width:200px;font-size:11px;color:var(--sub)}
+    .cell-sites-split{line-height:1.65}
+    .cell-sites-split .risk-site-line{display:flex;gap:4px;align-items:flex-start}
+    .cell-sites-split .risk-site-line .kind{font-weight:600;flex:none}
+    .cell-sites-split .risk-site-line .kind.kind-b{color:#e67e22}
+    .cell-sites-split .risk-site-line .kind.kind-c{color:#2f6df6}
     .cell-sim{font-size:11px;line-height:1.5}
     .sim-line{display:flex;gap:6px;align-items:center}
     .sim-label{color:var(--sub)}
@@ -1708,7 +1713,10 @@
                   </div>
                 </td>
                 <td><span class="tag t-d">有风险</span></td>
-                <td class="cell-sites">亚马逊：美国</td>
+                <td class="cell-sites cell-sites-split">
+                  <div class="risk-site-line"><span class="kind kind-b">禁售</span><span>亚马逊：美国</span></div>
+                  <div class="risk-site-line"><span class="kind kind-c">合规</span><span>—</span></div>
+                </td>
                 <td class="cell-ellipsis" title="检索相似度0.71，命中禁售品库-手术镊子">检索相似度0.71，命中禁售品库…</td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td>待同步</td>
@@ -1835,7 +1843,10 @@
                   </div>
                 </td>
                 <td><span class="tag t-d">有风险</span></td>
-                <td class="cell-sites">亚马逊：美国、英国</td>
+                <td class="cell-sites cell-sites-split">
+                  <div class="risk-site-line"><span class="kind kind-b">禁售</span><span>亚马逊：美国、英国</span></div>
+                  <div class="risk-site-line"><span class="kind kind-c">合规</span><span>亚马逊：德国、法国、意大利</span></div>
+                </td>
                 <td>命中危险品禁售 + 易燃液体合规</td>
                 <td><span class="tag t-d">有风险</span></td>
                 <td><span class="tag t-y">已同步</span></td>
@@ -2023,7 +2034,10 @@
                   </div>
                 </td>
                 <td><span class="tag t-d">有风险</span></td>
-                <td class="cell-sites">亚马逊：美国、英国</td>
+                <td class="cell-sites cell-sites-split">
+                  <div class="risk-site-line"><span class="kind kind-b">禁售</span><span>亚马逊：美国、英国</span></div>
+                  <div class="risk-site-line"><span class="kind kind-c">合规</span><span>亚马逊：德国、法国</span></div>
+                </td>
                 <td>禁售 + FDA 激光合规双命中</td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td>待同步</td>
