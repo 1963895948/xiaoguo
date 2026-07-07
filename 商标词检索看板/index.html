@@ -96,6 +96,41 @@
     .listing-info .row { font-size: 12px; line-height: 1.75; color: var(--sub); }
     .listing-info .row b { color: var(--text); font-weight: 500; min-width: 64px; display: inline-block; }
     .listing-info .msku { color: var(--pri); font-weight: 600; }
+    .msku-link { color: var(--pri); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+    .msku-link:hover { color: #1a52d4; }
+
+    .overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      z-index: 100; align-items: center; justify-content: center; padding: 20px;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      width: 920px; max-width: 96vw; max-height: 88vh; background: #fff; border-radius: 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.18); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-hd {
+      padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 600;
+    }
+    .modal-hd .sub { font-size: 12px; color: var(--sub); font-weight: 400; }
+    .modal-hd .x { margin-left: auto; cursor: pointer; color: var(--muted); font-size: 20px; line-height: 1; border: none; background: none; }
+    .modal-hd .x:hover { color: var(--text); }
+    .modal-bd { padding: 0; overflow: auto; flex: 1; }
+    .cmp-head {
+      display: grid; grid-template-columns: 110px 1fr 1fr; background: #f6f8fb; border-bottom: 1px solid var(--line);
+      font-size: 12px; font-weight: 600; color: var(--sub);
+    }
+    .cmp-head > div { padding: 10px 14px; }
+    .cmp-head .col-v2 { color: #2f6bff; border-left: 1px solid var(--line); }
+    .cmp-head .col-es { color: #722ed1; border-left: 1px solid var(--line); }
+    .cmp-row {
+      display: grid; grid-template-columns: 110px 1fr 1fr; border-bottom: 1px solid var(--line); font-size: 12px;
+    }
+    .cmp-row:last-child { border-bottom: none; }
+    .cmp-label { padding: 12px 14px; background: #fafbfd; color: var(--sub); font-weight: 600; border-right: 1px solid var(--line); }
+    .cmp-cell { padding: 12px 14px; line-height: 1.65; word-break: break-word; white-space: pre-wrap; border-left: 1px solid var(--line); }
+    .cmp-cell.diff { background: #fffbe6; }
+    .modal-ft { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; }
 
     .tag { display: inline-block; padding: 1px 7px; border-radius: 3px; font-size: 11px; line-height: 18px; white-space: nowrap; }
     .st-待处理 { background: #fff7e6; color: var(--warn); }
@@ -109,6 +144,8 @@
     .type-ban { background: #fff7e6; color: var(--warn); border: 1px solid #ffd591; }
     .shop-pause { color: var(--warn); font-weight: 600; }
     .shop-normal { color: var(--ok); }
+    .channel-on { color: var(--ok); font-weight: 600; }
+    .channel-off { color: var(--warn); font-weight: 600; }
     .yes { color: var(--danger); font-weight: 600; }
     .no { color: var(--ok); }
     .word { font-weight: 600; color: var(--danger); }
@@ -184,6 +221,9 @@
           <div class="field"><span class="lbl">店铺状态</span>
             <select class="ctrl" id="fShop"><option value="">全部</option><option>暂停</option><option>正常</option></select>
           </div>
+          <div class="field"><span class="lbl">渠道是否开启</span>
+            <select class="ctrl" id="fChannel"><option value="">全部</option><option>是</option><option>否</option></select>
+          </div>
           <div class="field"><span class="lbl">Listing删除</span>
             <select class="ctrl" id="fDel"><option value="">全部</option><option>是</option><option>否</option></select>
           </div>
@@ -209,6 +249,7 @@
               <th>处理状态</th>
               <th>检索词</th>
               <th>检索类型</th>
+              <th>渠道是否开启</th>
               <th>Listing 是否删除</th>
               <th style="min-width:200px">删除错误信息</th>
             </tr>
@@ -227,11 +268,31 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="overlay" id="listingOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="listingModalTitle">
+    <div class="modal-hd">
+      <span id="listingModalTitle">Listing 文案</span>
+      <span class="sub" id="listingModalSub"></span>
+      <button type="button" class="x" id="listingModalClose" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-bd" id="listingModalBody"></div>
+    <div class="modal-ft"><button class="btn pri" id="listingModalOk">关闭</button></div>
+  </div>
+</div>
+
 <script src="sample-data.js"></script>
 <script>
 const DATA = window.TRADEMARK_SEARCH_DATA;
 const ALL_STATUS = ["待处理", "已提交待确认", "无需处理", "处理成功", "处理失败", "业务自处理", "已替换"];
 const STATUS_COUNTS = DATA.meta.statusCountsFull;
+const LISTINGS = DATA.listings || {};
+
+const LISTING_FIELDS = [
+  { key: "title", label: "标题" },
+  { key: "keywords", label: "关键词" },
+  { key: "desc", label: "描述" },
+  { key: "bullets", label: "亮点" },
+];
 
 let records = [...DATA.records];
 let filtered = [...records];
@@ -355,6 +416,65 @@ function parseDetectDate(str) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+function getListingContent(record) {
+  const key = record.listingKey || `${record.sourceChannel}-${record.msku}`;
+  if (LISTINGS[key]) return LISTINGS[key];
+  const w = record.word || "Product";
+  return {
+    v2: {
+      title: `${w} Professional Listing Title (V2)`,
+      keywords: `${w};keyword;listing;amazon`,
+      desc: `V2 description for ${record.msku}. Contains detected word: ${w}.`,
+      bullets: `Highlight 1 with ${w}\nHighlight 2\nHighlight 3`,
+    },
+    es: {
+      title: "Professional Listing Title (ES)",
+      keywords: "keyword;listing;amazon;product",
+      desc: `ES description for ${record.msku}. May differ from V2 snapshot.`,
+      bullets: "Highlight 1\nHighlight 2\nHighlight 3",
+    },
+  };
+}
+
+function closeListingModal() {
+  document.getElementById("listingOverlay").classList.remove("show");
+}
+
+function openListingModal(record) {
+  const content = getListingContent(record);
+  document.getElementById("listingModalTitle").textContent = "Listing 文案对比";
+  document.getElementById("listingModalSub").textContent = `MSKU：${record.msku} · ${record.shopName || ""}`;
+  document.getElementById("listingModalBody").innerHTML = `
+    <div class="cmp-head">
+      <div>字段</div>
+      <div class="col-v2">V2</div>
+      <div class="col-es">ES</div>
+    </div>
+    ${LISTING_FIELDS.map(f => {
+      const v2 = content.v2?.[f.key] || "—";
+      const es = content.es?.[f.key] || "—";
+      const diff = String(v2).trim() !== String(es).trim();
+      return `
+        <div class="cmp-row">
+          <div class="cmp-label">${f.label}</div>
+          <div class="cmp-cell ${diff ? "diff" : ""}">${esc(v2)}</div>
+          <div class="cmp-cell ${diff ? "diff" : ""}">${esc(es)}</div>
+        </div>`;
+    }).join("")}
+  `;
+  document.getElementById("listingOverlay").classList.add("show");
+}
+
+function bindMskuClicks() {
+  document.querySelectorAll(".msku-link").forEach(el => {
+    el.onclick = e => {
+      e.preventDefault();
+      const idx = +el.dataset.idx;
+      openListingModal(filtered[idx]);
+    };
+  });
+}
+
 function renderStatusChips() {
   document.getElementById("statusRow").innerHTML = `
     <div class="status-chip ${statusFilter === "" ? "on" : ""}" data-status="">全部 <span class="cnt">(${Object.values(STATUS_COUNTS).reduce((a,b)=>a+b,0).toLocaleString()})</span></div>
@@ -368,11 +488,11 @@ function renderStatusChips() {
 
 function renderTable() {
   const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = filtered.map(r => `
+  tbody.innerHTML = filtered.map((r, idx) => `
     <tr class="${r.dealStatus === "待处理" ? "row-pending" : ""}">
       <td>
         <div class="listing-info">
-          <div class="row"><b>MSKU</b><span class="msku">${esc(r.msku)}</span></div>
+          <div class="row"><b>MSKU</b><span class="msku-link" data-idx="${idx}" title="点击查看 Listing 文案">${esc(r.msku)}</span></div>
           <div class="row"><b>店铺名称</b>${esc(r.shopName)}</div>
           <div class="row"><b>SKU</b>${esc(r.sku)}</div>
           <div class="row"><b>店铺状态</b><span class="${r.shopStatus === "暂停" ? "shop-pause" : "shop-normal"}">${esc(r.shopStatus)}</span></div>
@@ -384,11 +504,13 @@ function renderTable() {
       <td><span class="tag st-${esc(r.dealStatus)}">${esc(r.dealStatus)}</span></td>
       <td><span class="word">${esc(r.word)}</span></td>
       <td><span class="tag ${r.wordType === "商标词" ? "type-tm" : "type-ban"}">${esc(r.wordType)}</span></td>
+      <td><span class="${r.channelEnabled === "是" ? "channel-on" : "channel-off"}">${esc(r.channelEnabled || "否")}</span></td>
       <td><span class="${r.listingDeleted === "是" ? "yes" : "no"}">${esc(r.listingDeleted)}</span></td>
       <td>${r.deleteErrorInfo ? `<span class="fail-info has-err" title="${esc(r.deleteErrorInfo)}">${esc(r.deleteErrorInfo)}</span>` : '<span class="fail-info empty">—</span>'}</td>
     </tr>
   `).join("");
   document.getElementById("resultCount").textContent = filtered.length;
+  bindMskuClicks();
 }
 
 function applyFilters() {
@@ -397,6 +519,7 @@ function applyFilters() {
   const word = document.getElementById("fWord").value.trim().toUpperCase();
   const type = document.getElementById("fType").value;
   const shop = document.getElementById("fShop").value;
+  const channel = document.getElementById("fChannel").value;
   const del = document.getElementById("fDel").value;
   const channels = getSelectedChannels();
   const dateFrom = document.getElementById("fDateFrom").value;
@@ -410,6 +533,7 @@ function applyFilters() {
     if (type && r.wordType !== type) return false;
     if (channels.length && !channels.includes(r.sourceChannel)) return false;
     if (shop && r.shopStatus !== shop) return false;
+    if (channel && (r.channelEnabled || "否") !== channel) return false;
     if (del && r.listingDeleted !== del) return false;
     const detectDate = parseDetectDate(r.detectTime);
     if (dateFrom && detectDate) {
@@ -433,9 +557,17 @@ document.getElementById("statusRow").onclick = e => {
   applyFilters();
 };
 document.getElementById("btnSearch").onclick = () => { applyFilters(); toast("已筛选"); };
+document.getElementById("listingModalClose").onclick = closeListingModal;
+document.getElementById("listingModalOk").onclick = closeListingModal;
+document.getElementById("listingOverlay").onclick = e => {
+  if (e.target.id === "listingOverlay") closeListingModal();
+};
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeListingModal();
+});
 document.getElementById("btnReset").onclick = () => {
   ["fMsku","fSku","fWord"].forEach(id => document.getElementById(id).value = "");
-  ["fType","fShop","fDel"].forEach(id => document.getElementById(id).value = "");
+  ["fType","fShop","fChannel","fDel"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("fDateFrom").value = "2026-05-17";
   document.getElementById("fDateTo").value = "2026-05-18";
   resetChannelFilter();
