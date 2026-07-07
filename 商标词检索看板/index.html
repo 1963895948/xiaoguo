@@ -36,19 +36,12 @@
     .page-sub { font-size: 12px; color: var(--sub); margin-top: 4px; }
     .site-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #f0f5ff; border: 1px solid #adc6ff; border-radius: 4px; font-size: 12px; color: var(--pri); font-weight: 600; }
 
-    .status-row { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
-    .status-chip {
-      display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
-      border: 1px solid var(--line); border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; transition: .15s;
-    }
-    .status-chip:hover { border-color: var(--pri); }
-    .status-chip.on { border-color: var(--pri); background: #f5f8ff; color: var(--pri); font-weight: 600; }
-    .status-chip .cnt { color: var(--muted); font-weight: 400; }
-    .status-chip.on .cnt { color: var(--pri); opacity: .75; }
+    .status-row { display: none; }
 
     .filters { padding: 12px 20px; border-bottom: 1px solid var(--line); }
     .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
     .field { display: flex; align-items: stretch; height: 32px; }
+    .field.bulk-field { height: auto; min-height: 32px; }
     .field .lbl { background: #f6f8fb; border: 1px solid var(--line); border-right: none; border-radius: 4px 0 0 4px; padding: 0 10px; display: flex; align-items: center; color: var(--sub); white-space: nowrap; font-size: 12px; }
     .ctrl { height: 32px; border: 1px solid var(--line); border-radius: 4px; background: #fff; padding: 0 10px; color: var(--text); font-size: 12px; outline: none; min-width: 120px; }
     .field .ctrl { border-radius: 0 4px 4px 0; }
@@ -56,7 +49,10 @@
     .date-sep { color: var(--muted); font-size: 12px; }
     .channel-field { position: relative; height: auto; }
     .channel-field .lbl { height: 32px; }
+    .status-field { position: relative; height: auto; }
+    .status-field .lbl { height: 32px; }
     .channel-picker { position: relative; }
+    .status-picker { position: relative; }
     .channel-trigger {
       min-width: 168px; height: 32px; border: 1px solid var(--line); border-radius: 0 4px 4px 0;
       background: #fff; padding: 0 26px 0 10px; text-align: left; cursor: pointer; font-size: 12px; color: var(--text);
@@ -69,6 +65,16 @@
       border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 8px 0;
     }
     .channel-panel.show { display: block; }
+    .status-panel {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 40;
+      min-width: 220px; max-height: 320px; overflow: auto; background: #fff; border: 1px solid var(--line);
+      border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 8px 0;
+    }
+    .status-panel.show { display: block; }
+    .status-opt { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; user-select: none; }
+    .status-opt:hover { background: #f6f8fb; }
+    .status-opt input { margin: 0; cursor: pointer; }
+    .status-opt .cnt { margin-left: auto; color: var(--muted); font-size: 11px; }
     .tree-row {
       display: flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; user-select: none;
     }
@@ -82,6 +88,26 @@
     .tree-leaf { padding-left: 8px; }
     .btn { height: 32px; border: 1px solid var(--line); background: #fff; border-radius: 4px; padding: 0 14px; cursor: pointer; font-size: 12px; }
     .btn.pri { background: var(--pri); border-color: var(--pri); color: #fff; }
+
+    .sku-query-wrap { display: flex; align-items: stretch; flex: 1; min-width: 140px; height: 32px; border: 1px solid var(--line); border-radius: 0 4px 4px 0; background: #fff; }
+    .sku-query-input-cell { position: relative; flex: 1; display: flex; align-items: center; min-width: 120px; }
+    .sku-query-input { border: none; box-shadow: none; flex: 1; height: 30px; padding: 0 10px; font-size: 12px; outline: none; background: transparent; min-width: 0; }
+    .sku-query-more {
+      flex: none; width: 30px; height: 30px; border: none; border-left: 1px solid var(--line); background: #fff;
+      color: var(--sub); cursor: pointer; font-size: 16px; line-height: 1; letter-spacing: -2px;
+    }
+    .sku-query-more:hover { color: var(--pri); background: #f6f8fb; }
+    .sku-query-popover {
+      display: none; position: absolute; top: calc(100% + 4px); right: 0; z-index: 50;
+      width: min(340px, 88vw); background: #fff; border: 1px solid var(--line); border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 12px;
+    }
+    .sku-query-popover.show { display: block; }
+    .sku-query-popover textarea {
+      width: 100%; min-height: 128px; border: 1px solid var(--line); border-radius: 4px;
+      padding: 8px 10px; font: 12px/1.55 inherit; resize: vertical; outline: none; box-sizing: border-box;
+    }
+    .sku-query-popfoot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 
     .toolbar { display: flex; align-items: center; gap: 12px; padding: 10px 20px; font-size: 12px; color: var(--sub); }
     .toolbar .spacer { flex: 1; }
@@ -149,6 +175,11 @@
     .yes { color: var(--danger); font-weight: 600; }
     .no { color: var(--ok); }
     .word { font-weight: 600; color: var(--danger); }
+    .word-num { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+    .word-disp-删除 { background: #fff1f0; color: var(--danger); }
+    .word-disp-保留 { background: #f0f9f3; color: var(--ok); }
+    .word-disp-替换 { background: #e6fffb; color: #13c2c2; }
+    .word-disp-未配置 { background: #f5f5f5; color: var(--sub); }
     .empty { color: var(--muted); }
     .fail-info { max-width: 220px; font-size: 11px; line-height: 1.55; color: var(--sub); word-break: break-all; }
     .fail-info.has-err { color: var(--danger); }
@@ -188,15 +219,50 @@
         <div class="site-badge">🇺🇸 Amazon US</div>
       </div>
 
-      <div class="status-row" id="statusRow"></div>
-
       <div class="filters">
         <div class="filter-row">
-          <div class="field"><span class="lbl">MSKU</span><input class="ctrl" id="fMsku" placeholder="渠道SKU" /></div>
-          <div class="field"><span class="lbl">SKU</span><input class="ctrl" id="fSku" placeholder="系统SKU" /></div>
+          <div class="field status-field"><span class="lbl">处理状态</span>
+            <div class="status-picker" id="statusPicker">
+              <button type="button" class="channel-trigger" id="statusTrigger">全部处理状态</button>
+              <div class="status-panel" id="statusPanel"></div>
+            </div>
+          </div>
+          <div class="field bulk-field"><span class="lbl">MSKU</span>
+            <div class="sku-query-wrap" id="mskuQuery" data-max="500" data-unit="MSKU">
+              <div class="sku-query-input-cell">
+                <input type="text" class="sku-query-input" placeholder="请输入MSKU" />
+                <button type="button" class="sku-query-more" title="批量输入" aria-label="批量输入MSKU">⋮</button>
+                <div class="sku-query-popover">
+                  <textarea placeholder="一行一项，支持粘贴；回车换行"></textarea>
+                  <div class="sku-query-popfoot">
+                    <button type="button" class="btn" data-sku-act="clear">清空</button>
+                    <button type="button" class="btn pri" data-sku-act="ok">确定</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field bulk-field"><span class="lbl">SKU</span>
+            <div class="sku-query-wrap" id="skuQuery" data-max="500" data-unit="SKU">
+              <div class="sku-query-input-cell">
+                <input type="text" class="sku-query-input" placeholder="请输入SKU" />
+                <button type="button" class="sku-query-more" title="批量输入" aria-label="批量输入SKU">⋮</button>
+                <div class="sku-query-popover">
+                  <textarea placeholder="一行一项，支持粘贴；回车换行"></textarea>
+                  <div class="sku-query-popfoot">
+                    <button type="button" class="btn" data-sku-act="clear">清空</button>
+                    <button type="button" class="btn pri" data-sku-act="ok">确定</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="field"><span class="lbl">检索词</span><input class="ctrl" id="fWord" placeholder="如 NINJA" /></div>
           <div class="field"><span class="lbl">检索类型</span>
             <select class="ctrl" id="fType"><option value="">全部</option><option>商标词</option><option>禁用词</option></select>
+          </div>
+          <div class="field"><span class="lbl">词处理方式</span>
+            <select class="ctrl" id="fWordDispose"><option value="">全部</option><option>删除</option><option>保留</option><option>替换</option><option>未配置</option></select>
           </div>
           <div class="field channel-field"><span class="lbl">来源渠道</span>
             <div class="channel-picker" id="channelPicker">
@@ -224,10 +290,7 @@
           <div class="field"><span class="lbl">渠道是否开启</span>
             <select class="ctrl" id="fChannel"><option value="">全部</option><option>是</option><option>否</option></select>
           </div>
-          <div class="field"><span class="lbl">Listing删除</span>
-            <select class="ctrl" id="fDel"><option value="">全部</option><option>是</option><option>否</option></select>
-          </div>
-          <div class="field"><span class="lbl">检索时间</span><input class="ctrl" type="date" id="fDateFrom" value="2026-05-17" /></div>
+          <div class="field"><span class="lbl">设置处置时间</span><input class="ctrl" type="date" id="fDateFrom" value="2026-05-17" /></div>
           <span class="date-sep">—</span>
           <input class="ctrl" type="date" id="fDateTo" value="2026-05-18" style="border-radius:4px" />
           <button class="btn pri" id="btnSearch">查询</button>
@@ -245,12 +308,14 @@
             <tr>
               <th style="width:260px">Listing 信息</th>
               <th>检索时间</th>
+              <th>设置处置时间</th>
               <th>处理时间</th>
               <th>处理状态</th>
               <th>检索词</th>
+              <th>词处理方式</th>
+              <th>词检索listing数量</th>
               <th>检索类型</th>
               <th>渠道是否开启</th>
-              <th>Listing 是否删除</th>
               <th style="min-width:200px">删除错误信息</th>
             </tr>
           </thead>
@@ -296,7 +361,6 @@ const LISTING_FIELDS = [
 
 let records = [...DATA.records];
 let filtered = [...records];
-let statusFilter = "";
 
 function toast(msg) {
   const t = document.getElementById("toast");
@@ -307,6 +371,173 @@ function toast(msg) {
 
 function esc(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function wordDisposeLabel(v) {
+  const s = String(v ?? "").trim();
+  return s || "未配置";
+}
+
+function closeAllBulkPopovers() {
+  document.querySelectorAll(".sku-query-popover.show").forEach(p => p.classList.remove("show"));
+}
+
+function parseBulkLines(text, max) {
+  const lines = (text || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  const unique = [...new Set(lines)];
+  if (unique.length > max) return { items: unique.slice(0, max), truncated: true };
+  return { items: unique, truncated: false };
+}
+
+function bulkUnit(wrap) {
+  return wrap.dataset.unit || "项";
+}
+
+function setBulkQuery(wrap, items) {
+  if (!wrap || !items?.length) return;
+  const max = parseInt(wrap.dataset.max || "500", 10);
+  const list = items.slice(0, max);
+  const ta = wrap.querySelector(".sku-query-popover textarea");
+  const input = wrap.querySelector(".sku-query-input");
+  const unit = bulkUnit(wrap);
+  if (ta) ta.value = list.join("\n");
+  if (input) {
+    input.value = list.length === 1 ? list[0] : `${list.length}个${unit}`;
+    input.dataset.skuBulk = list.join("\n");
+  }
+}
+
+function applyBulkQuery(wrap) {
+  if (!wrap) return [];
+  const max = parseInt(wrap.dataset.max || "500", 10);
+  const ta = wrap.querySelector(".sku-query-popover textarea");
+  const input = wrap.querySelector(".sku-query-input");
+  const unit = bulkUnit(wrap);
+  const { items, truncated } = parseBulkLines(ta?.value || "", max);
+  if (!items.length) {
+    toast(`请输入至少一个 ${unit}`);
+    return [];
+  }
+  if (input) {
+    input.value = items.length === 1 ? items[0] : `${items.length}个${unit}`;
+    input.dataset.skuBulk = items.join("\n");
+  }
+  closeAllBulkPopovers();
+  if (truncated) toast(`最多 ${max} 个，已截取前 ${max} 个`);
+  else toast(`已填入 ${items.length} 个 ${unit} 用于查询`);
+  return items;
+}
+
+function resetBulkQuery(wrap) {
+  if (!wrap) return;
+  const ta = wrap.querySelector(".sku-query-popover textarea");
+  const input = wrap.querySelector(".sku-query-input");
+  if (ta) ta.value = "";
+  if (input) {
+    input.value = "";
+    delete input.dataset.skuBulk;
+  }
+}
+
+function getBulkFilter(wrapId, normalize = s => s) {
+  const wrap = document.getElementById(wrapId);
+  const input = wrap?.querySelector(".sku-query-input");
+  if (!input) return { mode: "none", list: [] };
+  if (input.dataset.skuBulk) {
+    const list = input.dataset.skuBulk.split("\n").map(s => normalize(s.trim())).filter(Boolean);
+    return { mode: "bulk", list };
+  }
+  const v = input.value.trim();
+  if (!v || /^\d+个/.test(v)) return { mode: "none", list: [] };
+  return { mode: "single", list: [normalize(v)] };
+}
+
+function initBulkQueryFields() {
+  document.querySelectorAll(".sku-query-wrap").forEach(wrap => {
+    const more = wrap.querySelector(".sku-query-more");
+    const pop = wrap.querySelector(".sku-query-popover");
+    const input = wrap.querySelector(".sku-query-input");
+
+    more?.addEventListener("click", e => {
+      e.stopPropagation();
+      const wasOpen = pop?.classList.contains("show");
+      closeAllBulkPopovers();
+      if (!wasOpen) {
+        pop?.classList.add("show");
+        wrap.querySelector(".sku-query-popover textarea")?.focus();
+      }
+    });
+
+    wrap.querySelector('[data-sku-act="clear"]')?.addEventListener("click", e => {
+      e.stopPropagation();
+      resetBulkQuery(wrap);
+    });
+
+    wrap.querySelector('[data-sku-act="ok"]')?.addEventListener("click", e => {
+      e.stopPropagation();
+      applyBulkQuery(wrap);
+    });
+
+    input?.addEventListener("input", () => {
+      if (!input.value.trim()) delete input.dataset.skuBulk;
+    });
+  });
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".sku-query-wrap")) closeAllBulkPopovers();
+  });
+}
+
+function initStatusFilter() {
+  const panel = document.getElementById("statusPanel");
+  panel.innerHTML = ALL_STATUS.map(st => `
+    <label class="status-opt">
+      <input type="checkbox" class="ch-status" value="${esc(st)}" />
+      <span>${esc(st)}</span>
+      <span class="cnt">${(STATUS_COUNTS[st] || 0).toLocaleString()}</span>
+    </label>
+  `).join("");
+  bindStatusFilter();
+}
+
+function getSelectedStatuses() {
+  return Array.from(document.querySelectorAll(".ch-status:checked")).map(el => el.value);
+}
+
+function updateStatusTrigger() {
+  const selected = getSelectedStatuses();
+  document.getElementById("statusTrigger").textContent = selected.length
+    ? `已选 ${selected.length} 个状态`
+    : "全部处理状态";
+}
+
+function resetStatusFilter() {
+  document.querySelectorAll(".ch-status").forEach(b => { b.checked = false; });
+  document.getElementById("statusTrigger").textContent = "全部处理状态";
+  document.getElementById("statusPanel").classList.remove("show");
+}
+
+function bindStatusFilter() {
+  const picker = document.getElementById("statusPicker");
+  const panel = document.getElementById("statusPanel");
+  const trigger = document.getElementById("statusTrigger");
+
+  panel.querySelectorAll(".ch-status").forEach(box => {
+    box.onchange = updateStatusTrigger;
+  });
+
+  trigger.onclick = e => {
+    e.stopPropagation();
+    panel.classList.toggle("show");
+  };
+
+  panel.onclick = e => e.stopPropagation();
+
+  document.addEventListener("click", e => {
+    if (!picker.contains(e.target)) panel.classList.remove("show");
+  });
+
+  updateStatusTrigger();
 }
 
 function initChannelFilter() {
@@ -475,20 +706,11 @@ function bindMskuClicks() {
   });
 }
 
-function renderStatusChips() {
-  document.getElementById("statusRow").innerHTML = `
-    <div class="status-chip ${statusFilter === "" ? "on" : ""}" data-status="">全部 <span class="cnt">(${Object.values(STATUS_COUNTS).reduce((a,b)=>a+b,0).toLocaleString()})</span></div>
-    ${ALL_STATUS.map(st => `
-      <div class="status-chip ${statusFilter === st ? "on" : ""}" data-status="${st}">
-        ${st} <span class="cnt">(${(STATUS_COUNTS[st] || 0).toLocaleString()})</span>
-      </div>
-    `).join("")}
-  `;
-}
-
 function renderTable() {
   const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = filtered.map((r, idx) => `
+  tbody.innerHTML = filtered.map((r, idx) => {
+    const disp = wordDisposeLabel(r.wordDispose);
+    return `
     <tr class="${r.dealStatus === "待处理" ? "row-pending" : ""}">
       <td>
         <div class="listing-info">
@@ -500,63 +722,75 @@ function renderTable() {
         </div>
       </td>
       <td>${esc(r.detectTime) || '<span class="empty">—</span>'}</td>
+      <td>${esc(r.setDisposeTime) || '<span class="empty">—</span>'}</td>
       <td>${esc(r.dealTime) || '<span class="empty">—</span>'}</td>
       <td><span class="tag st-${esc(r.dealStatus)}">${esc(r.dealStatus)}</span></td>
       <td><span class="word">${esc(r.word)}</span></td>
+      <td><span class="tag word-disp-${esc(disp)}">${esc(disp)}</span></td>
+      <td><span class="word-num">${Number(r.wordListingNum ?? 0).toLocaleString()}</span></td>
       <td><span class="tag ${r.wordType === "商标词" ? "type-tm" : "type-ban"}">${esc(r.wordType)}</span></td>
       <td><span class="${r.channelEnabled === "是" ? "channel-on" : "channel-off"}">${esc(r.channelEnabled || "否")}</span></td>
-      <td><span class="${r.listingDeleted === "是" ? "yes" : "no"}">${esc(r.listingDeleted)}</span></td>
       <td>${r.deleteErrorInfo ? `<span class="fail-info has-err" title="${esc(r.deleteErrorInfo)}">${esc(r.deleteErrorInfo)}</span>` : '<span class="fail-info empty">—</span>'}</td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
   document.getElementById("resultCount").textContent = filtered.length;
   bindMskuClicks();
 }
 
 function applyFilters() {
-  const msku = document.getElementById("fMsku").value.trim().toUpperCase();
-  const sku = document.getElementById("fSku").value.trim();
+  const mskuFilter = getBulkFilter("mskuQuery", s => s.toUpperCase());
+  const skuFilter = getBulkFilter("skuQuery");
   const word = document.getElementById("fWord").value.trim().toUpperCase();
   const type = document.getElementById("fType").value;
+  const wordDispose = document.getElementById("fWordDispose").value;
   const shop = document.getElementById("fShop").value;
   const channel = document.getElementById("fChannel").value;
-  const del = document.getElementById("fDel").value;
   const channels = getSelectedChannels();
+  const statuses = getSelectedStatuses();
   const dateFrom = document.getElementById("fDateFrom").value;
   const dateTo = document.getElementById("fDateTo").value;
 
   filtered = records.filter(r => {
-    if (statusFilter && r.dealStatus !== statusFilter) return false;
-    if (msku && !r.msku.toUpperCase().includes(msku)) return false;
-    if (sku && !String(r.sku).includes(sku)) return false;
+    if (statuses.length && !statuses.includes(r.dealStatus)) return false;
+    if (mskuFilter.mode === "bulk") {
+      if (!mskuFilter.list.includes(r.msku.toUpperCase())) return false;
+    } else if (mskuFilter.mode === "single") {
+      if (!r.msku.toUpperCase().includes(mskuFilter.list[0])) return false;
+    }
+    if (skuFilter.mode === "bulk") {
+      if (!skuFilter.list.includes(String(r.sku))) return false;
+    } else if (skuFilter.mode === "single") {
+      if (!String(r.sku).includes(skuFilter.list[0])) return false;
+    }
     if (word && !r.word.toUpperCase().includes(word)) return false;
     if (type && r.wordType !== type) return false;
+    if (wordDispose && wordDisposeLabel(r.wordDispose) !== wordDispose) return false;
     if (channels.length && !channels.includes(r.sourceChannel)) return false;
     if (shop && r.shopStatus !== shop) return false;
     if (channel && (r.channelEnabled || "否") !== channel) return false;
-    if (del && r.listingDeleted !== del) return false;
-    const detectDate = parseDetectDate(r.detectTime);
-    if (dateFrom && detectDate) {
+    const disposeDate = parseDetectDate(r.setDisposeTime);
+    if (dateFrom && disposeDate) {
       const from = new Date(dateFrom + "T00:00:00");
-      if (detectDate < from) return false;
+      if (disposeDate < from) return false;
     }
-    if (dateTo && detectDate) {
+    if (dateTo && disposeDate) {
       const to = new Date(dateTo + "T23:59:59");
-      if (detectDate > to) return false;
+      if (disposeDate > to) return false;
     }
     return true;
   });
   renderTable();
 }
 
-document.getElementById("statusRow").onclick = e => {
-  const chip = e.target.closest(".status-chip");
-  if (!chip) return;
-  statusFilter = chip.dataset.status;
-  renderStatusChips();
+document.getElementById("btnSearch").onclick = () => {
+  document.querySelectorAll(".sku-query-wrap").forEach(wrap => {
+    const ta = wrap.querySelector(".sku-query-popover textarea");
+    if (ta?.value.trim()) applyBulkQuery(wrap);
+  });
   applyFilters();
+  toast("已筛选");
 };
-document.getElementById("btnSearch").onclick = () => { applyFilters(); toast("已筛选"); };
 document.getElementById("listingModalClose").onclick = closeListingModal;
 document.getElementById("listingModalOk").onclick = closeListingModal;
 document.getElementById("listingOverlay").onclick = e => {
@@ -566,18 +800,20 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") closeListingModal();
 });
 document.getElementById("btnReset").onclick = () => {
-  ["fMsku","fSku","fWord"].forEach(id => document.getElementById(id).value = "");
-  ["fType","fShop","fChannel","fDel"].forEach(id => document.getElementById(id).value = "");
+  resetBulkQuery(document.getElementById("mskuQuery"));
+  resetBulkQuery(document.getElementById("skuQuery"));
+  document.getElementById("fWord").value = "";
+  ["fType","fWordDispose","fShop","fChannel"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("fDateFrom").value = "2026-05-17";
   document.getElementById("fDateTo").value = "2026-05-18";
   resetChannelFilter();
-  statusFilter = "";
-  renderStatusChips();
+  resetStatusFilter();
   filtered = [...records];
   renderTable();
 };
 
-renderStatusChips();
+initBulkQueryFields();
+initStatusFilter();
 initChannelFilter();
 renderTable();
 </script>

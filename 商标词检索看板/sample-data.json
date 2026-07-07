@@ -41,175 +41,182 @@
       "Amazon-Z011092-US",
       "Amazon-Z011095-US",
       "Amazon-Z011098-US"
-    ]
+    ],
+    "fieldMapping": {
+      "detectTime": "AddTimeString",
+      "setDisposeTime": "AuditTimeString",
+      "dealTime": "DealTimeString",
+      "wordListingNum": "SensitiveWordListingNum",
+      "wordDispose": "WordAuditStatusString（空白展示为未配置）"
+    }
   },
   "listings": {
     "10023-01TMY7B09J27MJ9YOM": {
       "v2": {
-        "title": "NINJA Professional Blender 1000W — BL610 Total Crushing Technology",
-        "keywords": "NINJA;blender;total crushing;1000W;professional",
-        "desc": "The NINJA BL610 features Total Crushing Technology with 6 blades. Crush ice, frozen fruit and more with 1000 watts of professional power.",
-        "bullets": "NINJA Total Crushing 6-blade system\n1000W peak power professional motor\n72 oz. pitcher with pour spout\nDishwasher-safe removable parts"
+        "title": "NINJA",
+        "keywords": "NINJA",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Blender 1000W Total Crushing Countertop Mixer",
-        "keywords": "blender;total crushing;1000W;countertop;mixer",
-        "desc": "Professional blender with Total Crushing blade system. Crush ice, frozen fruit and more with 1000 watts of power for smoothies and sauces.",
-        "bullets": "Total Crushing 6-blade blending system\n1000W peak power motor\n72 oz. pitcher with pour spout\nDishwasher-safe removable parts"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "14911-IBC508FJCK89B1KS1034V4L": {
       "v2": {
-        "title": "Best gift Kitchen Appliance — High Quality Home Set",
-        "keywords": "gift;kitchen;high quality;home;appliance",
-        "desc": "Premium kitchen appliance featuring gift design. High quality materials, easy to clean, perfect for daily cooking needs.",
-        "bullets": "High quality gift construction\nEasy-clean non-stick surface\nErgonomic handle design\nIdeal gift for home chefs"
+        "title": "gift",
+        "keywords": "gift",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Premium Kitchen Appliance Home Cooking Set",
-        "keywords": "kitchen;home;cooking;appliance;durable",
-        "desc": "Premium kitchen appliance with durable materials. Easy to clean, perfect for daily cooking and family meals.",
-        "bullets": "Durable non-stick construction\nEasy-clean surface\nErgonomic handle design\nIdeal for everyday cooking"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "14911-A144734Z2N1VJZJ": {
       "v2": {
-        "title": "Best gift Kitchen Appliance — High Quality Home Set",
-        "keywords": "gift;kitchen;high quality;home;appliance",
-        "desc": "Premium kitchen appliance featuring gift design. High quality materials, easy to clean, perfect for daily cooking needs.",
-        "bullets": "High quality gift construction\nEasy-clean non-stick surface\nErgonomic handle design\nIdeal gift for home chefs"
+        "title": "gift",
+        "keywords": "gift",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Premium Kitchen Appliance Home Cooking Set",
-        "keywords": "kitchen;home;cooking;appliance;durable",
-        "desc": "Premium kitchen appliance with durable materials. Easy to clean, perfect for daily cooking and family meals.",
-        "bullets": "Durable non-stick construction\nEasy-clean surface\nErgonomic handle design\nIdeal for everyday cooking"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "14911-14Y8EL352YTRA643RUIDBF": {
       "v2": {
-        "title": "Sparkling Black Professional Series Countertop Blender 6-Speed",
-        "keywords": "Sparkling Black;blender;6 BLADES;professional;countertop",
-        "desc": "The Sparkling Black professional series blender delivers powerful performance with 6 stainless steel blades. Variable speed for smoothies, ice crushing and more.",
-        "bullets": "Sparkling Black 6 BLADES stainless steel system\nVariable speed with pulse mode\nBPA-free pitcher\nHigh quality motor"
+        "title": "Sparkling Black",
+        "keywords": "Sparkling Black",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Series Countertop Blender 6-Speed High Power",
-        "keywords": "blender;6 blades;professional;countertop;mixer",
-        "desc": "Professional series blender with 6 stainless steel blades. Variable speed control for smoothies, ice crushing and sauces.",
-        "bullets": "6 stainless steel blade system\nVariable speed with pulse mode\nBPA-free pitcher\nReliable high-power motor"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "13922-BB1143439AXAW9JW": {
       "v2": {
-        "title": "6 BLADES Professional Series Countertop Blender 6-Speed",
-        "keywords": "6 BLADES;blender;6 BLADES;professional;countertop",
-        "desc": "The 6 BLADES professional series blender delivers powerful performance with 6 stainless steel blades. Variable speed for smoothies, ice crushing and more.",
-        "bullets": "6 BLADES 6 BLADES stainless steel system\nVariable speed with pulse mode\nBPA-free pitcher\nHigh quality motor"
+        "title": "6 BLADES",
+        "keywords": "6 BLADES",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Series Countertop Blender 6-Speed High Power",
-        "keywords": "blender;6 blades;professional;countertop;mixer",
-        "desc": "Professional series blender with 6 stainless steel blades. Variable speed control for smoothies, ice crushing and sauces.",
-        "bullets": "6 stainless steel blade system\nVariable speed with pulse mode\nBPA-free pitcher\nReliable high-power motor"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "13922-M33301IP3": {
       "v2": {
-        "title": "AMPER Professional Series Countertop Blender 6-Speed",
-        "keywords": "AMPER;blender;6 BLADES;professional;countertop",
-        "desc": "The AMPER professional series blender delivers powerful performance with 6 stainless steel blades. Variable speed for smoothies, ice crushing and more.",
-        "bullets": "AMPER 6 BLADES stainless steel system\nVariable speed with pulse mode\nBPA-free pitcher\nHigh quality motor"
+        "title": "AMPER",
+        "keywords": "AMPER",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Series Countertop Blender 6-Speed High Power",
-        "keywords": "blender;6 blades;professional;countertop;mixer",
-        "desc": "Professional series blender with 6 stainless steel blades. Variable speed control for smoothies, ice crushing and sauces.",
-        "bullets": "6 stainless steel blade system\nVariable speed with pulse mode\nBPA-free pitcher\nReliable high-power motor"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "14911-0117496TAB5ZC": {
       "v2": {
-        "title": "A-CHIC LED Night Light — ILLUMINATE YOUR MOOD Ambient Lamp",
-        "keywords": "ILLUMINATE YOUR MOOD;LED;night light;ambient;A-CHIC",
-        "desc": "Create the perfect atmosphere with ILLUMINATE YOUR MOOD lighting. Soft LED glow with multiple color modes for bedroom and living room.",
-        "bullets": "ILLUMINATE YOUR MOOD color-changing modes\nTouch dimmer control\nUSB powered compact design\nEnergy-saving LED beads"
+        "title": "ILLUMINATE YOUR MOOD",
+        "keywords": "ILLUMINATE YOUR MOOD",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "A-CHIC LED Night Light Ambient Mood Lamp for Bedroom",
-        "keywords": "LED;night light;ambient;mood lamp;bedroom",
-        "desc": "Create a relaxing atmosphere with soft LED ambient lighting. Multiple color modes for bedroom and living room decor.",
-        "bullets": "Soft ambient color-changing modes\nTouch dimmer control\nUSB powered compact design\nEnergy-saving LED beads"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "14911-A0143WRJRGNWGY43941DOHTRT": {
       "v2": {
-        "title": "BARET Professional Series Countertop Blender 6-Speed",
-        "keywords": "BARET;blender;6 BLADES;professional;countertop",
-        "desc": "The BARET professional series blender delivers powerful performance with 6 stainless steel blades. Variable speed for smoothies, ice crushing and more.",
-        "bullets": "BARET 6 BLADES stainless steel system\nVariable speed with pulse mode\nBPA-free pitcher\nHigh quality motor"
+        "title": "BARET",
+        "keywords": "BARET",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Series Countertop Blender 6-Speed High Power",
-        "keywords": "blender;6 blades;professional;countertop;mixer",
-        "desc": "Professional series blender with 6 stainless steel blades. Variable speed control for smoothies, ice crushing and sauces.",
-        "bullets": "6 stainless steel blade system\nVariable speed with pulse mode\nBPA-free pitcher\nReliable high-power motor"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "13922-115LBZFKIIZ8LTY2021QLDR7": {
       "v2": {
-        "title": "CHINA GARDEN Professional Series Countertop Blender 6-Speed",
-        "keywords": "CHINA GARDEN;blender;6 BLADES;professional;countertop",
-        "desc": "The CHINA GARDEN professional series blender delivers powerful performance with 6 stainless steel blades. Variable speed for smoothies, ice crushing and more.",
-        "bullets": "CHINA GARDEN 6 BLADES stainless steel system\nVariable speed with pulse mode\nBPA-free pitcher\nHigh quality motor"
+        "title": "CHINA GARDEN",
+        "keywords": "CHINA GARDEN",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Series Countertop Blender 6-Speed High Power",
-        "keywords": "blender;6 blades;professional;countertop;mixer",
-        "desc": "Professional series blender with 6 stainless steel blades. Variable speed control for smoothies, ice crushing and sauces.",
-        "bullets": "6 stainless steel blade system\nVariable speed with pulse mode\nBPA-free pitcher\nReliable high-power motor"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "11850-56ZT6E19P5B09Q": {
       "v2": {
-        "title": "BE-SAFE Professional Series Countertop Blender 6-Speed",
-        "keywords": "BE-SAFE;blender;6 BLADES;professional;countertop",
-        "desc": "The BE-SAFE professional series blender delivers powerful performance with 6 stainless steel blades. Variable speed for smoothies, ice crushing and more.",
-        "bullets": "BE-SAFE 6 BLADES stainless steel system\nVariable speed with pulse mode\nBPA-free pitcher\nHigh quality motor"
+        "title": "BE-SAFE",
+        "keywords": "BE-SAFE",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Series Countertop Blender 6-Speed High Power",
-        "keywords": "blender;6 blades;professional;countertop;mixer",
-        "desc": "Professional series blender with 6 stainless steel blades. Variable speed control for smoothies, ice crushing and sauces.",
-        "bullets": "6 stainless steel blade system\nVariable speed with pulse mode\nBPA-free pitcher\nReliable high-power motor"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "13922-3518J21GFP": {
       "v2": {
-        "title": "PIRANHA Professional Series Countertop Blender 6-Speed",
-        "keywords": "PIRANHA;blender;6 BLADES;professional;countertop",
-        "desc": "The PIRANHA professional series blender delivers powerful performance with 6 stainless steel blades. Variable speed for smoothies, ice crushing and more.",
-        "bullets": "PIRANHA 6 BLADES stainless steel system\nVariable speed with pulse mode\nBPA-free pitcher\nHigh quality motor"
+        "title": "PIRANHA",
+        "keywords": "PIRANHA",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Series Countertop Blender 6-Speed High Power",
-        "keywords": "blender;6 blades;professional;countertop;mixer",
-        "desc": "Professional series blender with 6 stainless steel blades. Variable speed control for smoothies, ice crushing and sauces.",
-        "bullets": "6 stainless steel blade system\nVariable speed with pulse mode\nBPA-free pitcher\nReliable high-power motor"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     },
     "13922-042WFM191Z10A": {
       "v2": {
-        "title": "EYE WALL Professional Series Countertop Blender 6-Speed",
-        "keywords": "EYE WALL;blender;6 BLADES;professional;countertop",
-        "desc": "The EYE WALL professional series blender delivers powerful performance with 6 stainless steel blades. Variable speed for smoothies, ice crushing and more.",
-        "bullets": "EYE WALL 6 BLADES stainless steel system\nVariable speed with pulse mode\nBPA-free pitcher\nHigh quality motor"
+        "title": "EYE WALL",
+        "keywords": "EYE WALL",
+        "desc": "d",
+        "bullets": "b"
       },
       "es": {
-        "title": "Professional Series Countertop Blender 6-Speed High Power",
-        "keywords": "blender;6 blades;professional;countertop;mixer",
-        "desc": "Professional series blender with 6 stainless steel blades. Variable speed control for smoothies, ice crushing and sauces.",
-        "bullets": "6 stainless steel blade system\nVariable speed with pulse mode\nBPA-free pitcher\nReliable high-power motor"
+        "title": "t",
+        "keywords": "k",
+        "desc": "d",
+        "bullets": "b"
       }
     }
   },
@@ -222,12 +229,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-18 09:38:23",
+      "detectTime": "2025-05-05 06:41:03",
+      "setDisposeTime": "2026-03-11 09:08:28",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "NINJA",
       "wordType": "商标词",
+      "wordDispose": "删除",
+      "wordListingNum": 1244848,
       "listingDeleted": "否",
       "riskLevel": "高危",
       "listingKey": "10023-01TMY7B09J27MJ9YOM",
@@ -242,11 +252,14 @@
       "channelEnabled": "否",
       "salesman": "—",
       "detectTime": "2026-05-17 16:02:06",
+      "setDisposeTime": "2026-05-18 11:19:13",
       "dealTime": "2026-05-18 11:19:13",
       "dealStatus": "无需处理",
       "deleteErrorInfo": "",
       "word": "gift",
       "wordType": "禁用词",
+      "wordDispose": "保留",
+      "wordListingNum": 24067429,
       "listingDeleted": "否",
       "riskLevel": "普通",
       "listingKey": "14911-IBC508FJCK89B1KS1034V4L",
@@ -261,11 +274,14 @@
       "channelEnabled": "否",
       "salesman": "—",
       "detectTime": "2026-05-17 16:02:06",
+      "setDisposeTime": "2026-05-18 11:19:13",
       "dealTime": "2026-05-18 11:19:13",
       "dealStatus": "无需处理",
       "deleteErrorInfo": "",
       "word": "gift",
       "wordType": "禁用词",
+      "wordDispose": "保留",
+      "wordListingNum": 24067429,
       "listingDeleted": "否",
       "riskLevel": "普通",
       "listingKey": "14911-A144734Z2N1VJZJ",
@@ -279,12 +295,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 16:46:25",
+      "detectTime": "2025-07-08 13:38:21",
+      "setDisposeTime": "2025-07-08 13:41:44",
       "dealTime": "2026-05-18 19:11:48",
       "dealStatus": "处理成功",
       "deleteErrorInfo": "业务已自己处理",
       "word": "Sparkling Black",
       "wordType": "商标词",
+      "wordDispose": "删除",
+      "wordListingNum": 972,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "14911-14Y8EL352YTRA643RUIDBF",
@@ -299,11 +318,14 @@
       "channelEnabled": "否",
       "salesman": "—",
       "detectTime": "2026-05-17 17:01:23",
+      "setDisposeTime": "2026-05-17 17:36:21",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "6 BLADES",
       "wordType": "商标词",
+      "wordDispose": "删除",
+      "wordListingNum": 602,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "13922-BB1143439AXAW9JW",
@@ -318,11 +340,14 @@
       "channelEnabled": "否",
       "salesman": "—",
       "detectTime": "2026-05-17 17:01:24",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "AMPER",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 51,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "13922-M33301IP3",
@@ -337,11 +362,14 @@
       "channelEnabled": "否",
       "salesman": "—",
       "detectTime": "2026-05-17 17:01:24",
+      "setDisposeTime": "2026-05-17 17:36:21",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "6 BLADES",
       "wordType": "商标词",
+      "wordDispose": "删除",
+      "wordListingNum": 602,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "13922-M33301IP3",
@@ -355,12 +383,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:36",
+      "detectTime": "2025-05-19 17:05:01",
+      "setDisposeTime": "2025-06-05 10:43:45",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "ILLUMINATE YOUR MOOD",
       "wordType": "商标词",
+      "wordDispose": "删除",
+      "wordListingNum": 530,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "14911-0117496TAB5ZC",
@@ -374,12 +405,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:35",
+      "detectTime": "2025-05-19 17:05:05",
+      "setDisposeTime": "2025-06-05 10:43:45",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "ILLUMINATE YOUR MOOD",
       "wordType": "商标词",
+      "wordDispose": "删除",
+      "wordListingNum": 530,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "14911-14Y8EL352YTRA643RUIDBF",
@@ -393,12 +427,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:36",
+      "detectTime": "2025-07-08 14:11:32",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "A-CHIC",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 3659345,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "14911-0117496TAB5ZC",
@@ -412,12 +449,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:35",
+      "detectTime": "2025-07-08 14:11:33",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "A-CHIC",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 3659345,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "14911-14Y8EL352YTRA643RUIDBF",
@@ -431,12 +471,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:35",
+      "detectTime": "2026-02-20 11:57:18",
+      "setDisposeTime": "2026-02-20 12:12:40",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "SPARKLE",
       "wordType": "商标词",
+      "wordDispose": "删除",
+      "wordListingNum": 612888,
       "listingDeleted": "否",
       "riskLevel": "高危",
       "listingKey": "14911-14Y8EL352YTRA643RUIDBF",
@@ -450,12 +493,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:35",
+      "detectTime": "2026-04-10 07:49:29",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "EXPRESS",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 3692094,
       "listingDeleted": "否",
       "riskLevel": "高危",
       "listingKey": "14911-14Y8EL352YTRA643RUIDBF",
@@ -469,12 +515,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:36",
+      "detectTime": "2026-04-10 07:49:37",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "EXPRESS",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 3692094,
       "listingDeleted": "否",
       "riskLevel": "高危",
       "listingKey": "14911-0117496TAB5ZC",
@@ -488,12 +537,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:35",
+      "detectTime": "2026-05-06 08:03:11",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "BARET",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 4015,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "14911-A0143WRJRGNWGY43941DOHTRT",
@@ -507,12 +559,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 17:46:35",
+      "detectTime": "2026-05-06 08:03:11",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "Red Women",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 43067,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "14911-A0143WRJRGNWGY43941DOHTRT",
@@ -527,11 +582,14 @@
       "channelEnabled": "否",
       "salesman": "—",
       "detectTime": "2026-05-17 17:46:27",
+      "setDisposeTime": "2026-05-17 18:19:55",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "CHINA GARDEN",
       "wordType": "商标词",
+      "wordDispose": "删除",
+      "wordListingNum": 14006,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "13922-115LBZFKIIZ8LTY2021QLDR7",
@@ -545,12 +603,15 @@
       "shopStatus": "正常",
       "channelEnabled": "是",
       "salesman": "—",
-      "detectTime": "2026-05-17 18:46:22",
+      "detectTime": "2025-05-12 12:52:56",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "BE-SAFE",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 441497,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "11850-56ZT6E19P5B09Q",
@@ -564,12 +625,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 18:46:18",
+      "detectTime": "2026-03-03 17:29:59",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "PIRANHA",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 2568,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "13922-3518J21GFP",
@@ -583,12 +647,15 @@
       "shopStatus": "正常",
       "channelEnabled": "否",
       "salesman": "—",
-      "detectTime": "2026-05-17 18:46:19",
+      "detectTime": "2026-04-08 16:47:27",
+      "setDisposeTime": "",
       "dealTime": "",
       "dealStatus": "待处理",
       "deleteErrorInfo": "",
       "word": "EYE WALL",
       "wordType": "商标词",
+      "wordDispose": "",
+      "wordListingNum": 94130,
       "listingDeleted": "否",
       "riskLevel": "",
       "listingKey": "13922-042WFM191Z10A",
