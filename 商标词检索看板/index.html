@@ -307,8 +307,7 @@
           <thead>
             <tr>
               <th style="width:260px">Listing 信息</th>
-              <th style="width:200px">时间信息</th>
-              <th>添加时间</th>
+              <th style="width:220px">时间信息</th>
               <th>处理状态</th>
               <th>检索词</th>
               <th>词处理方式</th>
@@ -723,11 +722,11 @@ function renderTable() {
       <td>
         <div class="listing-info">
           <div class="row"><b>检索时间</b>${esc(r.detectTime) || '<span class="empty">—</span>'}</div>
+          <div class="row"><b>添加时间</b>${esc(r.addTime) || '<span class="empty">—</span>'}</div>
           <div class="row"><b>设置处置时间</b>${esc(r.setDisposeTime) || '<span class="empty">—</span>'}</div>
           <div class="row"><b>处理时间</b>${esc(r.dealTime) || '<span class="empty">—</span>'}</div>
         </div>
       </td>
-      <td>${esc(r.addTime) || '<span class="empty">—</span>'}</td>
       <td><span class="tag st-${esc(r.dealStatus)}">${esc(r.dealStatus)}</span></td>
       <td><span class="word">${esc(r.word)}</span></td>
       <td><span class="tag word-disp-${esc(disp)}">${esc(disp)}</span></td>
