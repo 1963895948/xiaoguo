@@ -46,7 +46,6 @@
     .ctrl { height: 32px; border: 1px solid var(--line); border-radius: 4px; background: #fff; padding: 0 10px; color: var(--text); font-size: 12px; outline: none; min-width: 120px; }
     .field .ctrl { border-radius: 0 4px 4px 0; }
     select.ctrl { appearance: none; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%2397a0b0' fill='none' stroke-width='1.4'/></svg>") no-repeat right 9px center; padding-right: 26px; cursor: pointer; }
-    .date-sep { color: var(--muted); font-size: 12px; }
     .channel-field { position: relative; height: auto; }
     .channel-field .lbl { height: 32px; }
     .status-field { position: relative; height: auto; }
@@ -290,9 +289,7 @@
           <div class="field"><span class="lbl">渠道是否开启</span>
             <select class="ctrl" id="fChannel"><option value="">全部</option><option>是</option><option>否</option></select>
           </div>
-          <div class="field"><span class="lbl">检索时间</span><input class="ctrl" type="date" id="fDateFrom" value="2026-05-17" /></div>
-          <span class="date-sep">—</span>
-          <input class="ctrl" type="date" id="fDateTo" value="2026-05-18" style="border-radius:4px" />
+          <div class="field"><span class="lbl">检索时间</span><input class="ctrl" type="date" id="fDetectDate" value="2026-05-18" /></div>
           <button class="btn pri" id="btnSearch">查询</button>
           <button class="btn" id="btnReset">重置</button>
         </div>
@@ -639,12 +636,6 @@ function resetChannelFilter() {
   document.getElementById("channelPanel").classList.remove("show");
 }
 
-function parseDetectDate(str) {
-  if (!str) return null;
-  const d = new Date(String(str).replace(" ", "T"));
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
 function getListingContent(record) {
   const key = record.listingKey || `${record.sourceChannel}-${record.msku}`;
   if (LISTINGS[key]) return LISTINGS[key];
@@ -751,8 +742,7 @@ function applyFilters() {
   const channel = document.getElementById("fChannel").value;
   const channels = getSelectedChannels();
   const statuses = getSelectedStatuses();
-  const dateFrom = document.getElementById("fDateFrom").value;
-  const dateTo = document.getElementById("fDateTo").value;
+  const detectDate = document.getElementById("fDetectDate").value;
 
   filtered = records.filter(r => {
     if (statuses.length && !statuses.includes(r.dealStatus)) return false;
@@ -772,14 +762,9 @@ function applyFilters() {
     if (channels.length && !channels.includes(r.sourceChannel)) return false;
     if (shop && r.shopStatus !== shop) return false;
     if (channel && (r.channelEnabled || "否") !== channel) return false;
-    const detectDate = parseDetectDate(r.detectTime);
-    if (dateFrom && detectDate) {
-      const from = new Date(dateFrom + "T00:00:00");
-      if (detectDate < from) return false;
-    }
-    if (dateTo && detectDate) {
-      const to = new Date(dateTo + "T23:59:59");
-      if (detectDate > to) return false;
+    if (detectDate) {
+      const recordDay = String(r.detectTime || "").slice(0, 10);
+      if (!recordDay || recordDay !== detectDate) return false;
     }
     return true;
   });
@@ -807,8 +792,7 @@ document.getElementById("btnReset").onclick = () => {
   resetBulkQuery(document.getElementById("skuQuery"));
   document.getElementById("fWord").value = "";
   ["fType","fWordDispose","fShop","fChannel"].forEach(id => document.getElementById(id).value = "");
-  document.getElementById("fDateFrom").value = "2026-05-17";
-  document.getElementById("fDateTo").value = "2026-05-18";
+  document.getElementById("fDetectDate").value = "2026-05-18";
   resetChannelFilter();
   resetStatusFilter();
   filtered = [...records];
