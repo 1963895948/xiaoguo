@@ -120,7 +120,7 @@
     tbody tr.row-pending { background: #fffbf5; }
 
     .listing-info .row { font-size: 12px; line-height: 1.75; color: var(--sub); }
-    .listing-info .row b { color: var(--text); font-weight: 500; min-width: 64px; display: inline-block; }
+    .listing-info .row b { color: var(--text); font-weight: 500; min-width: 88px; display: inline-block; }
     .listing-info .msku { color: var(--pri); font-weight: 600; }
     .msku-link { color: var(--pri); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
     .msku-link:hover { color: #1a52d4; }
@@ -290,7 +290,7 @@
           <div class="field"><span class="lbl">渠道是否开启</span>
             <select class="ctrl" id="fChannel"><option value="">全部</option><option>是</option><option>否</option></select>
           </div>
-          <div class="field"><span class="lbl">设置处置时间</span><input class="ctrl" type="date" id="fDateFrom" value="2026-05-17" /></div>
+          <div class="field"><span class="lbl">检索时间</span><input class="ctrl" type="date" id="fDateFrom" value="2026-05-17" /></div>
           <span class="date-sep">—</span>
           <input class="ctrl" type="date" id="fDateTo" value="2026-05-18" style="border-radius:4px" />
           <button class="btn pri" id="btnSearch">查询</button>
@@ -307,9 +307,8 @@
           <thead>
             <tr>
               <th style="width:260px">Listing 信息</th>
-              <th>检索时间</th>
-              <th>设置处置时间</th>
-              <th>处理时间</th>
+              <th style="width:200px">时间信息</th>
+              <th>添加时间</th>
               <th>处理状态</th>
               <th>检索词</th>
               <th>词处理方式</th>
@@ -721,9 +720,14 @@ function renderTable() {
           <div class="row"><b>业务员</b>${esc(r.salesman)}</div>
         </div>
       </td>
-      <td>${esc(r.detectTime) || '<span class="empty">—</span>'}</td>
-      <td>${esc(r.setDisposeTime) || '<span class="empty">—</span>'}</td>
-      <td>${esc(r.dealTime) || '<span class="empty">—</span>'}</td>
+      <td>
+        <div class="listing-info">
+          <div class="row"><b>检索时间</b>${esc(r.detectTime) || '<span class="empty">—</span>'}</div>
+          <div class="row"><b>设置处置时间</b>${esc(r.setDisposeTime) || '<span class="empty">—</span>'}</div>
+          <div class="row"><b>处理时间</b>${esc(r.dealTime) || '<span class="empty">—</span>'}</div>
+        </div>
+      </td>
+      <td>${esc(r.addTime) || '<span class="empty">—</span>'}</td>
       <td><span class="tag st-${esc(r.dealStatus)}">${esc(r.dealStatus)}</span></td>
       <td><span class="word">${esc(r.word)}</span></td>
       <td><span class="tag word-disp-${esc(disp)}">${esc(disp)}</span></td>
@@ -769,14 +773,14 @@ function applyFilters() {
     if (channels.length && !channels.includes(r.sourceChannel)) return false;
     if (shop && r.shopStatus !== shop) return false;
     if (channel && (r.channelEnabled || "否") !== channel) return false;
-    const disposeDate = parseDetectDate(r.setDisposeTime);
-    if (dateFrom && disposeDate) {
+    const detectDate = parseDetectDate(r.detectTime);
+    if (dateFrom && detectDate) {
       const from = new Date(dateFrom + "T00:00:00");
-      if (disposeDate < from) return false;
+      if (detectDate < from) return false;
     }
-    if (dateTo && disposeDate) {
+    if (dateTo && detectDate) {
       const to = new Date(dateTo + "T23:59:59");
-      if (disposeDate > to) return false;
+      if (detectDate > to) return false;
     }
     return true;
   });
