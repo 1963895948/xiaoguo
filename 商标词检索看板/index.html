@@ -53,6 +53,33 @@
     .ctrl { height: 32px; border: 1px solid var(--line); border-radius: 4px; background: #fff; padding: 0 10px; color: var(--text); font-size: 12px; outline: none; min-width: 120px; }
     .field .ctrl { border-radius: 0 4px 4px 0; }
     select.ctrl { appearance: none; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%2397a0b0' fill='none' stroke-width='1.4'/></svg>") no-repeat right 9px center; padding-right: 26px; cursor: pointer; }
+    .date-sep { color: var(--muted); font-size: 12px; }
+    .channel-field { position: relative; height: auto; }
+    .channel-field .lbl { height: 32px; }
+    .channel-picker { position: relative; }
+    .channel-trigger {
+      min-width: 168px; height: 32px; border: 1px solid var(--line); border-radius: 0 4px 4px 0;
+      background: #fff; padding: 0 26px 0 10px; text-align: left; cursor: pointer; font-size: 12px; color: var(--text);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%2397a0b0' fill='none' stroke-width='1.4'/></svg>");
+      background-repeat: no-repeat; background-position: right 9px center;
+    }
+    .channel-panel {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 40;
+      min-width: 280px; max-height: 320px; overflow: auto; background: #fff; border: 1px solid var(--line);
+      border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 8px 0;
+    }
+    .channel-panel.show { display: block; }
+    .tree-row {
+      display: flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; user-select: none;
+    }
+    .tree-row:hover { background: #f6f8fb; }
+    .tree-row input { cursor: pointer; margin: 0; }
+    .tree-arrow { width: 14px; color: var(--muted); font-size: 10px; text-align: center; flex: none; cursor: pointer; }
+    .tree-arrow.collapsed::before { content: "▸"; }
+    .tree-arrow.open::before { content: "▾"; }
+    .tree-children { padding-left: 18px; }
+    .tree-children.hidden { display: none; }
+    .tree-leaf { padding-left: 8px; }
     .btn { height: 32px; border: 1px solid var(--line); background: #fff; border-radius: 4px; padding: 0 14px; cursor: pointer; font-size: 12px; }
     .btn.pri { background: var(--pri); border-color: var(--pri); color: #fff; }
 
@@ -80,8 +107,8 @@
     .st-已替换 { background: #e6fffb; color: #13c2c2; }
     .type-tm { background: #fff1f0; color: var(--danger); border: 1px solid #ffccc7; }
     .type-ban { background: #fff7e6; color: var(--warn); border: 1px solid #ffd591; }
-    .shop-del { color: var(--danger); font-weight: 600; }
-    .shop-off { color: var(--sub); }
+    .shop-pause { color: var(--warn); font-weight: 600; }
+    .shop-normal { color: var(--ok); }
     .yes { color: var(--danger); font-weight: 600; }
     .no { color: var(--ok); }
     .word { font-weight: 600; color: var(--danger); }
@@ -111,7 +138,6 @@
     <div class="nav-item">📦 样品管理</div>
     <div class="nav-item">⚖ 专利管理</div>
     <div class="nav-item">© 版权管理</div>
-    <div class="nav-item">✎ 纠错队列管理</div>
     <div class="nav-item active">📊 商标词&禁用词检索看板</div>
   </nav>
 
@@ -135,13 +161,35 @@
           <div class="field"><span class="lbl">检索类型</span>
             <select class="ctrl" id="fType"><option value="">全部</option><option>商标词</option><option>禁用词</option></select>
           </div>
+          <div class="field channel-field"><span class="lbl">来源渠道</span>
+            <div class="channel-picker" id="channelPicker">
+              <button type="button" class="channel-trigger" id="channelTrigger">全部来源渠道</button>
+              <div class="channel-panel" id="channelPanel">
+                <label class="tree-row">
+                  <span class="tree-arrow open" data-target="treePlatform"></span>
+                  <input type="checkbox" id="chPlatform" data-role="group" data-target="platform" />
+                  <span>亚马逊平台</span>
+                </label>
+                <div class="tree-children" id="treePlatform">
+                  <label class="tree-row">
+                    <span class="tree-arrow open" data-target="treeUS"></span>
+                    <input type="checkbox" id="chUS" data-role="group" data-target="us" />
+                    <span>United States（美国）</span>
+                  </label>
+                  <div class="tree-children" id="treeUS"></div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="field"><span class="lbl">店铺状态</span>
-            <select class="ctrl" id="fShop"><option value="">全部</option><option>删除</option><option>不开启</option></select>
+            <select class="ctrl" id="fShop"><option value="">全部</option><option>暂停</option><option>正常</option></select>
           </div>
           <div class="field"><span class="lbl">Listing删除</span>
             <select class="ctrl" id="fDel"><option value="">全部</option><option>是</option><option>否</option></select>
           </div>
           <div class="field"><span class="lbl">检索时间</span><input class="ctrl" type="date" id="fDateFrom" value="2026-05-17" /></div>
+          <span class="date-sep">—</span>
+          <input class="ctrl" type="date" id="fDateTo" value="2026-05-18" style="border-radius:4px" />
           <button class="btn pri" id="btnSearch">查询</button>
           <button class="btn" id="btnReset">重置</button>
         </div>
@@ -149,8 +197,6 @@
 
       <div class="toolbar">
         <span>当前展示 <b id="resultCount">0</b> 条检索记录</span>
-        <span class="spacer"></span>
-        <button class="btn" id="btnExport">导出</button>
       </div>
 
       <div class="table-wrap">
@@ -202,6 +248,113 @@ function esc(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function initChannelFilter() {
+  const treeUS = document.getElementById("treeUS");
+  const channels = [...new Set(records.map(r => r.sourceChannel).filter(Boolean))].sort();
+  treeUS.innerHTML = channels.map(c => `
+    <label class="tree-row tree-leaf">
+      <span class="tree-arrow" style="visibility:hidden">▸</span>
+      <input type="checkbox" class="ch-shop" value="${esc(c)}" data-role="shop" />
+      <span>${esc(c)}</span>
+    </label>
+  `).join("");
+  bindChannelTree();
+}
+
+function bindChannelTree() {
+  const panel = document.getElementById("channelPanel");
+  const trigger = document.getElementById("channelTrigger");
+  const shopBoxes = () => Array.from(document.querySelectorAll(".ch-shop"));
+  const chPlatform = document.getElementById("chPlatform");
+  const chUS = document.getElementById("chUS");
+
+  function setGroupChecked(boxes, checked) {
+    boxes.forEach(b => { b.checked = checked; b.indeterminate = false; });
+  }
+
+  function syncParentState(parent, children) {
+    const checked = children.filter(c => c.checked).length;
+    parent.indeterminate = checked > 0 && checked < children.length;
+    parent.checked = checked === children.length && children.length > 0;
+  }
+
+  function updateTrigger() {
+    const selected = getSelectedChannels();
+    trigger.textContent = selected.length ? `已选 ${selected.length} 个渠道` : "全部来源渠道";
+  }
+
+  chPlatform.onchange = () => {
+    const on = chPlatform.checked;
+    chPlatform.indeterminate = false;
+    chUS.checked = on;
+    chUS.indeterminate = false;
+    setGroupChecked(shopBoxes(), on);
+    updateTrigger();
+  };
+
+  chUS.onchange = () => {
+    const on = chUS.checked;
+    chUS.indeterminate = false;
+    setGroupChecked(shopBoxes(), on);
+    syncParentState(chPlatform, [chUS, ...shopBoxes()]);
+    updateTrigger();
+  };
+
+  shopBoxes().forEach(box => {
+    box.onchange = () => {
+      syncParentState(chUS, shopBoxes());
+      chPlatform.checked = chUS.checked && shopBoxes().every(s => s.checked);
+      chPlatform.indeterminate = !chPlatform.checked && (chUS.indeterminate || chUS.checked || shopBoxes().some(s => s.checked));
+      updateTrigger();
+    };
+  });
+
+  panel.querySelectorAll("[data-target]").forEach(arrow => {
+    arrow.onclick = e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const target = document.getElementById(arrow.dataset.target);
+      const collapsed = target.classList.toggle("hidden");
+      arrow.classList.toggle("open", !collapsed);
+      arrow.classList.toggle("collapsed", collapsed);
+    };
+  });
+
+  trigger.onclick = e => {
+    e.stopPropagation();
+    panel.classList.toggle("show");
+  };
+
+  document.addEventListener("click", e => {
+    if (!document.getElementById("channelPicker").contains(e.target)) {
+      panel.classList.remove("show");
+    }
+  });
+
+  panel.onclick = e => e.stopPropagation();
+  updateTrigger();
+}
+
+function getSelectedChannels() {
+  return Array.from(document.querySelectorAll(".ch-shop:checked")).map(el => el.value);
+}
+
+function resetChannelFilter() {
+  document.getElementById("chPlatform").checked = false;
+  document.getElementById("chPlatform").indeterminate = false;
+  document.getElementById("chUS").checked = false;
+  document.getElementById("chUS").indeterminate = false;
+  document.querySelectorAll(".ch-shop").forEach(b => { b.checked = false; });
+  document.getElementById("channelTrigger").textContent = "全部来源渠道";
+  document.getElementById("channelPanel").classList.remove("show");
+}
+
+function parseDetectDate(str) {
+  if (!str) return null;
+  const d = new Date(String(str).replace(" ", "T"));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 function renderStatusChips() {
   document.getElementById("statusRow").innerHTML = `
     <div class="status-chip ${statusFilter === "" ? "on" : ""}" data-status="">全部 <span class="cnt">(${Object.values(STATUS_COUNTS).reduce((a,b)=>a+b,0).toLocaleString()})</span></div>
@@ -222,7 +375,7 @@ function renderTable() {
           <div class="row"><b>MSKU</b><span class="msku">${esc(r.msku)}</span></div>
           <div class="row"><b>店铺名称</b>${esc(r.shopName)}</div>
           <div class="row"><b>SKU</b>${esc(r.sku)}</div>
-          <div class="row"><b>店铺状态</b><span class="${r.shopStatus === "删除" ? "shop-del" : "shop-off"}">${esc(r.shopStatus)}</span></div>
+          <div class="row"><b>店铺状态</b><span class="${r.shopStatus === "暂停" ? "shop-pause" : "shop-normal"}">${esc(r.shopStatus)}</span></div>
           <div class="row"><b>业务员</b>${esc(r.salesman)}</div>
         </div>
       </td>
@@ -245,6 +398,9 @@ function applyFilters() {
   const type = document.getElementById("fType").value;
   const shop = document.getElementById("fShop").value;
   const del = document.getElementById("fDel").value;
+  const channels = getSelectedChannels();
+  const dateFrom = document.getElementById("fDateFrom").value;
+  const dateTo = document.getElementById("fDateTo").value;
 
   filtered = records.filter(r => {
     if (statusFilter && r.dealStatus !== statusFilter) return false;
@@ -252,8 +408,18 @@ function applyFilters() {
     if (sku && !String(r.sku).includes(sku)) return false;
     if (word && !r.word.toUpperCase().includes(word)) return false;
     if (type && r.wordType !== type) return false;
+    if (channels.length && !channels.includes(r.sourceChannel)) return false;
     if (shop && r.shopStatus !== shop) return false;
     if (del && r.listingDeleted !== del) return false;
+    const detectDate = parseDetectDate(r.detectTime);
+    if (dateFrom && detectDate) {
+      const from = new Date(dateFrom + "T00:00:00");
+      if (detectDate < from) return false;
+    }
+    if (dateTo && detectDate) {
+      const to = new Date(dateTo + "T23:59:59");
+      if (detectDate > to) return false;
+    }
     return true;
   });
   renderTable();
@@ -270,14 +436,17 @@ document.getElementById("btnSearch").onclick = () => { applyFilters(); toast("�
 document.getElementById("btnReset").onclick = () => {
   ["fMsku","fSku","fWord"].forEach(id => document.getElementById(id).value = "");
   ["fType","fShop","fDel"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("fDateFrom").value = "2026-05-17";
+  document.getElementById("fDateTo").value = "2026-05-18";
+  resetChannelFilter();
   statusFilter = "";
   renderStatusChips();
   filtered = [...records];
   renderTable();
 };
-document.getElementById("btnExport").onclick = () => toast("原型演示：导出待接入 BI");
 
 renderStatusChips();
+initChannelFilter();
 renderTable();
 </script>
 </body>
