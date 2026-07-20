@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>合规标签 SKU 放开 · 效果与认证决策</title>
+  <style>
+    :root {
+      --bg:#f0f2f5; --panel:#fff; --line:#e8ebf0; --text:#1f2733; --sub:#5b6577;
+      --muted:#97a0b0; --pri:#2f6bff; --pri-bg:#eaf0ff; --ok:#16b364; --ok-bg:#e8f8f0;
+      --warn:#fa8c16; --warn-bg:#fff7e6; --danger:#f5455c; --danger-bg:#fff1f0;
+      --keep:#0f766e; --keep-bg:#ecfdf5; --cert:#b45309; --cert-bg:#fffbeb;
+      --obs:#475569; --obs-bg:#f1f5f9; --tight:#be123c; --tight-bg:#fff1f2;
+      --header-h:48px; --side-w:210px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font:13px/1.5 "Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text)}
+    .header{height:var(--header-h);background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;position:sticky;top:0;z-index:30}
+    .brand{width:var(--side-w);flex:none;padding:0 16px;font-weight:700;font-size:15px;border-right:1px solid var(--line);height:100%;display:flex;align-items:center}
+    .page-tabs{flex:1;display:flex;align-items:flex-end;padding:0 12px;height:100%}
+    .ptab{padding:0 14px;height:36px;margin-top:11px;border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;background:var(--bg);color:var(--pri);font-weight:600;display:flex;align-items:center}
+    .user{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);padding:0 16px;border-left:1px solid var(--line)}
+    .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6ea8ff,#2f6bff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+    .body{display:flex;min-height:calc(100vh - var(--header-h))}
+    .sidenav{width:var(--side-w);flex:none;background:#fff;border-right:1px solid var(--line);padding:8px 0}
+    .nav-group{padding:8px 14px 4px;font-size:11px;color:var(--muted);font-weight:600}
+    .nav-item{padding:9px 14px 9px 18px;color:var(--sub);cursor:pointer}
+    .nav-item:hover{color:var(--pri)}
+    .nav-item.active{background:var(--pri-bg);color:var(--pri);font-weight:600;border-right:3px solid var(--pri)}
+    .content{flex:1;padding:12px;overflow:auto}
+    .page{background:var(--panel);min-height:calc(100vh - var(--header-h) - 24px);border-radius:4px}
+    .page-hd{padding:16px 20px 12px;border-bottom:1px solid var(--line)}
+    .page-title{font-size:16px;font-weight:700;margin:0}
+    .page-desc{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.6;max-width:920px}
+    .filters{padding:12px 20px;border-bottom:1px solid var(--line)}
+    .filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .field{display:flex;align-items:stretch;height:32px}
+    .field .lbl{background:#f6f8fb;border:1px solid var(--line);border-right:none;border-radius:4px 0 0 4px;padding:0 10px;display:flex;align-items:center;color:var(--sub);white-space:nowrap;font-size:12px}
+    .ctrl{height:32px;border:1px solid var(--line);border-radius:4px;background:#fff;padding:0 10px;color:var(--text);font-size:12px;outline:none;min-width:110px}
+    .field .ctrl{border-radius:0 4px 4px 0}
+    select.ctrl{appearance:none;cursor:pointer;padding-right:26px;background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%2397a0b0' fill='none' stroke-width='1.4'/></svg>") no-repeat right 9px center}
+    .btn{height:32px;border:1px solid var(--line);background:#fff;border-radius:4px;padding:0 14px;cursor:pointer;font-size:12px}
+    .btn:hover{border-color:var(--pri);color:var(--pri)}
+    .btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+    .btn.pri:hover{background:#1a52d4;color:#fff}
+    .hint{font-size:11px;color:var(--muted)}
+    .section{padding:16px 20px}
+    .sec-title{font-size:13px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .sec-title .tip{font-weight:400;color:var(--muted);font-size:12px}
+    .sec-title .spacer{flex:1}
+    .seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#fff}
+    .seg button{border:none;background:#fff;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--sub);border-right:1px solid var(--line)}
+    .seg button:last-child{border-right:none}
+    .seg button.on{background:var(--pri);color:#fff}
+    .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    @media (max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:800px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+    .kpi{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:#fff}
+    .kpi .k-label{font-size:12px;color:var(--sub)}
+    .kpi .k-val{font-size:22px;font-weight:700;margin-top:4px;letter-spacing:-.5px}
+    .kpi .k-sub{font-size:11px;color:var(--muted);margin-top:4px}
+    .kpi.warn .k-val{color:var(--warn)}
+    .kpi.ok .k-val{color:var(--ok)}
+    .kpi.danger .k-val{color:var(--danger)}
+    .axis-note{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;color:var(--muted)}
+    .quad{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:900px){.quad{grid-template-columns:1fr}}
+    .qcard{border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;transition:.15s;min-height:118px;position:relative}
+    .qcard:hover{box-shadow:0 4px 14px rgba(31,39,51,.08);transform:translateY(-1px)}
+    .qcard.keep{background:var(--keep-bg);border-color:#99f6e4}
+    .qcard.cert{background:var(--cert-bg);border-color:#fcd34d}
+    .qcard.obs{background:var(--obs-bg);border-color:#cbd5e1}
+    .qcard.tight{background:var(--tight-bg);border-color:#fecdd3}
+    .qcard .q-tag{display:inline-flex;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+    .qcard.keep .q-tag{background:#ccfbf1;color:var(--keep)}
+    .qcard.cert .q-tag{background:#fde68a;color:var(--cert)}
+    .qcard.obs .q-tag{background:#e2e8f0;color:var(--obs)}
+    .qcard.tight .q-tag{background:#fecdd3;color:var(--tight)}
+    .qcard .q-title{font-size:14px;font-weight:700;margin:8px 0 4px}
+    .qcard .q-desc{font-size:12px;color:var(--sub)}
+    .qcard .q-nums{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
+    .qcard .q-nums b{font-size:20px;font-weight:700}
+    .qcard .q-nums span{display:block;font-size:11px;color:var(--muted)}
+    .qcard .q-go{position:absolute;right:14px;bottom:12px;font-size:11px;color:var(--pri);font-weight:600}
+    .two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    @media (max-width:1100px){.two-col{grid-template-columns:1fr}}
+    .panel-box{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
+    .panel-hd{padding:10px 14px;background:#f6f8fb;border-bottom:1px solid var(--line);font-weight:600;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+    .matrix-wrap{overflow:auto;max-height:360px}
+    table.matrix{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+    table.matrix th,table.matrix td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+    table.matrix th:first-child,table.matrix td:first-child{text-align:left;position:sticky;left:0;background:#fff}
+    table.matrix thead th{background:#fafbfd;color:var(--sub);font-weight:600;position:sticky;top:0;z-index:1}
+    table.matrix thead th:first-child{z-index:2}
+    table.matrix tbody tr{cursor:pointer}
+    table.matrix tbody tr:hover{background:#f6f8fb}
+    .num-warn{color:var(--warn);font-weight:600}
+    .num-ok{color:var(--ok);font-weight:600}
+    .num-danger{color:var(--danger);font-weight:600}
+    .action-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .atab{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer;font-size:12px;color:var(--sub)}
+    .atab.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+    .atab .n{margin-left:4px;opacity:.85}
+    .action-list{max-height:420px;overflow:auto}
+    .arow{display:grid;grid-template-columns:88px 1fr 90px 70px 70px 64px;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+    .arow:hover{background:#fafbfd}
+    .arow .sku{font-family:Consolas,"Courier New",monospace;font-size:11px;font-weight:700;color:var(--pri)}
+    .arow .meta{font-size:12px;color:var(--text)}
+    .arow .sub{font-size:11px;color:var(--muted);margin-top:2px}
+    .arow .m{text-align:right;font-size:12px}
+    .tag{display:inline-flex;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600}
+    .tag.ok{background:var(--ok-bg);color:var(--ok)}
+    .tag.muted{background:#f0f2f5;color:var(--sub)}
+    .tag.warn{background:var(--warn-bg);color:var(--warn)}
+    .tag.danger{background:var(--danger-bg);color:var(--danger)}
+    .empty{padding:28px;text-align:center;color:var(--muted)}
+    .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#1f2733;color:#fff;padding:10px 18px;border-radius:8px;z-index:200;opacity:0;transition:.25s;pointer-events:none}
+    .toast.show{opacity:1;top:34px}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">风控系统</div>
+    <div class="page-tabs"><div class="ptab">合规标签 SKU 放开监控</div></div>
+    <div class="user">
+      <span>决策台</span>
+      <div class="avatar">产</div>
+      <span>产品同学</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <aside class="sidenav">
+      <div class="nav-group">合规性项目</div>
+      <div class="nav-item active">放开效果决策</div>
+      <div class="nav-item" id="navDetail">明细列表</div>
+    </aside>
+
+    <main class="content">
+      <div class="page">
+        <div class="page-hd">
+          <h1 class="page-title">合规标签 SKU 放开 · 效果与认证决策</h1>
+        </div>
+
+        <div class="filters">
+          <div class="filter-row">
+            <div class="field">
+              <span class="lbl">平台</span>
+              <select class="ctrl" id="fPlatform" style="min-width:140px">
+                <option value="亚马逊">亚马逊</option>
+                <option value="沃尔玛">沃尔玛（待接入）</option>
+                <option value="速卖通">速卖通（待接入）</option>
+              </select>
+            </div>
+            <div class="field"><span class="lbl">站点</span><select class="ctrl" id="fSite"><option value="">全部站点</option></select></div>
+            <div class="field"><span class="lbl">刊登部门</span><select class="ctrl" id="fDept"><option value="">全部</option></select></div>
+            <button type="button" class="btn pri" id="btnQuery">查询</button>
+            <button type="button" class="btn" id="btnReset">重置</button>
+            <button type="button" class="btn" id="btnGoDetail">查看明细 →</button>
+          </div>
+        </div>
+
+        <div class="section" style="padding-bottom:8px">
+          <div class="sec-title">
+            1. 放开池概览
+            <span class="spacer"></span>
+            <div class="seg" id="dimSeg">
+              <button type="button" class="on" data-dim="sku">按 SKU</button>
+              <button type="button" data-dim="cat3">按三级类目</button>
+              <button type="button" data-dim="listing">按 Listing</button>
+            </div>
+          </div>
+          <div class="kpi-grid" id="kpiOverview"></div>
+        </div>
+
+        <div class="section" style="padding-top:4px">
+          <div class="sec-title">2. 风险 × 收益四象限</div>
+          <div class="quad" id="quadGrid"></div>
+        </div>
+
+        <div class="section" style="padding-top:4px">
+          <div class="sec-title">3. 分站点 / 部门对比</div>
+          <div class="two-col">
+            <div class="panel-box">
+              <div class="panel-hd"><span>分站点</span></div>
+              <div class="matrix-wrap">
+                <table class="matrix">
+                  <thead>
+                    <tr>
+                      <th>站点</th>
+                      <th>Listing</th>
+                      <th>有出单</th>
+                      <th>出单率</th>
+                      <th>邮件</th>
+                      <th>邮件率</th>
+                      <th>CPC</th>
+                      <th>销量金额</th>
+                    </tr>
+                  </thead>
+                  <tbody id="siteBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel-box">
+              <div class="panel-hd"><span>刊登部门</span></div>
+              <div class="matrix-wrap">
+                <table class="matrix" style="min-width:480px">
+                  <thead>
+                    <tr>
+                      <th>部门</th>
+                      <th>Listing</th>
+                      <th>出单率</th>
+                      <th>邮件率</th>
+                      <th>金额</th>
+                    </tr>
+                  </thead>
+                  <tbody id="deptBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" style="padding-top:4px;padding-bottom:24px">
+          <div class="sec-title">4. 认证 / 处置候选清单</div>
+          <div class="action-tabs" id="actionTabs">
+            <div class="atab on" data-action="certify">优先认证 <span class="n" id="nCert">0</span></div>
+            <div class="atab" data-action="tighten">建议收紧 <span class="n" id="nTight">0</span></div>
+            <div class="atab" data-action="keep">可继续放 <span class="n" id="nKeep">0</span></div>
+            <div class="atab" data-action="observe">观察试放 <span class="n" id="nObs">0</span></div>
+          </div>
+          <div class="panel-box">
+            <div class="panel-hd">
+              <span id="actionTitle">优先认证</span>
+              <button type="button" class="btn" id="btnActionDetail" style="height:28px">整批下钻 →</button>
+            </div>
+            <div class="arow" style="background:#fafbfd;font-weight:600;color:var(--sub);cursor:default" id="actionHead">
+              <div>SKU</div><div>标题 / 类目</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>
+            </div>
+            <div class="action-list" id="actionList"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="./dashboard_payload_v1_2.js"></script>
+  <script>
+  const DATA = window.DASHBOARD_DATA;
+  if (!DATA || !DATA.decision) {
+    document.body.innerHTML = '<div style="padding:40px;font-family:Microsoft YaHei">未加载到决策数据（decision）。请确认 dashboard_payload_v1_2.js 已更新。</div>';
+    throw new Error('missing decision');
+  }
+
+  const DEC = DATA.decision;
+  const OV = DEC.overview;
+  const SITE = DEC.site_decision || [];
+  const DEPT = DEC.dept_decision || [];
+  const ACTIONS = DEC.actions || {};
+  const ACTIONS_CAT3 = DEC.actions_cat3 || {};
+  const LEGEND = DEC.legend || {};
+  const DIM_LABEL = { sku: 'SKU', cat3: '三级类目', listing: 'Listing' };
+
+  const DETAIL_PAGE = /总览|决策/.test(decodeURIComponent(location.pathname))
+    ? '合规SKU数据看板-明细页.html' : './detail.html';
+
+  const PLATFORMS_READY = ['亚马逊'];
+  const state = {
+    platform: '亚马逊',
+    site: '',
+    dept: '',
+    dim: 'sku', // sku | listing
+    action: 'certify',
+  };
+
+  const ACTION_META = {
+    certify: {
+      title: '优先认证',
+      quadrant: 'order_high_mail',
+      tab: 'mail',
+      kpi: 'order_mail',
+    },
+    tighten: {
+      title: '建议收紧',
+      quadrant: 'no_order_high_mail',
+      tab: 'mail',
+      kpi: 'mail',
+    },
+    keep: {
+      title: '可继续放',
+      quadrant: 'order_low_mail',
+      tab: 'order',
+      kpi: 'order',
+    },
+    observe: {
+      title: '观察试放',
+      quadrant: 'no_order_low_mail',
+      tab: 'all',
+      kpi: null,
+    },
+  };
+
+  const QUAD_UI = [
+    { key: 'order_low_mail', cls: 'keep', axis: '有出单 × 低邮件' },
+    { key: 'order_high_mail', cls: 'cert', axis: '有出单 × 高邮件' },
+    { key: 'no_order_low_mail', cls: 'obs', axis: '无出单 × 低邮件' },
+    { key: 'no_order_high_mail', cls: 'tight', axis: '无出单 × 高邮件' },
+  ];
+
+  function platformReady() {
+    return PLATFORMS_READY.includes(state.platform);
+  }
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+  function fmt(n) {
+    if (n == null || n === '') return '—';
+    return Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+  }
+  function money(n) {
+    return '$' + fmt(n || 0);
+  }
+  function pct(n) {
+    return fmt(n) + '%';
+  }
+
+  function detailUrl(extra) {
+    const p = new URLSearchParams();
+    if (state.platform) p.set('platform', state.platform);
+    if (state.site) p.set('site', state.site);
+    if (state.dept) p.set('dept', state.dept);
+    Object.entries(extra || {}).forEach(([k, v]) => { if (v != null && v !== '') p.set(k, v); });
+    const q = p.toString();
+    return DETAIL_PAGE + (q ? '?' + q : '');
+  }
+  function gotoDetail(extra) {
+    location.href = detailUrl(extra);
+  }
+
+  function initFilters() {
+    SITE.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.site;
+      o.textContent = `${s.site}（邮件率 ${pct(s.mail_rate)}）`;
+      document.getElementById('fSite').appendChild(o);
+    });
+    DEPT.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.dept;
+      o.textContent = `${d.dept}（Listing ${fmt(d.listing)}）`;
+      document.getElementById('fDept').appendChild(o);
+    });
+    document.getElementById('fPlatform').value = state.platform;
+    document.getElementById('nCert').textContent = (ACTIONS.certify || []).length;
+    document.getElementById('nTight').textContent = (ACTIONS.tighten || []).length;
+    document.getElementById('nKeep').textContent = (ACTIONS.keep || []).length;
+    document.getElementById('nObs').textContent = (ACTIONS.observe || []).length;
+  }
+
+  function filteredSiteRows() {
+    let rows = SITE.slice();
+    if (state.site) rows = rows.filter(r => r.site === state.site);
+    return rows;
+  }
+  function filteredDeptRows() {
+    let rows = DEPT.slice();
+    if (state.dept) rows = rows.filter(r => r.dept === state.dept);
+    return rows;
+  }
+  function filteredActions(list) {
+    let rows = (list || []).slice();
+    if (state.site) rows = rows.filter(r => (r.sites || []).includes(state.site));
+    if (state.dept) rows = rows.filter(r => r.dept === state.dept);
+    return rows;
+  }
+  function currentActionSource() {
+    return state.dim === 'cat3' ? ACTIONS_CAT3 : ACTIONS;
+  }
+
+  function renderOverview() {
+    document.querySelectorAll('#dimSeg button').forEach(b => b.classList.toggle('on', b.dataset.dim === state.dim));
+    if (!platformReady()) {
+      document.getElementById('kpiOverview').innerHTML = '<div class="kpi"><div class="k-label">放开池</div><div class="k-val">0</div></div>';
+      return;
+    }
+    const dim = state.dim;
+    const scale = OV[dim];
+    const orderN = OV['order_' + dim];
+    const mailN = OV['mail_' + dim];
+    const orderRate = OV['order_rate_' + dim];
+    const mailRate = OV['mail_rate_' + dim];
+    const cpcN = dim === 'listing' ? OV.cpc_sku : (OV['cpc_' + dim] ?? OV.cpc_sku);
+    const cpcCover = dim === 'listing' ? OV.cpc_cover_sku : (OV['cpc_cover_' + dim] ?? OV.cpc_cover_sku);
+    const cpcOrderCover = dim === 'cat3' ? OV.cpc_cover_order_cat3 : OV.cpc_cover_order_sku;
+    document.getElementById('kpiOverview').innerHTML = `
+      <div class="kpi"><div class="k-label">放开规模</div><div class="k-val">${fmt(scale)}</div><div class="k-sub">${DIM_LABEL[dim]} · 监控池</div></div>
+      <div class="kpi ok"><div class="k-label">有出单</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
+      <div class="kpi warn"><div class="k-label">有合规邮件</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
+      <div class="kpi"><div class="k-label">已做 CPC 认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim === 'listing' ? 'sku' : dim]} 覆盖率 ${pct(cpcCover)}</div></div>
+      <div class="kpi"><div class="k-label">有出单对象认证覆盖</div><div class="k-val">${pct(cpcOrderCover)}</div><div class="k-sub">${dim === 'cat3' ? '有出单类目' : '有出单 SKU'}</div></div>
+    `;
+  }
+
+  function renderQuad() {
+    if (!platformReady()) {
+      document.getElementById('quadGrid').innerHTML = '<div class="empty">待接入</div>';
+      return;
+    }
+    const qMap = {
+      sku: DEC.quadrant_sku,
+      cat3: DEC.quadrant_cat3,
+      listing: DEC.quadrant_listing,
+    };
+    const q = qMap[state.dim] || DEC.quadrant_sku;
+    const unit = DIM_LABEL[state.dim];
+    document.getElementById('quadGrid').innerHTML = QUAD_UI.map(item => {
+      const leg = LEGEND[item.key] || {};
+      const n = q[item.key] || 0;
+      return `<div class="qcard ${item.cls}" data-quadrant="${item.key}">
+        <span class="q-tag">${leg.title || item.key}</span>
+        <div class="q-title">${item.axis}</div>
+        <div class="q-nums"><div><b>${fmt(n)}</b><span>${unit}</span></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderSiteDept() {
+    if (!platformReady()) {
+      document.getElementById('siteBody').innerHTML = '<tr><td colspan="8" class="empty">待接入</td></tr>';
+      document.getElementById('deptBody').innerHTML = '<tr><td colspan="5" class="empty">待接入</td></tr>';
+      return;
+    }
+    document.getElementById('siteBody').innerHTML = filteredSiteRows().map(s => `
+      <tr data-site="${s.site}">
+        <td><b>${s.site}</b></td>
+        <td>${fmt(s.listing)}</td>
+        <td class="num-ok">${fmt(s.order)}</td>
+        <td>${pct(s.order_rate)}</td>
+        <td class="${s.mail ? 'num-warn' : ''}">${fmt(s.mail)}</td>
+        <td class="${s.mail_rate > 1 ? 'num-danger' : ''}">${pct(s.mail_rate)}</td>
+        <td>${fmt(s.cpc)}</td>
+        <td>${money(s.amount_sum)}</td>
+      </tr>`).join('') || '<tr><td colspan="8" class="empty">无数据</td></tr>';
+
+    document.getElementById('deptBody').innerHTML = filteredDeptRows().map(d => `
+      <tr data-dept="${d.dept}">
+        <td><b>${d.dept}</b></td>
+        <td>${fmt(d.listing)}</td>
+        <td>${pct(d.order_rate)}</td>
+        <td class="${d.mail_rate > 1 ? 'num-warn' : ''}">${pct(d.mail_rate)}</td>
+        <td>${money(d.amount_sum)}</td>
+      </tr>`).join('') || '<tr><td colspan="5" class="empty">无数据</td></tr>';
+  }
+
+  function renderActions() {
+    document.querySelectorAll('#actionTabs .atab').forEach(t => t.classList.toggle('on', t.dataset.action === state.action));
+    const meta = ACTION_META[state.action];
+    const src = currentActionSource();
+    const byCat3 = state.dim === 'cat3';
+    document.getElementById('actionTitle').textContent = meta.title + (byCat3 ? '（三级类目）' : '');
+    document.getElementById('nCert').textContent = (src.certify || []).length;
+    document.getElementById('nTight').textContent = (src.tighten || []).length;
+    document.getElementById('nKeep').textContent = (src.keep || []).length;
+    document.getElementById('nObs').textContent = (src.observe || []).length;
+    document.getElementById('actionHead').innerHTML = byCat3
+      ? `<div>三级类目</div><div>站点 / 部门</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`
+      : `<div>SKU</div><div>标题 / 类目</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`;
+    const rows = filteredActions(src[state.action]);
+    if (!platformReady()) {
+      document.getElementById('actionList').innerHTML = '<div class="empty">待接入</div>';
+      return;
+    }
+    if (byCat3) {
+      document.getElementById('actionList').innerHTML = rows.length ? rows.map(r => `
+        <div class="arow" data-cat3="${encodeURIComponent(r.cat3)}">
+          <div class="sku" title="${r.cat3}">${(r.cat3 || '-').slice(0, 12)}${(r.cat3 || '').length > 12 ? '…' : ''}</div>
+          <div>
+            <div class="meta">SKU ${fmt(r.sku_cnt)} · Listing ${fmt(r.listing_cnt)}</div>
+            <div class="sub">${(r.sites || []).slice(0, 3).join('/')} · ${r.dept || '-'}</div>
+          </div>
+          <div class="m">${money(r.amount)}</div>
+          <div class="m">${fmt(r.orders)}</div>
+          <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
+          <div class="m">${r.cpc ? '<span class="tag ok">是</span>' : '<span class="tag muted">否</span>'}</div>
+        </div>`).join('') : '<div class="empty">当前筛选下无候选</div>';
+      return;
+    }
+    document.getElementById('actionList').innerHTML = rows.length ? rows.map(r => `
+      <div class="arow" data-sku="${r.sku}">
+        <div class="sku">${r.sku}</div>
+        <div>
+          <div class="meta" title="${r.title || ''}">${(r.title || '-').slice(0, 28)}${(r.title || '').length > 28 ? '…' : ''}</div>
+          <div class="sub">${r.cat3 || '-'} · ${(r.sites || []).slice(0, 3).join('/')}</div>
+        </div>
+        <div class="m">${money(r.amount)}</div>
+        <div class="m">${fmt(r.orders)}</div>
+        <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
+        <div class="m">${r.cpc ? '<span class="tag ok">是</span>' : '<span class="tag muted">否</span>'}</div>
+      </div>`).join('') : '<div class="empty">当前筛选下无候选</div>';
+  }
+
+  function renderAll() {
+    renderOverview();
+    renderQuad();
+    renderSiteDept();
+    renderActions();
+  }
+
+  function readFilters() {
+    state.platform = document.getElementById('fPlatform').value || '亚马逊';
+    state.site = document.getElementById('fSite').value;
+    state.dept = document.getElementById('fDept').value;
+  }
+  function syncFiltersToUI() {
+    document.getElementById('fPlatform').value = state.platform;
+    document.getElementById('fSite').value = state.site;
+    document.getElementById('fDept').value = state.dept;
+  }
+
+  document.getElementById('navDetail').onclick = () => { readFilters(); gotoDetail(); };
+  document.getElementById('btnGoDetail').onclick = () => { readFilters(); gotoDetail(); };
+  document.getElementById('btnQuery').onclick = () => {
+    readFilters(); renderAll();
+    toast(platformReady() ? '已刷新' : `${state.platform} 暂未接入`);
+  };
+  document.getElementById('btnReset').onclick = () => {
+    state.platform = '亚马逊'; state.site = ''; state.dept = ''; state.dim = 'sku'; state.action = 'certify';
+    syncFiltersToUI(); renderAll(); toast('已重置');
+  };
+  document.getElementById('fPlatform').onchange = () => {
+    readFilters(); state.site = ''; document.getElementById('fSite').value = '';
+    renderAll();
+    toast(platformReady() ? `当前平台：${state.platform}` : `${state.platform} 待接入`);
+  };
+  document.getElementById('dimSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-dim]'); if (!b) return;
+    state.dim = b.dataset.dim; renderAll();
+  });
+  document.getElementById('quadGrid').addEventListener('click', e => {
+    const card = e.target.closest('[data-quadrant]'); if (!card || !platformReady()) return;
+    readFilters();
+    const q = card.dataset.quadrant;
+    const meta = Object.values(ACTION_META).find(m => m.quadrant === q) || {};
+    gotoDetail({
+      quadrant: q,
+      tab: meta.tab || 'all',
+      kpi: meta.kpi || '',
+      action: Object.keys(ACTION_META).find(k => ACTION_META[k].quadrant === q) || '',
+      dim: state.dim,
+    });
+  });
+  document.getElementById('actionTabs').addEventListener('click', e => {
+    const t = e.target.closest('[data-action]'); if (!t) return;
+    state.action = t.dataset.action; renderActions();
+  });
+  document.getElementById('btnActionDetail').onclick = () => {
+    readFilters();
+    const meta = ACTION_META[state.action];
+    gotoDetail({
+      quadrant: meta.quadrant,
+      tab: meta.tab,
+      kpi: meta.kpi || '',
+      action: state.action,
+      dim: state.dim,
+    });
+  };
+  document.getElementById('actionList').addEventListener('click', e => {
+    const rowSku = e.target.closest('[data-sku]');
+    const rowCat3 = e.target.closest('[data-cat3]');
+    if (!platformReady()) return;
+    readFilters();
+    const meta = ACTION_META[state.action];
+    if (rowCat3) {
+      gotoDetail({
+        quadrant: meta.quadrant,
+        tab: meta.tab,
+        kpi: meta.kpi || '',
+        action: state.action,
+        dim: 'cat3',
+        cat3: decodeURIComponent(rowCat3.dataset.cat3),
+      });
+      return;
+    }
+    if (!rowSku) return;
+    gotoDetail({
+      quadrant: meta.quadrant,
+      tab: meta.tab,
+      kpi: meta.kpi || '',
+      action: state.action,
+      dim: state.dim,
+      sku: rowSku.dataset.sku,
+    });
+  });
+  document.getElementById('siteBody').addEventListener('click', e => {
+    const tr = e.target.closest('[data-site]'); if (!tr || !platformReady()) return;
+    state.site = state.site === tr.dataset.site ? '' : tr.dataset.site;
+    document.getElementById('fSite').value = state.site;
+    renderAll();
+    toast(state.site ? `筛选站点：${state.site}` : '已取消站点筛选');
+  });
+  document.getElementById('deptBody').addEventListener('click', e => {
+    const tr = e.target.closest('[data-dept]'); if (!tr || !platformReady()) return;
+    state.dept = state.dept === tr.dataset.dept ? '' : tr.dataset.dept;
+    document.getElementById('fDept').value = state.dept;
+    renderAll();
+    toast(state.dept ? `筛选部门：${state.dept}` : '已取消部门筛选');
+  });
+
+  initFilters();
+  renderAll();
+  </script>
+</body>
+</html>
