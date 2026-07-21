@@ -240,10 +240,16 @@
         <div class="section" style="padding-top:4px">
           <div class="sec-title">
             3. 放开趋势、分站点与一级类目对比
-            <span class="tip">独立时间筛选 · 与上方刊登时间无关</span>
+            <span class="tip">独立时间筛选 · 与上方筛选无关</span>
           </div>
           <div class="chart-filter-row">
             <div class="field"><span class="lbl">统计时间</span>
+              <select class="ctrl" id="fChartTimeAxis" style="min-width:128px">
+                <option value="list">刊登时间</option>
+                <option value="mail">收到邮件时间</option>
+              </select>
+            </div>
+            <div class="field"><span class="lbl">时间范围</span>
               <div style="display:flex;align-items:center;gap:6px">
                 <input class="ctrl" type="date" id="fChartFrom" style="min-width:132px" />
                 <span style="color:var(--sub)">至</span>
@@ -384,6 +390,7 @@
     listTo: '',
     chartListFrom: '',
     chartListTo: '',
+    chartTimeAxis: 'list', // list | mail
     dim: 'sku', // sku | listing
     action: 'certify',
     trendGrain: 'month', // day | week | month
@@ -393,6 +400,16 @@
 
   const DAY_RANGE = DEC.list_day_range || {};
   const ALL_DAYS = (DAY_RANGE.days || Object.keys(DEC.by_list_day || {})).slice().sort();
+  const MAIL_DAY_RANGE = DEC.mail_day_range || {};
+  const MAIL_DAYS = (MAIL_DAY_RANGE.days || Object.keys(DEC.by_mail_day || {})).slice().sort();
+  const CHART_AXIS_LABEL = { list: '刊登时间', mail: '收到邮件时间' };
+
+  function chartAxisDays() {
+    return state.chartTimeAxis === 'mail' ? MAIL_DAYS : ALL_DAYS;
+  }
+  function chartAxisName() {
+    return CHART_AXIS_LABEL[state.chartTimeAxis] || '刊登时间';
+  }
 
   function selectedDays() {
     if (!ALL_DAYS.length) return [];
@@ -406,41 +423,50 @@
     return [`${y}-${pad2(m)}-01`, `${y}-${pad2(m)}-${pad2(last)}`];
   }
   function clampChartRange(from, to) {
-    if (!ALL_DAYS.length) return { from: from || '', to: to || '' };
-    let f = from || ALL_DAYS[0];
-    let t = to || ALL_DAYS[ALL_DAYS.length - 1];
-    if (f < ALL_DAYS[0]) f = ALL_DAYS[0];
-    if (t > ALL_DAYS[ALL_DAYS.length - 1]) t = ALL_DAYS[ALL_DAYS.length - 1];
+    const days = chartAxisDays();
+    if (!days.length) return { from: from || '', to: to || '' };
+    let f = from || days[0];
+    let t = to || days[days.length - 1];
+    if (f < days[0]) f = days[0];
+    if (t > days[days.length - 1]) t = days[days.length - 1];
     if (f > t) { const x = f; f = t; t = x; }
     return { from: f, to: t };
   }
   function defaultChartMonthRange() {
-    if (!ALL_DAYS.length) return { from: '', to: '' };
+    const daysAll = chartAxisDays();
+    if (!daysAll.length) return { from: '', to: '' };
     const now = new Date();
     let [from, to] = monthBounds(now.getFullYear(), now.getMonth() + 1);
-    let days = ALL_DAYS.filter(d => d >= from && d <= to);
+    let days = daysAll.filter(d => d >= from && d <= to);
     if (!days.length) {
-      const last = ALL_DAYS[ALL_DAYS.length - 1];
+      const last = daysAll[daysAll.length - 1];
       const [y, m] = last.split('-').map(Number);
       [from, to] = monthBounds(y, m);
-      days = ALL_DAYS.filter(d => d >= from && d <= to);
+      days = daysAll.filter(d => d >= from && d <= to);
     }
-    if (!days.length) return { from: ALL_DAYS[0], to: ALL_DAYS[ALL_DAYS.length - 1] };
+    if (!days.length) return { from: daysAll[0], to: daysAll[daysAll.length - 1] };
     return { from: days[0], to: days[days.length - 1] };
   }
   function chartSelectedDays() {
-    if (!ALL_DAYS.length) return [];
-    const from = state.chartListFrom || ALL_DAYS[0];
-    const to = state.chartListTo || ALL_DAYS[ALL_DAYS.length - 1];
-    return ALL_DAYS.filter(d => d >= from && d <= to);
+    const daysAll = chartAxisDays();
+    if (!daysAll.length) return [];
+    const from = state.chartListFrom || daysAll[0];
+    const to = state.chartListTo || daysAll[daysAll.length - 1];
+    return daysAll.filter(d => d >= from && d <= to);
+  }
+  function chartDayMap() {
+    return state.chartTimeAxis === 'mail' ? (DEC.by_mail_day || {}) : (DEC.by_list_day || {});
   }
   function chartSlice() {
     const days = chartSelectedDays();
+    const daysAll = chartAxisDays();
+    const byDay = chartDayMap();
     if (!days.length) return emptySlice();
-    if (days.length === ALL_DAYS.length) {
+    // 邮件时间全选：合并邮件日切片（不可用总览全量，因全量含未收邮件 Listing）
+    if (days.length === daysAll.length && state.chartTimeAxis === 'list') {
       return (DEC.by_label && DEC.by_label['']) || DEC;
     }
-    const slices = days.map(d => (DEC.by_list_day[d] || {})['']).filter(Boolean);
+    const slices = days.map(d => (byDay[d] || {})['']).filter(Boolean);
     return mergeSlices(slices);
   }
   function isFullDateRange() {
@@ -740,26 +766,39 @@
   }
 
   function syncChartFiltersToUI() {
+    const axisSel = document.getElementById('fChartTimeAxis');
+    if (axisSel) axisSel.value = state.chartTimeAxis || 'list';
     document.getElementById('fChartFrom').value = state.chartListFrom;
     document.getElementById('fChartTo').value = state.chartListTo;
+    const axis = chartAxisName();
     document.getElementById('chartFilterHint').textContent = state.chartListFrom && state.chartListTo
-      ? `当前：${state.chartListFrom} ~ ${state.chartListTo}` : '';
+      ? `当前：${axis} ${state.chartListFrom} ~ ${state.chartListTo}` : '';
+  }
+
+  function bindChartDateLimits() {
+    const days = chartAxisDays();
+    const fromEl = document.getElementById('fChartFrom');
+    const toEl = document.getElementById('fChartTo');
+    if (days.length) {
+      fromEl.min = days[0]; fromEl.max = days[days.length - 1];
+      toEl.min = days[0]; toEl.max = days[days.length - 1];
+    } else {
+      fromEl.removeAttribute('min'); fromEl.removeAttribute('max');
+      toEl.removeAttribute('min'); toEl.removeAttribute('max');
+    }
   }
 
   function initChartFilters() {
     const def = defaultChartMonthRange();
     if (!state.chartListFrom) state.chartListFrom = def.from;
     if (!state.chartListTo) state.chartListTo = def.to;
-    if (ALL_DAYS.length) {
-      document.getElementById('fChartFrom').min = ALL_DAYS[0];
-      document.getElementById('fChartFrom').max = ALL_DAYS[ALL_DAYS.length - 1];
-      document.getElementById('fChartTo').min = ALL_DAYS[0];
-      document.getElementById('fChartTo').max = ALL_DAYS[ALL_DAYS.length - 1];
-    }
+    bindChartDateLimits();
     syncChartFiltersToUI();
   }
 
   function readChartFilters() {
+    const axisSel = document.getElementById('fChartTimeAxis');
+    state.chartTimeAxis = (axisSel && axisSel.value) || 'list';
     state.chartListFrom = document.getElementById('fChartFrom').value;
     state.chartListTo = document.getElementById('fChartTo').value;
     const clamped = clampChartRange(state.chartListFrom, state.chartListTo);
@@ -770,11 +809,23 @@
     syncChartFiltersToUI();
   }
 
+  function onChartTimeAxisChange() {
+    state.chartTimeAxis = document.getElementById('fChartTimeAxis').value || 'list';
+    const def = defaultChartMonthRange();
+    state.chartListFrom = def.from;
+    state.chartListTo = def.to;
+    bindChartDateLimits();
+    syncChartFiltersToUI();
+    renderSiteDept();
+    toast(`已切换为按${chartAxisName()}统计`);
+  }
+
   function resetChartFilters() {
     const def = defaultChartMonthRange();
     state.chartListFrom = def.from;
     state.chartListTo = def.to;
     state.trendGrain = 'month';
+    bindChartDateLimits();
     syncChartFiltersToUI();
   }
 
@@ -959,7 +1010,9 @@
 
   function trendDayRows() {
     const T = DATA.trend || {};
-    const byLabel = (T.by_label && T.by_label['']) || T.days || [];
+    const axisKey = state.chartTimeAxis === 'mail' ? 'mail' : 'list';
+    const axis = (T.axes && T.axes[axisKey]) || T;
+    const byLabel = (axis.by_label && axis.by_label['']) || axis.days || [];
     const from = state.chartListFrom || '';
     const to = state.chartListTo || '';
     return byLabel.filter(r => {
@@ -1076,7 +1129,11 @@
   function renderTrend() {
     document.querySelectorAll('#trendGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.trendGrain));
     const titles = { day: '日度放开趋势', week: '周度放开趋势', month: '月度放开趋势' };
-    const axisTip = { day: '刊登时间(天)', week: '刊登时间(周)', month: '刊登时间(月)' };
+    const axisTip = {
+      day: `${chartAxisName()}(天)`,
+      week: `${chartAxisName()}(周)`,
+      month: `${chartAxisName()}(月)`,
+    };
     document.getElementById('trendTitle').textContent = titles[state.trendGrain] || '放开趋势';
     const rows = aggregateTrend(state.trendGrain, trendDayRows());
     const empty = document.getElementById('trendEmpty');
@@ -1085,14 +1142,14 @@
       if (trendChart) { trendChart.destroy(); trendChart = null; }
       canvas.style.display = 'none';
       empty.style.display = 'block';
-      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前筛选下暂无趋势数据');
+      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前统计时间下暂无趋势数据');
       document.getElementById('trendHint').textContent = '';
       return;
     }
     canvas.style.display = 'block';
     empty.style.display = 'none';
     document.getElementById('trendHint').textContent =
-      `${state.chartListFrom || ''}~${state.chartListTo || ''} · ${axisTip[state.trendGrain] || ''}` +
+      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''} · ${axisTip[state.trendGrain] || ''}` +
       (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
     const seriesMeta = (DATA.trend && DATA.trend.series) || CHART_SERIES;
@@ -1131,7 +1188,7 @@
     canvas.style.display = 'block';
     empty.style.display = 'none';
     document.getElementById('siteChartHint').textContent =
-      `${state.chartListFrom || ''}~${state.chartListTo || ''} · 合规标签 SKU` +
+      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''} · 合规标签 SKU` +
       (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
     const datasets = CHART_SERIES.map(s => ({
@@ -1183,7 +1240,7 @@
     canvas.style.display = 'block';
     empty.style.display = 'none';
     document.getElementById('cat1ChartHint').textContent =
-      `${state.chartListFrom || ''}~${state.chartListTo || ''} · sku类目一级 · 合规标签 SKU` +
+      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''} · sku类目一级 · 合规标签 SKU` +
       (rows.length > 8 ? ' · 可左右拖动查看' : '');
 
     const datasets = CHART_SERIES.map(s => ({
@@ -1367,6 +1424,7 @@
     state.trendGrain = b.dataset.grain;
     renderTrend();
   });
+  document.getElementById('fChartTimeAxis').onchange = () => onChartTimeAxisChange();
   document.getElementById('btnChartApply').onclick = () => {
     readChartFilters();
     renderSiteDept();
