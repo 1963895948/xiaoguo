@@ -275,7 +275,7 @@
             </div>
             <div class="chart-box">
               <div class="chart-hd">
-                <div class="chart-title" id="siteChartTitle">分站点 Listing / 合规邮件 / 出单</div>
+                <div class="chart-title" id="siteChartTitle">分站点 Listing / SKU / CPC认证</div>
                 <div class="chart-sub" id="siteChartHint"></div>
               </div>
               <div class="chart-scroll-wrap" id="siteChartScroll">
@@ -287,7 +287,7 @@
             </div>
             <div class="chart-box">
               <div class="chart-hd">
-                <div class="chart-title" id="cat1ChartTitle">分一级类目 Listing / 合规邮件 / 出单</div>
+                <div class="chart-title" id="cat1ChartTitle">分一级类目 Listing / SKU / CPC认证</div>
                 <div class="chart-sub" id="cat1ChartHint"></div>
               </div>
               <div class="chart-scroll-wrap" id="cat1ChartScroll">
@@ -526,11 +526,12 @@
       slices.forEach(s => {
         (s[key] || []).forEach(row => {
           const id = row[idKey];
-          const prev = m.get(id) || { [idKey]: id, listing: 0, order: 0, mail: 0, cpc: 0, amount_sum: 0, orders_sum: 0 };
+          const prev = m.get(id) || { [idKey]: id, listing: 0, sku: 0, cpc: 0, order: 0, mail: 0, amount_sum: 0, orders_sum: 0 };
           prev.listing += row.listing || 0;
+          prev.sku += row.sku || 0;
+          prev.cpc += row.cpc || 0;
           prev.order += row.order || 0;
           prev.mail += row.mail || 0;
-          prev.cpc += row.cpc || 0;
           prev.amount_sum += row.amount_sum || 0;
           prev.orders_sum += row.orders_sum || 0;
           m.set(id, prev);
@@ -927,6 +928,12 @@
     return label;
   }
 
+  const CHART_SERIES = [
+    { key: 'listing', name: 'Listing数量', color: '#4C8DFF' },
+    { key: 'sku', name: 'SKU数量', color: '#3DB8A0' },
+    { key: 'cpc', name: '有CPC认证数量', color: '#E8A05C' },
+  ];
+
   let trendChart = null;
   let siteChart = null;
   let cat1Chart = null;
@@ -1049,18 +1056,18 @@
         key: r.day,
         label: r.day.slice(5).replace(/-/g, '/'),
         listing: r.listing,
-        mail_listing: r.mail_listing,
-        order_listing: r.order_listing,
+        sku: r.sku,
+        cpc: r.cpc != null ? r.cpc : r.cpc_listing,
       }));
     }
     const map = new Map();
     rows.forEach(r => {
       const key = grain === 'month' ? r.day.slice(0, 7) : isoWeekKey(r.day);
       const label = grain === 'month' ? key : key.replace(/-/g, '');
-      const prev = map.get(key) || { key, label, listing: 0, mail_listing: 0, order_listing: 0 };
+      const prev = map.get(key) || { key, label, listing: 0, sku: 0, cpc: 0 };
       prev.listing += r.listing || 0;
-      prev.mail_listing += r.mail_listing || 0;
-      prev.order_listing += r.order_listing || 0;
+      prev.sku += r.sku || 0;
+      prev.cpc += (r.cpc != null ? r.cpc : r.cpc_listing) || 0;
       map.set(key, prev);
     });
     return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
@@ -1088,14 +1095,10 @@
       `${state.chartListFrom || ''}~${state.chartListTo || ''} · ${axisTip[state.trendGrain] || ''}` +
       (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
-    const seriesMeta = (DATA.trend && DATA.trend.series) || [
-      { key: 'listing', name: 'Listing数', color: '#4C8DFF' },
-      { key: 'mail_listing', name: '合规邮件Listing', color: '#3DB8A0' },
-      { key: 'order_listing', name: '出单Listing', color: '#E8A05C' },
-    ];
+    const seriesMeta = (DATA.trend && DATA.trend.series) || CHART_SERIES;
     const datasets = seriesMeta.map(s => ({
       label: s.name,
-      data: rows.map(r => r[s.key] || 0),
+      data: rows.map(r => r[s.key] != null ? r[s.key] : 0),
       backgroundColor: s.color,
       borderRadius: 3,
       maxBarThickness: 28,
@@ -1115,8 +1118,8 @@
     const empty = document.getElementById('siteChartEmpty');
     const canvas = document.getElementById('siteChart');
     document.getElementById('siteChartTitle').textContent = state.site
-      ? `站点 ${state.site} · Listing / 合规邮件 / 出单`
-      : '分站点 Listing / 合规邮件 / 出单';
+      ? `站点 ${state.site} · Listing / SKU / CPC认证`
+      : '分站点 Listing / SKU / CPC认证';
     if (!platformReady() || !rows.length || typeof Chart === 'undefined') {
       if (siteChart) { siteChart.destroy(); siteChart = null; }
       canvas.style.display = 'none';
@@ -1131,12 +1134,7 @@
       `${state.chartListFrom || ''}~${state.chartListTo || ''} · 合规标签 SKU` +
       (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
-    const seriesMeta = [
-      { key: 'listing', name: 'Listing数', color: '#4C8DFF' },
-      { key: 'mail', name: '合规邮件Listing', color: '#3DB8A0' },
-      { key: 'order', name: '出单Listing', color: '#E8A05C' },
-    ];
-    const datasets = seriesMeta.map(s => ({
+    const datasets = CHART_SERIES.map(s => ({
       label: s.name,
       data: rows.map(r => r[s.key] || 0),
       backgroundColor: s.color,
@@ -1151,7 +1149,7 @@
       const i = items[0]?.dataIndex;
       if (i == null || !rows[i]) return [];
       const r = rows[i];
-      return [`出单率 ${pct(r.order_rate)}`, `邮件率 ${pct(r.mail_rate)}`, `销量 ${money(r.amount_sum)}`];
+      return [`SKU ${fmt(r.sku)}`, `CPC认证 ${fmt(r.cpc)}`];
     };
     siteOpts.onClick = (_evt, elements) => {
       if (!elements.length || !platformReady()) return;
@@ -1188,12 +1186,7 @@
       `${state.chartListFrom || ''}~${state.chartListTo || ''} · sku类目一级 · 合规标签 SKU` +
       (rows.length > 8 ? ' · 可左右拖动查看' : '');
 
-    const seriesMeta = [
-      { key: 'listing', name: 'Listing数', color: '#4C8DFF' },
-      { key: 'mail', name: '合规邮件Listing', color: '#3DB8A0' },
-      { key: 'order', name: '出单Listing', color: '#E8A05C' },
-    ];
-    const datasets = seriesMeta.map(s => ({
+    const datasets = CHART_SERIES.map(s => ({
       label: s.name,
       data: rows.map(r => r[s.key] || 0),
       backgroundColor: s.color,
@@ -1208,12 +1201,7 @@
       const i = items[0]?.dataIndex;
       if (i == null || !rows[i]) return [];
       const r = rows[i];
-      return [
-        r.cat1 || r.label || '',
-        `出单率 ${pct(r.order_rate)}`,
-        `邮件率 ${pct(r.mail_rate)}`,
-        `销量 ${money(r.amount_sum)}`,
-      ];
+      return [r.cat1 || r.label || '', `SKU ${fmt(r.sku)}`, `CPC认证 ${fmt(r.cpc)}`];
     };
     cat1Chart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
