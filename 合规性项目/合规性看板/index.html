@@ -455,7 +455,21 @@
     return daysAll.filter(d => d >= from && d <= to);
   }
   function chartDayMap() {
+    if (state.dept) {
+      return state.chartTimeAxis === 'mail'
+        ? (DEC.by_mail_day_dept || {})
+        : (DEC.by_list_day_dept || {});
+    }
     return state.chartTimeAxis === 'mail' ? (DEC.by_mail_day || {}) : (DEC.by_list_day || {});
+  }
+  function pickDaySlice(byDay, day) {
+    const cell = byDay[day];
+    if (!cell) return null;
+    if (state.dept) {
+      const deptCell = cell[state.dept];
+      return deptCell ? (deptCell[''] || null) : null;
+    }
+    return cell[''] || null;
   }
   function chartSlice() {
     const days = chartSelectedDays();
@@ -464,9 +478,13 @@
     if (!days.length) return emptySlice();
     // 邮件时间全选：合并邮件日切片（不可用总览全量，因全量含未收邮件 Listing）
     if (days.length === daysAll.length && state.chartTimeAxis === 'list') {
+      if (state.dept) {
+        const ds = (DEC.by_dept || {})[state.dept];
+        return ds ? (ds[''] || emptySlice()) : emptySlice();
+      }
       return (DEC.by_label && DEC.by_label['']) || DEC;
     }
-    const slices = days.map(d => (byDay[d] || {})['']).filter(Boolean);
+    const slices = days.map(d => pickDaySlice(byDay, d)).filter(Boolean);
     return mergeSlices(slices);
   }
   function isFullDateRange() {
@@ -575,11 +593,15 @@
 
   function currentSlice() {
     if (isFullDateRange()) {
+      if (state.dept) {
+        const ds = (DEC.by_dept || {})[state.dept];
+        return ds ? (ds[''] || emptySlice()) : emptySlice();
+      }
       return (DEC.by_label && DEC.by_label['']) || DEC;
     }
-    const byDay = DEC.by_list_day || {};
+    const byDay = state.dept ? (DEC.by_list_day_dept || {}) : (DEC.by_list_day || {});
     const slices = selectedDays()
-      .map(d => (byDay[d] || {})[''])
+      .map(d => pickDaySlice(byDay, d))
       .filter(Boolean);
     return mergeSlices(slices);
   }
@@ -736,6 +758,8 @@
   }
 
   function fillSiteDeptOptions() {
+    // 部门选项始终用全量，避免选中后下拉只剩当前部门
+    const allSlice = (DEC.by_label && DEC.by_label['']) || DEC;
     const slice = currentSlice();
     const siteSel = document.getElementById('fSite');
     const deptSel = document.getElementById('fDept');
@@ -749,7 +773,7 @@
       siteSel.appendChild(o);
     });
     deptSel.innerHTML = '<option value="">全部</option>';
-    (slice.dept_decision || []).forEach(d => {
+    (allSlice.dept_decision || []).forEach(d => {
       const o = document.createElement('option');
       o.value = d.dept;
       o.textContent = `${d.dept}（Listing ${fmt(d.listing)}）`;
@@ -912,6 +936,7 @@
     const cpcOrderN = OV['cpc_order_' + dim] ?? OV.cpc_order_sku;
     const poolHint = [
       dim === 'listing' ? '合规标签 Listing' : (dim === 'cat3' ? '合规标签三级类目' : '合规标签 SKU'),
+      state.dept || null,
       isFullDateRange() ? null : `刊登 ${state.listFrom || ''}~${state.listTo || ''}`,
       currentSlice()._multiDay ? '多日合计' : null,
     ].filter(Boolean).join(' · ');
@@ -1419,6 +1444,15 @@
     readFilters(); state.site = ''; document.getElementById('fSite').value = '';
     renderAll();
     toast(platformReady() ? `当前平台：${state.platform}` : `${state.platform} 待接入`);
+  };
+  document.getElementById('fDept').onchange = () => {
+    readFilters();
+    renderAll();
+    toast(state.dept ? `已筛选部门：${state.dept}` : '已取消部门筛选');
+  };
+  document.getElementById('fSite').onchange = () => {
+    readFilters();
+    renderAll();
   };
   document.getElementById('trendGrain').addEventListener('click', e => {
     const b = e.target.closest('[data-grain]'); if (!b) return;
