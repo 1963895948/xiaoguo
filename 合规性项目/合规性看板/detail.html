@@ -321,6 +321,13 @@
     return Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
   }
   function money(n) { return '$' + fmt(n || 0); }
+  function isBlankVal(v) {
+    return v == null || v === '' || v === '1' || v === '无' || v === 'None';
+  }
+  function fmtMailTime(v) {
+    if (isBlankVal(v)) return '';
+    return String(v);
+  }
 
   const MULTI_CFG = {
     shop: { panel: 'panelShop', trigger: 'triggerShop', field: 'shop' },
@@ -610,9 +617,9 @@
         <td>${r.dev_time || '-'}</td>
         <td>${r.label === '是' ? '<span class="tag ok">是</span>' : r.label === '否' ? '<span class="tag danger">否</span>' : '<span class="tag muted">-</span>'}</td>
         <td>${r.cpc === '是' ? '<span class="tag pri">是</span>' : '<span class="tag muted">否</span>'}</td>
-        <td>${r.mail_time || '<span class="tag muted">无</span>'}</td>
-        <td>${r.mail_status ? `<span class="tag ${r.mail_status === '未处理' ? 'warn' : 'ok'}">${r.mail_status}</span>` : '<span class="tag muted">无</span>'}</td>
-        <td>${r.orders ? `${fmt(r.orders)} / ${money(r.amount)}` : '<span class="tag muted">无</span>'}</td>
+        <td>${fmtMailTime(r.mail_time)}</td>
+        <td>${r.mail_status ? `<span class="tag ${r.mail_status === '未处理' ? 'warn' : 'ok'}">${r.mail_status}</span>` : ''}</td>
+        <td>${r.orders ? `${fmt(r.orders)} / ${money(r.amount)}` : ''}</td>
         <td title="${r.remark || ''}">${(r.remark || '-').length > 10 ? (r.remark || '').slice(0, 10) + '…' : (r.remark || '-')}</td>
         <td><span class="link" data-key="${encodeURIComponent(r.msku + '|' + r.site)}">详情</span></td>
       </tr>
@@ -646,11 +653,11 @@
         <div class="k">三级类目</div><div class="v">${r.cat3 || '-'}</div>
         <div class="k">合规标签</div><div class="v">${r.label || '-'} ${r.label_time ? ('· ' + r.label_time) : ''}</div>
         <div class="k">CPC认证</div><div class="v">${r.cpc || '-'}</div>
-        <div class="k">收到合规性邮件时间</div><div class="v">${r.mail_time || '无'}</div>
-        <div class="k">邮件处理状态</div><div class="v">${r.mail_status || '无'}</div>
+        <div class="k">收到合规性邮件时间</div><div class="v">${fmtMailTime(r.mail_time) || '-'}</div>
+        <div class="k">邮件处理状态</div><div class="v">${r.mail_status || '-'}</div>
         <div class="k">移除原因</div><div class="v">${r.remove_reason || '-'}</div>
         <div class="k">销售申诉</div><div class="v">${r.appeal || '-'}</div>
-        <div class="k">出单/金额</div><div class="v">${r.orders ? `${fmt(r.orders)} / ${money(r.amount)}` : '无'}</div>
+        <div class="k">出单/金额</div><div class="v">${r.orders ? `${fmt(r.orders)} / ${money(r.amount)}` : '-'}</div>
       </div>`;
     document.getElementById('detailOverlay').classList.add('show');
   }
@@ -763,7 +770,8 @@
     const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [cols.map(c => esc(c.name)).join(',')].concat(
       rows.map(r => cols.map(c => {
-        const val = c.key === 'platform' ? (r.platform || '亚马逊') : r[c.key];
+        let val = c.key === 'platform' ? (r.platform || '亚马逊') : r[c.key];
+        if (c.key === 'mail_time' && isBlankVal(val)) val = '';
         return esc(val);
       }).join(','))
     ).join('\n');
