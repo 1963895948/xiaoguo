@@ -502,7 +502,7 @@
     ovKeys.forEach(k => {
       out.overview[k] = slices.reduce((a, s) => a + (Number(s.overview?.[k]) || 0), 0);
     });
-    ['order_rate_listing','mail_rate_listing','order_rate_sku','mail_rate_sku','order_rate_cat3','mail_rate_cat3','cpc_cover_sku','cpc_cover_cat3','cpc_cover_order_sku','cpc_cover_order_cat3']
+    ['order_rate_listing','mail_rate_listing','order_rate_sku','mail_rate_sku','order_rate_cat3','mail_rate_cat3','cpc_cover_listing','cpc_cover_sku','cpc_cover_cat3','cpc_cover_order_listing','cpc_cover_order_sku','cpc_cover_order_cat3']
       .forEach(k => { delete out.overview[k]; });
     const rate = (n, d) => d ? Math.round(10000 * n / d) / 100 : 0;
     out.overview.order_rate_listing = rate(out.overview.order_listing, out.overview.listing);
@@ -511,8 +511,10 @@
     out.overview.mail_rate_sku = rate(out.overview.mail_sku, out.overview.sku);
     out.overview.order_rate_cat3 = rate(out.overview.order_cat3, out.overview.cat3);
     out.overview.mail_rate_cat3 = rate(out.overview.mail_cat3, out.overview.cat3);
+    out.overview.cpc_cover_listing = rate(out.overview.cpc_listing, out.overview.listing);
     out.overview.cpc_cover_sku = rate(out.overview.cpc_sku, out.overview.sku);
     out.overview.cpc_cover_cat3 = rate(out.overview.cpc_cat3, out.overview.cat3);
+    out.overview.cpc_cover_order_listing = rate(out.overview.cpc_order_listing, Math.max(out.overview.order_listing, 1));
     out.overview.cpc_cover_order_sku = rate(out.overview.cpc_order_sku, Math.max(out.overview.order_sku, 1));
     out.overview.cpc_cover_order_cat3 = rate(out.overview.cpc_order_cat3, Math.max(out.overview.order_cat3, 1));
 
@@ -951,20 +953,25 @@
     const mailN = OV['mail_' + dim];
     const orderRate = OV['order_rate_' + dim];
     const mailRate = OV['mail_rate_' + dim];
-    const cpcN = dim === 'listing' ? OV.cpc_sku : (OV['cpc_' + dim] ?? OV.cpc_sku);
-    const cpcCover = dim === 'listing' ? OV.cpc_cover_sku : (OV['cpc_cover_' + dim] ?? OV.cpc_cover_sku);
-    const cpcOrderN = dim === 'cat3' ? OV.cpc_order_cat3 : OV.cpc_order_sku;
+    const cpcN = OV['cpc_' + dim] ?? OV.cpc_sku;
+    const cpcCover = OV['cpc_cover_' + dim] ?? OV.cpc_cover_sku;
+    const cpcOrderN = OV['cpc_order_' + dim] ?? OV.cpc_order_sku;
     const poolHint = [
-      '合规标签 SKU',
+      dim === 'listing' ? '合规标签 Listing' : (dim === 'cat3' ? '合规标签三级类目' : '合规标签 SKU'),
       isFullDateRange() ? null : `刊登 ${state.listFrom || ''}~${state.listTo || ''}`,
       currentSlice()._multiDay ? '多日合计' : null,
     ].filter(Boolean).join(' · ');
+    const cpcOrderSub = {
+      listing: '有出单且已认证 Listing 数',
+      sku: '有出单且已认证 SKU 数',
+      cat3: '含「出单且认证」SKU 的类目数',
+    };
     document.getElementById('kpiOverview').innerHTML = `
       <div class="kpi"><div class="k-label">放开规模</div><div class="k-val">${fmt(scale)}</div><div class="k-sub">${DIM_LABEL[dim]} · ${poolHint}</div></div>
       <div class="kpi ok"><div class="k-label">有出单对象</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
       <div class="kpi warn"><div class="k-label">收到合规邮件</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
-      <div class="kpi"><div class="k-label">已做CPC认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim === 'listing' ? 'sku' : dim]} 覆盖率 ${pct(cpcCover)}</div></div>
-      <div class="kpi"><div class="k-label">出单对象已认证</div><div class="k-val">${fmt(cpcOrderN)}</div><div class="k-sub">${dim === 'cat3' ? '含「出单且认证」SKU的类目数' : '有出单且已认证SKU数'}</div></div>
+      <div class="kpi"><div class="k-label">已做CPC认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim]} 覆盖率 ${pct(cpcCover)}</div></div>
+      <div class="kpi"><div class="k-label">出单对象已认证</div><div class="k-val">${fmt(cpcOrderN)}</div><div class="k-sub">${cpcOrderSub[dim] || cpcOrderSub.sku}</div></div>
     `;
   }
 
