@@ -851,8 +851,8 @@
       rows.map(r => cols.map(c => {
         let val;
         if (c.key === 'platform') val = r.platform || '亚马逊';
-        else if (c.key === 'compliance_quad') val = (complianceQuadOf(r) || {}).title || '未分类';
-        else if (c.key === 'compliance_quad_axis') val = (complianceQuadOf(r) || {}).axis || '';
+        else if (c.key === 'compliance_quad') val = (complianceQuadOf(r) || {}).label || '未分类';
+        else if (c.key === 'compliance_quad_axis') val = (complianceQuadOf(r) || {}).rule || '';
         else val = r[c.key];
         if (c.key === 'mail_time' && isBlankVal(val)) val = '';
         return esc(val);
