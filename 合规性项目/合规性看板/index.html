@@ -505,14 +505,8 @@
     out.overview.mail_rate_cat3 = rate(out.overview.mail_cat3, out.overview.cat3);
     out.overview.cpc_cover_sku = rate(out.overview.cpc_sku, out.overview.sku);
     out.overview.cpc_cover_cat3 = rate(out.overview.cpc_cat3, out.overview.cat3);
-    out.overview.cpc_cover_order_sku = rate(
-      slices.reduce((a, s) => a + ((Number(s.overview?.cpc_cover_order_sku) || 0) / 100) * (Number(s.overview?.order_sku) || 0), 0),
-      Math.max(out.overview.order_sku, 1)
-    );
-    out.overview.cpc_cover_order_cat3 = rate(
-      slices.reduce((a, s) => a + ((Number(s.overview?.cpc_cover_order_cat3) || 0) / 100) * (Number(s.overview?.order_cat3) || 0), 0),
-      Math.max(out.overview.order_cat3, 1)
-    );
+    out.overview.cpc_cover_order_sku = rate(out.overview.cpc_order_sku, Math.max(out.overview.order_sku, 1));
+    out.overview.cpc_cover_order_cat3 = rate(out.overview.cpc_order_cat3, Math.max(out.overview.order_cat3, 1));
 
     ['quadrant_listing','quadrant_sku','quadrant_cat3','quadrant_compliance_listing','quadrant_compliance_sku','quadrant_compliance_cat3'].forEach(qk => {
       out[qk] = {};
@@ -913,7 +907,7 @@
     const mailRate = OV['mail_rate_' + dim];
     const cpcN = dim === 'listing' ? OV.cpc_sku : (OV['cpc_' + dim] ?? OV.cpc_sku);
     const cpcCover = dim === 'listing' ? OV.cpc_cover_sku : (OV['cpc_cover_' + dim] ?? OV.cpc_cover_sku);
-    const cpcOrderCover = dim === 'cat3' ? OV.cpc_cover_order_cat3 : OV.cpc_cover_order_sku;
+    const cpcOrderN = dim === 'cat3' ? OV.cpc_order_cat3 : OV.cpc_order_sku;
     const poolHint = [
       '合规标签 SKU',
       isFullDateRange() ? null : `刊登 ${state.listFrom || ''}~${state.listTo || ''}`,
@@ -924,7 +918,7 @@
       <div class="kpi ok"><div class="k-label">有出单对象</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
       <div class="kpi warn"><div class="k-label">收到合规邮件</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
       <div class="kpi"><div class="k-label">已做CPC认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim === 'listing' ? 'sku' : dim]} 覆盖率 ${pct(cpcCover)}</div></div>
-      <div class="kpi"><div class="k-label">出单对象认证覆盖</div><div class="k-val">${pct(cpcOrderCover)}</div><div class="k-sub">${dim === 'cat3' ? '有出单类目中已认证占比' : '有出单SKU中已认证占比'}</div></div>
+      <div class="kpi"><div class="k-label">出单对象已认证</div><div class="k-val">${fmt(cpcOrderN)}</div><div class="k-sub">${dim === 'cat3' ? '有出单且已认证类目数' : '有出单且已认证SKU数'}</div></div>
     `;
   }
 
