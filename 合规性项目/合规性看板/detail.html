@@ -237,11 +237,11 @@
                 <th>店铺</th>
                 <th>刊登时间</th>
                 <th>开发时间</th>
-                <th>合规标签</th>
-                <th>CPC</th>
+                <th>是否有合规标签</th>
+                <th>是否CPC认证</th>
                 <th>收到合规性邮件时间</th>
-                <th>邮件状态</th>
-                <th>出单/金额</th>
+                <th>邮件处理状态</th>
+                <th>出单量/金额</th>
                 <th>备注</th>
                 <th>操作</th>
               </tr>
@@ -600,7 +600,7 @@
     updateFilterUI();
     const rows = filteredRows();
     document.getElementById('listHint').textContent = platformReady()
-      ? `当前 ${rows.length} 条（演示池 ${POOL.length}）`
+      ? `当前 ${rows.length} 条（样例 ${POOL.length}）`
       : `${state.platform} 暂未接入数据`;
 
     const pages = Math.max(1, Math.ceil(rows.length / state.pageSize));
@@ -651,13 +651,13 @@
         <div class="k">中文标题</div><div class="v">${r.title || '-'}</div>
         <div class="k">类目</div><div class="v">${r.cat || '-'}</div>
         <div class="k">三级类目</div><div class="v">${r.cat3 || '-'}</div>
-        <div class="k">合规标签</div><div class="v">${r.label || '-'} ${r.label_time ? ('· ' + r.label_time) : ''}</div>
-        <div class="k">CPC认证</div><div class="v">${r.cpc || '-'}</div>
+        <div class="k">是否有合规标签</div><div class="v">${r.label || '-'} ${r.label_time ? ('· ' + r.label_time) : ''}</div>
+        <div class="k">是否CPC认证</div><div class="v">${r.cpc || '-'}</div>
         <div class="k">收到合规性邮件时间</div><div class="v">${fmtMailTime(r.mail_time) || '-'}</div>
         <div class="k">邮件处理状态</div><div class="v">${r.mail_status || '-'}</div>
         <div class="k">移除原因</div><div class="v">${r.remove_reason || '-'}</div>
         <div class="k">销售申诉</div><div class="v">${r.appeal || '-'}</div>
-        <div class="k">出单/金额</div><div class="v">${r.orders ? `${fmt(r.orders)} / ${money(r.amount)}` : '-'}</div>
+        <div class="k">出单量/金额</div><div class="v">${r.orders ? `${fmt(r.orders)} / ${money(r.amount)}` : '-'}</div>
       </div>`;
     document.getElementById('detailOverlay').classList.add('show');
   }

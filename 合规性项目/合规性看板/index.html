@@ -196,13 +196,13 @@
                   <thead>
                     <tr>
                       <th>站点</th>
-                      <th>Listing</th>
-                      <th>有出单</th>
-                      <th>出单率</th>
-                      <th>邮件</th>
-                      <th>邮件率</th>
-                      <th>CPC</th>
-                      <th>销量金额</th>
+                      <th title="Listing 数量">Listing数</th>
+                      <th title="刊登后有出单的 Listing 数">出单Listing</th>
+                      <th title="出单Listing / Listing数">出单率</th>
+                      <th title="收到过合规性邮件的 Listing 数">合规邮件</th>
+                      <th title="合规邮件 Listing / Listing数">邮件率</th>
+                      <th title="已做 CPC 认证的 Listing 数">CPC认证</th>
+                      <th title="刊登后销量金额合计">销量金额</th>
                     </tr>
                   </thead>
                   <tbody id="siteBody"></tbody>
@@ -216,10 +216,10 @@
                   <thead>
                     <tr>
                       <th>部门</th>
-                      <th>Listing</th>
-                      <th>出单率</th>
-                      <th>邮件率</th>
-                      <th>金额</th>
+                      <th title="Listing 数量">Listing数</th>
+                      <th title="出单Listing / Listing数">出单率</th>
+                      <th title="合规邮件 Listing / Listing数">邮件率</th>
+                      <th title="刊登后销量金额合计">销量金额</th>
                     </tr>
                   </thead>
                   <tbody id="deptBody"></tbody>
@@ -243,7 +243,7 @@
               <button type="button" class="btn" id="btnActionDetail" style="height:28px">整批下钻 →</button>
             </div>
             <div class="arow" style="background:#fafbfd;font-weight:600;color:var(--sub);cursor:default" id="actionHead">
-              <div>SKU</div><div>标题 / 类目</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>
+              <div>SKU</div><div>标题 / 类目</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>
             </div>
             <div class="action-list" id="actionList"></div>
           </div>
@@ -592,10 +592,10 @@
     ].filter(Boolean).join(' · ');
     document.getElementById('kpiOverview').innerHTML = `
       <div class="kpi"><div class="k-label">放开规模</div><div class="k-val">${fmt(scale)}</div><div class="k-sub">${DIM_LABEL[dim]} · ${poolHint}</div></div>
-      <div class="kpi ok"><div class="k-label">有出单</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
-      <div class="kpi warn"><div class="k-label">有合规邮件</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
-      <div class="kpi"><div class="k-label">已做 CPC 认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim === 'listing' ? 'sku' : dim]} 覆盖率 ${pct(cpcCover)}</div></div>
-      <div class="kpi"><div class="k-label">有出单对象认证覆盖</div><div class="k-val">${pct(cpcOrderCover)}</div><div class="k-sub">${dim === 'cat3' ? '有出单类目' : '有出单 SKU'}</div></div>
+      <div class="kpi ok"><div class="k-label">有出单对象</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
+      <div class="kpi warn"><div class="k-label">收到合规邮件</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
+      <div class="kpi"><div class="k-label">已做CPC认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim === 'listing' ? 'sku' : dim]} 覆盖率 ${pct(cpcCover)}</div></div>
+      <div class="kpi"><div class="k-label">出单对象认证覆盖</div><div class="k-val">${pct(cpcOrderCover)}</div><div class="k-sub">${dim === 'cat3' ? '有出单类目中已认证占比' : '有出单SKU中已认证占比'}</div></div>
     `;
   }
 
@@ -672,10 +672,10 @@
     document.getElementById('nKeep').textContent = fmt(totals.keep || 0);
     document.getElementById('nObs').textContent = fmt(totals.observe || 0);
     document.getElementById('actionHead').innerHTML = byCat3
-      ? `<div>三级类目</div><div>站点 / 部门</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`
+      ? `<div>三级类目</div><div>站点 / 部门</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>`
       : byListing
-        ? `<div>msku</div><div>标题 / 站点</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`
-        : `<div>SKU</div><div>标题 / 类目</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`;
+        ? `<div>msku</div><div>标题 / 站点</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>`
+        : `<div>SKU</div><div>标题 / 类目</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>`;
     if (!platformReady()) {
       document.getElementById('actionList').innerHTML = '<div class="empty">待接入</div>';
       return;
