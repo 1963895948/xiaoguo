@@ -815,11 +815,45 @@
     inner.style.width = minW + 'px';
   }
 
+  function barLabel(v) {
+    if (v == null || v === 0) return '';
+    const n = Number(v);
+    if (!Number.isFinite(n)) return '';
+    if (n >= 10000) return shortNum(n);
+    return Number.isInteger(n) ? String(n) : fmt(n);
+  }
+
+  const barValueLabelPlugin = {
+    id: 'barValueLabel',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea, data } = chart;
+      if (!chartArea) return;
+      ctx.save();
+      ctx.font = '10px "Microsoft YaHei","PingFang SC",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#5b6577';
+      data.datasets.forEach((_ds, datasetIndex) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        if (!meta.visible || meta.hidden) return;
+        meta.data.forEach((bar, index) => {
+          const text = barLabel(_ds.data[index]);
+          if (!text) return;
+          const barH = chartArea.bottom - bar.y;
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(text, bar.x, barH < 12 ? bar.y - 2 : bar.y - 4);
+        });
+      });
+      ctx.restore();
+    },
+  };
+  if (typeof Chart !== 'undefined') Chart.register(barValueLabelPlugin);
+
   function barChartOptions(rows, barWidth) {
     const scrollable = rows.length > 12;
     return {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: 16 } },
       plugins: {
         legend: {
           position: 'top',
