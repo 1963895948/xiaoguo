@@ -82,7 +82,7 @@
     .table-toolbar{padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
     .table-toolbar .spacer{flex:1}
     .table-wrap{padding:0 20px 12px;overflow-x:auto}
-    table.data{width:100%;border-collapse:collapse;min-width:1180px;font-size:12px}
+    table.data{width:100%;border-collapse:collapse;min-width:1280px;font-size:12px}
     table.data thead th{background:#f6f8fb;color:var(--sub);font-weight:600;text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
     table.data tbody td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
     table.data tbody tr:hover{background:#fafbfd}
@@ -205,6 +205,7 @@
             </div>
             <div class="filter-row more" id="filterMore">
               <div class="field"><span class="lbl">三级类目</span><select class="ctrl" id="fCat3" style="min-width:160px"><option value="">全部</option></select></div>
+              <div class="field"><span class="lbl">四象限分类</span><select class="ctrl" id="fComplianceQuad" style="min-width:140px"><option value="">全部</option></select></div>
               <div class="field"><span class="lbl">邮件处理状态</span><select class="ctrl" id="fMailStatus" style="min-width:120px"><option value="">全部</option><option value="__none__">无</option></select></div>
               <div class="field"><span class="lbl">销售申诉结果</span><select class="ctrl" id="fAppeal" style="min-width:120px"><option value="">全部</option><option value="__none__">无</option></select></div>
               <div class="field"><span class="lbl">是否做CPC认证</span><select class="ctrl" id="fCpc"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
@@ -237,6 +238,7 @@
                 <th>刊登时间</th>
                 <th>开发时间</th>
                 <th>是否有合规标签</th>
+                <th>四象限分类</th>
                 <th>是否CPC认证</th>
                 <th>收到合规性邮件时间</th>
                 <th>邮件处理状态</th>
@@ -275,6 +277,45 @@
   const POOL = DATA.samples.pool || [];
   const DEPT_3D = DATA.dept_stats_3d || {};
   const APPEAL_STATS = DATA.appeal || {};
+  const COMPLIANCE_CAT3 = DATA.compliance_cat3 || { items: [], quadrants: [] };
+  const COMPLIANCE_LEGEND = (DATA.decision && DATA.decision.compliance_legend) || {
+    biz_high_mail_high: { title: '优先关注', desc: '业绩高 · 邮件SKU占比高' },
+    biz_high_mail_low: { title: '可继续放', desc: '业绩高 · 邮件SKU占比低' },
+    biz_low_mail_low: { title: '观察试放', desc: '业绩低 · 邮件SKU占比低' },
+    biz_low_mail_high: { title: '建议收紧', desc: '业绩低 · 邮件SKU占比高' },
+  };
+  const COMPLIANCE_TAG_CLS = {
+    biz_high_mail_high: 'warn',
+    biz_high_mail_low: 'ok',
+    biz_low_mail_low: 'muted',
+    biz_low_mail_high: 'danger',
+  };
+  const CAT3_QUAD_MAP = (() => {
+    const m = {};
+    (COMPLIANCE_CAT3.items || []).forEach(it => {
+      if (it.cat3) m[it.cat3] = it;
+    });
+    return m;
+  })();
+
+  function complianceQuadOf(r) {
+    const cat3 = String(r.cat3 || '').trim();
+    const hit = CAT3_QUAD_MAP[cat3];
+    if (!hit) return null;
+    const leg = COMPLIANCE_LEGEND[hit.quadrant] || {};
+    return {
+      key: hit.quadrant,
+      title: leg.title || hit.quadrant,
+      axis: leg.desc || hit.rule || '',
+      rule: hit.rule || '',
+    };
+  }
+  function complianceQuadTag(r) {
+    const q = complianceQuadOf(r);
+    if (!q) return '<span class="tag muted">未分类</span>';
+    const cls = COMPLIANCE_TAG_CLS[q.key] || 'muted';
+    return `<span class="tag ${cls}" title="${q.axis || q.rule || ''}">${q.title}</span>`;
+  }
 
   const OVERVIEW_PAGE = /明细/.test(decodeURIComponent(location.pathname))
     ? '合规SKU数据看板-总览页.html' : './index.html';
@@ -295,6 +336,7 @@
     msku: parseMultiParam('msku'),
     shop: parseMultiParam('shop'),
     cat3: qs.get('cat3') || '',
+    complianceQuad: qs.get('complianceQuad') || '',
     mailStatus: qs.get('mailStatus') || '',
     appeal: qs.get('appeal') || '',
     cpc: qs.get('cpc') || '',
@@ -517,6 +559,19 @@
       o.title = c;
       document.getElementById('fCat3').appendChild(o);
     });
+    const quadSel = document.getElementById('fComplianceQuad');
+    (COMPLIANCE_CAT3.quadrants || []).forEach(q => {
+      const leg = COMPLIANCE_LEGEND[q.key] || {};
+      const o = document.createElement('option');
+      o.value = q.key;
+      o.textContent = `${leg.title || q.title || q.key}（${q.count || 0}）`;
+      o.title = leg.desc || q.axis || '';
+      quadSel.appendChild(o);
+    });
+    const oNone = document.createElement('option');
+    oNone.value = '__none__';
+    oNone.textContent = '未分类';
+    quadSel.appendChild(oNone);
     [...mailSet].sort().forEach(m => {
       const o = document.createElement('option');
       o.value = m; o.textContent = m;
@@ -539,6 +594,14 @@
     if (state.msku.length && !state.msku.includes(String(r.msku ?? ''))) return false;
     if (state.shop.length && !state.shop.includes(String(r.shop ?? ''))) return false;
     if (state.cat3 && String(r.cat3 || '') !== state.cat3) return false;
+    if (state.complianceQuad) {
+      const q = complianceQuadOf(r);
+      if (state.complianceQuad === '__none__') {
+        if (q) return false;
+      } else if (!q || q.key !== state.complianceQuad) {
+        return false;
+      }
+    }
     if (state.cpc && r.cpc !== state.cpc) return false;
     if (state.mailStatus === '__none__' && r.mail_status) return false;
     if (state.mailStatus === '__has__' && !r.mail_time && !r.mail_status) return false;
@@ -566,7 +629,7 @@
     return ['site', 'dept', 'sku', 'msku', 'shop'];
   }
   function moreFilterKeys() {
-    return ['cat3', 'mailStatus', 'appeal', 'cpc', 'hasOrder', 'listFrom', 'listTo'];
+    return ['cat3', 'complianceQuad', 'mailStatus', 'appeal', 'cpc', 'hasOrder', 'listFrom', 'listTo'];
   }
   function filterHasValue(k) {
     const v = state[k];
@@ -613,6 +676,7 @@
         <td>${r.list_time || '-'}</td>
         <td>${r.dev_time || '-'}</td>
         <td>${r.label === '是' ? '<span class="tag ok">是</span>' : r.label === '否' ? '<span class="tag danger">否</span>' : '<span class="tag muted">-</span>'}</td>
+        <td>${complianceQuadTag(r)}</td>
         <td>${r.cpc === '是' ? '<span class="tag pri">是</span>' : '<span class="tag muted">否</span>'}</td>
         <td>${fmtMailTime(r.mail_time)}</td>
         <td>${r.mail_status ? `<span class="tag ${r.mail_status === '未处理' ? 'warn' : 'ok'}">${r.mail_status}</span>` : ''}</td>
@@ -620,7 +684,7 @@
         <td title="${r.remark || ''}">${(r.remark || '-').length > 10 ? (r.remark || '').slice(0, 10) + '…' : (r.remark || '-')}</td>
         <td><span class="link" data-key="${encodeURIComponent(r.msku + '|' + r.site)}">详情</span></td>
       </tr>
-    `).join('') || `<tr><td colspan="14" style="text-align:center;color:var(--muted);padding:28px">无匹配明细，可放宽筛选</td></tr>`;
+    `).join('') || `<tr><td colspan="15" style="text-align:center;color:var(--muted);padding:28px">无匹配明细，可放宽筛选</td></tr>`;
 
     let ph = `<span>共 ${rows.length} 条</span>`;
     ph += `<button type="button" data-p="${state.page - 1}" ${state.page <= 1 ? 'disabled' : ''}>上一页</button>`;
@@ -648,6 +712,7 @@
         <div class="k">中文标题</div><div class="v">${r.title || '-'}</div>
         <div class="k">类目</div><div class="v">${r.cat || '-'}</div>
         <div class="k">三级类目</div><div class="v">${r.cat3 || '-'}</div>
+        <div class="k">四象限分类</div><div class="v">${(() => { const q = complianceQuadOf(r); return q ? `${q.title}${q.axis ? ' · ' + q.axis : ''}` : '未分类'; })()}</div>
         <div class="k">是否有合规标签</div><div class="v">${r.label || '-'} ${r.label_time ? ('· ' + r.label_time) : ''}</div>
         <div class="k">是否CPC认证</div><div class="v">${r.cpc || '-'}</div>
         <div class="k">收到合规性邮件时间</div><div class="v">${fmtMailTime(r.mail_time) || '-'}</div>
@@ -667,6 +732,7 @@
     state.msku = getBulkFilter('mskuQuery');
     state.shop = getMultiValues('shop');
     state.cat3 = document.getElementById('fCat3').value;
+    state.complianceQuad = document.getElementById('fComplianceQuad').value;
     state.mailStatus = document.getElementById('fMailStatus').value;
     state.appeal = document.getElementById('fAppeal').value;
     state.cpc = document.getElementById('fCpc').value;
@@ -682,6 +748,7 @@
     setBulkQuery(document.getElementById('mskuQuery'), state.msku);
     setMultiValues('shop', state.shop);
     document.getElementById('fCat3').value = state.cat3;
+    document.getElementById('fComplianceQuad').value = state.complianceQuad;
     document.getElementById('fMailStatus').value = state.mailStatus;
     document.getElementById('fAppeal').value = state.appeal;
     document.getElementById('fCpc').value = state.cpc;
@@ -717,6 +784,7 @@
     state.msku = [];
     state.shop = [];
     state.cat3 = '';
+    state.complianceQuad = '';
     state.mailStatus = '';
     state.appeal = '';
     state.cpc = '';
@@ -753,6 +821,8 @@
       { key: 'list_time', name: '刊登时间' },
       { key: 'dev_time', name: '开发时间' },
       { key: 'label', name: '是否有合规性标签' },
+      { key: 'compliance_quad', name: '四象限分类' },
+      { key: 'compliance_quad_axis', name: '四象限说明' },
       { key: 'cpc', name: '是否做CPC认证' },
       { key: 'mail_time', name: '收到合规性邮件时间' },
       { key: 'mail_status', name: '邮件处理状态' },
@@ -764,7 +834,11 @@
     const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [cols.map(c => esc(c.name)).join(',')].concat(
       rows.map(r => cols.map(c => {
-        let val = c.key === 'platform' ? (r.platform || '亚马逊') : r[c.key];
+        let val;
+        if (c.key === 'platform') val = r.platform || '亚马逊';
+        else if (c.key === 'compliance_quad') val = (complianceQuadOf(r) || {}).title || '未分类';
+        else if (c.key === 'compliance_quad_axis') val = (complianceQuadOf(r) || {}).axis || '';
+        else val = r[c.key];
         if (c.key === 'mail_time' && isBlankVal(val)) val = '';
         return esc(val);
       }).join(','))
