@@ -154,6 +154,7 @@
             </div>
             <div class="field"><span class="lbl">站点</span><select class="ctrl" id="fSite"><option value="">全部站点</option></select></div>
             <div class="field"><span class="lbl">刊登部门</span><select class="ctrl" id="fDept"><option value="">全部</option></select></div>
+            <div class="field"><span class="lbl">是否有合规性标签</span><select class="ctrl" id="fLabel" style="min-width:100px"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
             <button type="button" class="btn pri" id="btnQuery">查询</button>
             <button type="button" class="btn" id="btnReset">重置</button>
             <button type="button" class="btn" id="btnGoDetail">查看明细 →</button>
@@ -222,7 +223,7 @@
         </div>
 
         <div class="section" style="padding-top:4px;padding-bottom:24px">
-          <div class="sec-title">4. 认证 / 处置候选清单</div>
+          <div class="sec-title">4. 认证 / 处置候选清单<span style="margin-left:8px;font-size:12px;font-weight:400;color:var(--sub)">与上方四象限一一对应 · 列表为 Top 预览</span></div>
           <div class="action-tabs" id="actionTabs">
             <div class="atab on" data-action="certify">优先认证 <span class="n" id="nCert">0</span></div>
             <div class="atab" data-action="tighten">建议收紧 <span class="n" id="nTight">0</span></div>
@@ -255,11 +256,6 @@
   }
 
   const DEC = DATA.decision;
-  const OV = DEC.overview;
-  const SITE = DEC.site_decision || [];
-  const DEPT = DEC.dept_decision || [];
-  const ACTIONS = DEC.actions || {};
-  const ACTIONS_CAT3 = DEC.actions_cat3 || {};
   const LEGEND = DEC.legend || {};
   const DIM_LABEL = { sku: 'SKU', cat3: '三级类目', listing: 'Listing' };
 
@@ -271,9 +267,16 @@
     platform: '亚马逊',
     site: '',
     dept: '',
+    label: '',
     dim: 'sku', // sku | listing
     action: 'certify',
   };
+
+  function currentSlice() {
+    const by = DEC.by_label || {};
+    const key = state.label || '';
+    return by[key] || by[''] || DEC;
+  }
 
   const ACTION_META = {
     certify: {
@@ -335,6 +338,7 @@
     if (state.platform) p.set('platform', state.platform);
     if (state.site) p.set('site', state.site);
     if (state.dept) p.set('dept', state.dept);
+    if (state.label) p.set('label', state.label);
     Object.entries(extra || {}).forEach(([k, v]) => { if (v != null && v !== '') p.set(k, v); });
     const q = p.toString();
     return DETAIL_PAGE + (q ? '?' + q : '');
@@ -343,44 +347,84 @@
     location.href = detailUrl(extra);
   }
 
-  function initFilters() {
-    SITE.forEach(s => {
+  function fillSiteDeptOptions() {
+    const slice = currentSlice();
+    const siteSel = document.getElementById('fSite');
+    const deptSel = document.getElementById('fDept');
+    const keepSite = state.site;
+    const keepDept = state.dept;
+    siteSel.innerHTML = '<option value="">全部站点</option>';
+    (slice.site_decision || []).forEach(s => {
       const o = document.createElement('option');
       o.value = s.site;
       o.textContent = `${s.site}（邮件率 ${pct(s.mail_rate)}）`;
-      document.getElementById('fSite').appendChild(o);
+      siteSel.appendChild(o);
     });
-    DEPT.forEach(d => {
+    deptSel.innerHTML = '<option value="">全部</option>';
+    (slice.dept_decision || []).forEach(d => {
       const o = document.createElement('option');
       o.value = d.dept;
       o.textContent = `${d.dept}（Listing ${fmt(d.listing)}）`;
-      document.getElementById('fDept').appendChild(o);
+      deptSel.appendChild(o);
     });
+    if (keepSite && [...siteSel.options].some(o => o.value === keepSite)) siteSel.value = keepSite;
+    else { state.site = ''; siteSel.value = ''; }
+    if (keepDept && [...deptSel.options].some(o => o.value === keepDept)) deptSel.value = keepDept;
+    else { state.dept = ''; deptSel.value = ''; }
+  }
+
+  function initFilters() {
     document.getElementById('fPlatform').value = state.platform;
-    document.getElementById('nCert').textContent = (ACTIONS.certify || []).length;
-    document.getElementById('nTight').textContent = (ACTIONS.tighten || []).length;
-    document.getElementById('nKeep').textContent = (ACTIONS.keep || []).length;
-    document.getElementById('nObs').textContent = (ACTIONS.observe || []).length;
+    document.getElementById('fLabel').value = state.label;
+    fillSiteDeptOptions();
   }
 
   function filteredSiteRows() {
-    let rows = SITE.slice();
+    let rows = (currentSlice().site_decision || []).slice();
     if (state.site) rows = rows.filter(r => r.site === state.site);
     return rows;
   }
   function filteredDeptRows() {
-    let rows = DEPT.slice();
+    let rows = (currentSlice().dept_decision || []).slice();
     if (state.dept) rows = rows.filter(r => r.dept === state.dept);
     return rows;
   }
   function filteredActions(list) {
     let rows = (list || []).slice();
-    if (state.site) rows = rows.filter(r => (r.sites || []).includes(state.site));
+    if (state.site) rows = rows.filter(r => (r.sites || []).includes(state.site) || r.site === state.site);
     if (state.dept) rows = rows.filter(r => r.dept === state.dept);
     return rows;
   }
   function currentActionSource() {
-    return state.dim === 'cat3' ? ACTIONS_CAT3 : ACTIONS;
+    const slice = currentSlice();
+    if (state.dim === 'cat3') return slice.actions_cat3 || {};
+    if (state.dim === 'listing') return slice.actions_listing || {};
+    return slice.actions || {};
+  }
+  function currentActionTotals() {
+    const slice = currentSlice();
+    if (state.dim === 'cat3') {
+      return slice.actions_cat3_total || {
+        certify: (slice.quadrant_cat3 || {}).order_high_mail || 0,
+        tighten: (slice.quadrant_cat3 || {}).no_order_high_mail || 0,
+        keep: (slice.quadrant_cat3 || {}).order_low_mail || 0,
+        observe: (slice.quadrant_cat3 || {}).no_order_low_mail || 0,
+      };
+    }
+    if (state.dim === 'listing') {
+      return slice.actions_listing_total || {
+        certify: (slice.quadrant_listing || {}).order_high_mail || 0,
+        tighten: (slice.quadrant_listing || {}).no_order_high_mail || 0,
+        keep: (slice.quadrant_listing || {}).order_low_mail || 0,
+        observe: (slice.quadrant_listing || {}).no_order_low_mail || 0,
+      };
+    }
+    return slice.actions_total || {
+      certify: (slice.quadrant_sku || {}).order_high_mail || 0,
+      tighten: (slice.quadrant_sku || {}).no_order_high_mail || 0,
+      keep: (slice.quadrant_sku || {}).order_low_mail || 0,
+      observe: (slice.quadrant_sku || {}).no_order_low_mail || 0,
+    };
   }
 
   function renderOverview() {
@@ -389,6 +433,7 @@
       document.getElementById('kpiOverview').innerHTML = '<div class="kpi"><div class="k-label">放开池</div><div class="k-val">0</div></div>';
       return;
     }
+    const OV = currentSlice().overview || {};
     const dim = state.dim;
     const scale = OV[dim];
     const orderN = OV['order_' + dim];
@@ -398,8 +443,9 @@
     const cpcN = dim === 'listing' ? OV.cpc_sku : (OV['cpc_' + dim] ?? OV.cpc_sku);
     const cpcCover = dim === 'listing' ? OV.cpc_cover_sku : (OV['cpc_cover_' + dim] ?? OV.cpc_cover_sku);
     const cpcOrderCover = dim === 'cat3' ? OV.cpc_cover_order_cat3 : OV.cpc_cover_order_sku;
+    const poolHint = state.label === '是' ? '标签=是' : state.label === '否' ? '标签=否' : '全量';
     document.getElementById('kpiOverview').innerHTML = `
-      <div class="kpi"><div class="k-label">放开规模</div><div class="k-val">${fmt(scale)}</div><div class="k-sub">${DIM_LABEL[dim]} · 监控池</div></div>
+      <div class="kpi"><div class="k-label">放开规模</div><div class="k-val">${fmt(scale)}</div><div class="k-sub">${DIM_LABEL[dim]} · ${poolHint}</div></div>
       <div class="kpi ok"><div class="k-label">有出单</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
       <div class="kpi warn"><div class="k-label">有合规邮件</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
       <div class="kpi"><div class="k-label">已做 CPC 认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim === 'listing' ? 'sku' : dim]} 覆盖率 ${pct(cpcCover)}</div></div>
@@ -412,12 +458,13 @@
       document.getElementById('quadGrid').innerHTML = '<div class="empty">待接入</div>';
       return;
     }
+    const slice = currentSlice();
     const qMap = {
-      sku: DEC.quadrant_sku,
-      cat3: DEC.quadrant_cat3,
-      listing: DEC.quadrant_listing,
+      sku: slice.quadrant_sku,
+      cat3: slice.quadrant_cat3,
+      listing: slice.quadrant_listing,
     };
-    const q = qMap[state.dim] || DEC.quadrant_sku;
+    const q = qMap[state.dim] || slice.quadrant_sku || {};
     const unit = DIM_LABEL[state.dim];
     document.getElementById('quadGrid').innerHTML = QUAD_UI.map(item => {
       const leg = LEGEND[item.key] || {};
@@ -462,22 +509,40 @@
     document.querySelectorAll('#actionTabs .atab').forEach(t => t.classList.toggle('on', t.dataset.action === state.action));
     const meta = ACTION_META[state.action];
     const src = currentActionSource();
+    const totals = currentActionTotals();
     const byCat3 = state.dim === 'cat3';
-    document.getElementById('actionTitle').textContent = meta.title + (byCat3 ? '（三级类目）' : '');
-    document.getElementById('nCert').textContent = (src.certify || []).length;
-    document.getElementById('nTight').textContent = (src.tighten || []).length;
-    document.getElementById('nKeep').textContent = (src.keep || []).length;
-    document.getElementById('nObs').textContent = (src.observe || []).length;
+    const byListing = state.dim === 'listing';
+    const unit = byCat3 ? '三级类目' : (byListing ? 'Listing' : 'SKU');
+    const totalN = totals[state.action] || 0;
+    const previewRows = filteredActions(src[state.action]);
+    const previewN = (currentSlice().actions_preview_n) || previewRows.length;
+    const dimHint = byCat3 ? '（三级类目）' : (byListing ? '（Listing / msku）' : '');
+    document.getElementById('actionTitle').textContent =
+      `${meta.title} · 对应「${(LEGEND[meta.quadrant] || {}).title || meta.quadrant}」象限` +
+      dimHint +
+      ` · 预览 ${previewRows.length}/${fmt(totalN)} ${unit} · 点击行可下钻明细`;
+    document.getElementById('nCert').textContent = fmt(totals.certify || 0);
+    document.getElementById('nTight').textContent = fmt(totals.tighten || 0);
+    document.getElementById('nKeep').textContent = fmt(totals.keep || 0);
+    document.getElementById('nObs').textContent = fmt(totals.observe || 0);
     document.getElementById('actionHead').innerHTML = byCat3
       ? `<div>三级类目</div><div>站点 / 部门</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`
-      : `<div>SKU</div><div>标题 / 类目</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`;
-    const rows = filteredActions(src[state.action]);
+      : byListing
+        ? `<div>msku</div><div>标题 / 站点</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`
+        : `<div>SKU</div><div>标题 / 类目</div><div class="m">金额</div><div class="m">出单</div><div class="m">邮件</div><div class="m">CPC</div>`;
     if (!platformReady()) {
       document.getElementById('actionList').innerHTML = '<div class="empty">待接入</div>';
       return;
     }
+    if (!previewRows.length) {
+      document.getElementById('actionList').innerHTML = '<div class="empty">当前筛选下该象限无对象</div>';
+      return;
+    }
+    const moreHint = totalN > previewRows.length
+      ? `<div class="empty" style="padding:10px 12px">仅展示 Top ${previewN}；完整 ${fmt(totalN)} 个请点「整批下钻」</div>`
+      : '';
     if (byCat3) {
-      document.getElementById('actionList').innerHTML = rows.length ? rows.map(r => `
+      document.getElementById('actionList').innerHTML = previewRows.map(r => `
         <div class="arow" data-cat3="${encodeURIComponent(r.cat3)}">
           <div class="sku" title="${r.cat3}">${(r.cat3 || '-').slice(0, 12)}${(r.cat3 || '').length > 12 ? '…' : ''}</div>
           <div>
@@ -488,10 +553,25 @@
           <div class="m">${fmt(r.orders)}</div>
           <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
           <div class="m">${r.cpc ? '<span class="tag ok">是</span>' : '<span class="tag muted">否</span>'}</div>
-        </div>`).join('') : '<div class="empty">当前筛选下无候选</div>';
+        </div>`).join('') + moreHint;
       return;
     }
-    document.getElementById('actionList').innerHTML = rows.length ? rows.map(r => `
+    if (byListing) {
+      document.getElementById('actionList').innerHTML = previewRows.map(r => `
+        <div class="arow" data-msku="${encodeURIComponent(r.msku || '')}" data-site="${encodeURIComponent(r.site || '')}" data-sku="${r.sku || ''}">
+          <div class="sku" title="${r.msku || ''}">${r.msku || '-'}</div>
+          <div>
+            <div class="meta" title="${r.title || ''}">${(r.title || '-').slice(0, 28)}${(r.title || '').length > 28 ? '…' : ''}</div>
+            <div class="sub">${r.site || '-'} · SKU ${r.sku || '-'} · ${r.cat3 || '-'}</div>
+          </div>
+          <div class="m">${money(r.amount)}</div>
+          <div class="m">${fmt(r.orders)}</div>
+          <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
+          <div class="m">${r.cpc ? '<span class="tag ok">是</span>' : '<span class="tag muted">否</span>'}</div>
+        </div>`).join('') + moreHint;
+      return;
+    }
+    document.getElementById('actionList').innerHTML = previewRows.map(r => `
       <div class="arow" data-sku="${r.sku}">
         <div class="sku">${r.sku}</div>
         <div>
@@ -502,7 +582,7 @@
         <div class="m">${fmt(r.orders)}</div>
         <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
         <div class="m">${r.cpc ? '<span class="tag ok">是</span>' : '<span class="tag muted">否</span>'}</div>
-      </div>`).join('') : '<div class="empty">当前筛选下无候选</div>';
+      </div>`).join('') + moreHint;
   }
 
   function renderAll() {
@@ -513,12 +593,17 @@
   }
 
   function readFilters() {
+    const prevLabel = state.label;
     state.platform = document.getElementById('fPlatform').value || '亚马逊';
     state.site = document.getElementById('fSite').value;
     state.dept = document.getElementById('fDept').value;
+    state.label = document.getElementById('fLabel').value;
+    if (prevLabel !== state.label) fillSiteDeptOptions();
   }
   function syncFiltersToUI() {
     document.getElementById('fPlatform').value = state.platform;
+    document.getElementById('fLabel').value = state.label;
+    fillSiteDeptOptions();
     document.getElementById('fSite').value = state.site;
     document.getElementById('fDept').value = state.dept;
   }
@@ -530,13 +615,18 @@
     toast(platformReady() ? '已刷新' : `${state.platform} 暂未接入`);
   };
   document.getElementById('btnReset').onclick = () => {
-    state.platform = '亚马逊'; state.site = ''; state.dept = ''; state.dim = 'sku'; state.action = 'certify';
+    state.platform = '亚马逊'; state.site = ''; state.dept = ''; state.label = ''; state.dim = 'sku'; state.action = 'certify';
     syncFiltersToUI(); renderAll(); toast('已重置');
   };
   document.getElementById('fPlatform').onchange = () => {
     readFilters(); state.site = ''; document.getElementById('fSite').value = '';
     renderAll();
     toast(platformReady() ? `当前平台：${state.platform}` : `${state.platform} 待接入`);
+  };
+  document.getElementById('fLabel').onchange = () => {
+    readFilters();
+    renderAll();
+    toast(state.label ? `合规标签：${state.label}` : '合规标签：全部');
   };
   document.getElementById('dimSeg').addEventListener('click', e => {
     const b = e.target.closest('[data-dim]'); if (!b) return;
@@ -546,14 +636,13 @@
     const card = e.target.closest('[data-quadrant]'); if (!card || !platformReady()) return;
     readFilters();
     const q = card.dataset.quadrant;
-    const meta = Object.values(ACTION_META).find(m => m.quadrant === q) || {};
-    gotoDetail({
-      quadrant: q,
-      tab: meta.tab || 'all',
-      kpi: meta.kpi || '',
-      action: Object.keys(ACTION_META).find(k => ACTION_META[k].quadrant === q) || '',
-      dim: state.dim,
-    });
+    const actionKey = Object.keys(ACTION_META).find(k => ACTION_META[k].quadrant === q);
+    if (actionKey) {
+      state.action = actionKey;
+      renderActions();
+      document.getElementById('actionTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      toast(`已定位到「${ACTION_META[actionKey].title}」清单（与该象限对应）`);
+    }
   });
   document.getElementById('actionTabs').addEventListener('click', e => {
     const t = e.target.closest('[data-action]'); if (!t) return;
@@ -573,6 +662,7 @@
   document.getElementById('actionList').addEventListener('click', e => {
     const rowSku = e.target.closest('[data-sku]');
     const rowCat3 = e.target.closest('[data-cat3]');
+    const rowMsku = e.target.closest('[data-msku]');
     if (!platformReady()) return;
     readFilters();
     const meta = ACTION_META[state.action];
@@ -587,7 +677,23 @@
       });
       return;
     }
-    if (!rowSku) return;
+    if (rowMsku && state.dim === 'listing') {
+      const msku = decodeURIComponent(rowMsku.dataset.msku || '');
+      const site = decodeURIComponent(rowMsku.dataset.site || '');
+      gotoDetail({
+        quadrant: meta.quadrant,
+        tab: meta.tab,
+        kpi: meta.kpi || '',
+        action: state.action,
+        dim: 'listing',
+        msku,
+        site: site || state.site || undefined,
+        hasOrder: meta.quadrant.startsWith('order_') ? '是' : '否',
+        mailStatus: meta.quadrant.endsWith('high_mail') ? '__has__' : '',
+      });
+      return;
+    }
+    if (!rowSku || !rowSku.dataset.sku) return;
     gotoDetail({
       quadrant: meta.quadrant,
       tab: meta.tab,
@@ -595,6 +701,8 @@
       action: state.action,
       dim: state.dim,
       sku: rowSku.dataset.sku,
+      hasOrder: meta.quadrant.startsWith('order_') ? '是' : '否',
+      mailStatus: meta.quadrant.endsWith('high_mail') ? '__has__' : '',
     });
   });
   document.getElementById('siteBody').addEventListener('click', e => {
