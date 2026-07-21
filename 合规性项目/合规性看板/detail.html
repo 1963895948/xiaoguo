@@ -239,9 +239,10 @@
                 <th>开发时间</th>
                 <th>合规标签</th>
                 <th>CPC</th>
+                <th>收到合规性邮件时间</th>
                 <th>邮件状态</th>
                 <th>出单/金额</th>
-                <th>remark</th>
+                <th>备注</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -547,7 +548,8 @@
       if (day.length >= 10) {
         if (state.listFrom && day < state.listFrom) return false;
         if (state.listTo && day > state.listTo) return false;
-      } else if (state.listFrom || state.listTo) {
+      } else if (!(state.sku.length || state.msku.length)) {
+        // 无刊登时间：仅在按 SKU/MSKU 精确定位时保留
         return false;
       }
     }
@@ -608,12 +610,13 @@
         <td>${r.dev_time || '-'}</td>
         <td>${r.label === '是' ? '<span class="tag ok">是</span>' : r.label === '否' ? '<span class="tag danger">否</span>' : '<span class="tag muted">-</span>'}</td>
         <td>${r.cpc === '是' ? '<span class="tag pri">是</span>' : '<span class="tag muted">否</span>'}</td>
+        <td>${r.mail_time || '<span class="tag muted">无</span>'}</td>
         <td>${r.mail_status ? `<span class="tag ${r.mail_status === '未处理' ? 'warn' : 'ok'}">${r.mail_status}</span>` : '<span class="tag muted">无</span>'}</td>
         <td>${r.orders ? `${fmt(r.orders)} / ${money(r.amount)}` : '<span class="tag muted">无</span>'}</td>
         <td title="${r.remark || ''}">${(r.remark || '-').length > 10 ? (r.remark || '').slice(0, 10) + '…' : (r.remark || '-')}</td>
         <td><span class="link" data-key="${encodeURIComponent(r.msku + '|' + r.site)}">详情</span></td>
       </tr>
-    `).join('') || `<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:28px">无匹配明细，可放宽筛选</td></tr>`;
+    `).join('') || `<tr><td colspan="14" style="text-align:center;color:var(--muted);padding:28px">无匹配明细，可放宽筛选</td></tr>`;
 
     let ph = `<span>共 ${rows.length} 条</span>`;
     ph += `<button type="button" data-p="${state.page - 1}" ${state.page <= 1 ? 'disabled' : ''}>上一页</button>`;
@@ -630,7 +633,7 @@
       <div class="dl">
         <div class="k">平台</div><div class="v">${r.platform || '亚马逊'}</div>
         <div class="k">刊登部门</div><div class="v">${r.dept || '-'}</div>
-        <div class="k">remark</div><div class="v">${r.remark || '-'}</div>
+        <div class="k">备注</div><div class="v">${r.remark || '-'}</div>
         <div class="k">站点</div><div class="v"><b>${r.site || '-'}</b></div>
         <div class="k">MSKU</div><div class="v">${r.msku || '-'}</div>
         <div class="k">SKU</div><div class="v">${r.sku || '-'}</div>
@@ -643,7 +646,8 @@
         <div class="k">三级类目</div><div class="v">${r.cat3 || '-'}</div>
         <div class="k">合规标签</div><div class="v">${r.label || '-'} ${r.label_time ? ('· ' + r.label_time) : ''}</div>
         <div class="k">CPC认证</div><div class="v">${r.cpc || '-'}</div>
-        <div class="k">合规邮件</div><div class="v">${r.mail_time || '无'} ${r.mail_status ? ('· ' + r.mail_status) : ''}</div>
+        <div class="k">收到合规性邮件时间</div><div class="v">${r.mail_time || '无'}</div>
+        <div class="k">邮件处理状态</div><div class="v">${r.mail_status || '无'}</div>
         <div class="k">移除原因</div><div class="v">${r.remove_reason || '-'}</div>
         <div class="k">销售申诉</div><div class="v">${r.appeal || '-'}</div>
         <div class="k">出单/金额</div><div class="v">${r.orders ? `${fmt(r.orders)} / ${money(r.amount)}` : '无'}</div>
@@ -737,8 +741,32 @@
   });
   document.getElementById('btnExport').onclick = () => {
     const rows = filteredRows();
-    const header = ['platform', 'site', 'dept', 'msku', 'sku', 'asin', 'shop', 'list_time', 'dev_time', 'label', 'cpc', 'mail_status', 'orders', 'amount', 'remark', 'cat3'];
-    const csv = [header.join(',')].concat(rows.map(r => header.map(h => `"${String((h === 'platform' ? (r.platform || '亚马逊') : r[h]) ?? '').replace(/"/g, '""')}"`).join(','))).join('\n');
+    const cols = [
+      { key: 'platform', name: '平台' },
+      { key: 'site', name: '站点' },
+      { key: 'dept', name: '刊登部门' },
+      { key: 'msku', name: 'MSKU' },
+      { key: 'sku', name: 'SKU' },
+      { key: 'asin', name: 'ASIN' },
+      { key: 'shop', name: '店铺名称' },
+      { key: 'list_time', name: '刊登时间' },
+      { key: 'dev_time', name: '开发时间' },
+      { key: 'label', name: '是否有合规性标签' },
+      { key: 'cpc', name: '是否做CPC认证' },
+      { key: 'mail_time', name: '收到合规性邮件时间' },
+      { key: 'mail_status', name: '邮件处理状态' },
+      { key: 'orders', name: '刊登后出单量' },
+      { key: 'amount', name: '刊登后销量金额' },
+      { key: 'remark', name: '备注' },
+      { key: 'cat3', name: '三级类目' },
+    ];
+    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [cols.map(c => esc(c.name)).join(',')].concat(
+      rows.map(r => cols.map(c => {
+        const val = c.key === 'platform' ? (r.platform || '亚马逊') : r[c.key];
+        return esc(val);
+      }).join(','))
+    ).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -784,15 +812,30 @@
   });
 
   if (moreFilterKeys().some(filterHasValue)) state.filtersExpanded = true;
-  // 决策台下钻：tab 映射为筛选条件（不再展示 Tab 栏）
+  // 决策台下钻：整批带 tab 时映射筛选；点具体 SKU/MSKU/类目时不套出单/邮件条件，避免演示池筛空
   const tabFromUrl = qs.get('tab');
-  if (tabFromUrl === 'cpc' && !state.cpc) state.cpc = '是';
-  if (tabFromUrl === 'order' && !state.hasOrder) state.hasOrder = '是';
-  if (tabFromUrl === 'mail' && !state.mailStatus) state.mailStatus = '__has__';
+  const hasEntityDrill = state.sku.length > 0 || state.msku.length > 0 || !!state.cat3;
+  if (!hasEntityDrill) {
+    if (tabFromUrl === 'cpc' && !state.cpc) state.cpc = '是';
+    if (tabFromUrl === 'order' && !state.hasOrder) state.hasOrder = '是';
+    if (tabFromUrl === 'mail' && !state.mailStatus) state.mailStatus = '__has__';
+  } else {
+    // 实体下钻：清掉易冲突的象限衍生条件（若 URL 仍带了旧参数）
+    state.hasOrder = '';
+    state.mailStatus = '';
+    state.cpc = '';
+  }
   initFilterOptions();
   initMultiSelects();
   initBulkQueryFields();
   syncFiltersToUI();
+  // 若仍无结果：再放宽刊登时间（演示池日期可能不全）
+  if (hasEntityDrill && filteredRows().length === 0 && (state.listFrom || state.listTo)) {
+    state.listFrom = '';
+    state.listTo = '';
+    syncFiltersToUI();
+    toast('已自动放宽刊登时间以展示该对象明细');
+  }
   renderList();
   </script>
 </body>

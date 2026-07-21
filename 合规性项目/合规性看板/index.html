@@ -821,13 +821,9 @@
     const rowMsku = e.target.closest('[data-msku]');
     if (!platformReady()) return;
     readFilters();
-    const meta = ACTION_META[state.action];
+    // 点具体对象下钻：只带实体条件，避免 hasOrder/邮件状态把演示池筛空
     if (rowCat3) {
       gotoDetail({
-        quadrant: meta.quadrant,
-        tab: meta.tab,
-        kpi: meta.kpi || '',
-        action: state.action,
         dim: 'cat3',
         cat3: decodeURIComponent(rowCat3.dataset.cat3),
       });
@@ -837,28 +833,16 @@
       const msku = decodeURIComponent(rowMsku.dataset.msku || '');
       const site = decodeURIComponent(rowMsku.dataset.site || '');
       gotoDetail({
-        quadrant: meta.quadrant,
-        tab: meta.tab,
-        kpi: meta.kpi || '',
-        action: state.action,
         dim: 'listing',
         msku,
         site: site || state.site || undefined,
-        hasOrder: meta.quadrant.startsWith('order_') ? '是' : '否',
-        mailStatus: meta.quadrant.endsWith('high_mail') ? '__has__' : '',
       });
       return;
     }
     if (!rowSku || !rowSku.dataset.sku) return;
     gotoDetail({
-      quadrant: meta.quadrant,
-      tab: meta.tab,
-      kpi: meta.kpi || '',
-      action: state.action,
       dim: state.dim,
       sku: rowSku.dataset.sku,
-      hasOrder: meta.quadrant.startsWith('order_') ? '是' : '否',
-      mailStatus: meta.quadrant.endsWith('high_mail') ? '__has__' : '',
     });
   });
   document.getElementById('siteBody').addEventListener('click', e => {
