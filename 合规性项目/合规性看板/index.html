@@ -95,7 +95,13 @@
     .chart-box .chart-title{font-size:13px;font-weight:700}
     .chart-box .chart-sub{font-size:12px;color:var(--muted)}
     .chart-canvas-wrap{position:relative;height:340px}
-    .two-col .chart-canvas-wrap{height:300px}
+    .chart-stack{display:flex;flex-direction:column;gap:16px}
+    .chart-scroll-wrap{overflow-x:auto;overflow-y:hidden;border-radius:4px;-webkit-overflow-scrolling:touch}
+    .chart-scroll-wrap::-webkit-scrollbar{height:8px}
+    .chart-scroll-wrap::-webkit-scrollbar-thumb{background:#c5cad3;border-radius:4px}
+    .chart-scroll-inner{position:relative;height:340px;min-width:100%}
+    .chart-filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;padding:10px 12px;background:#f6f8fb;border:1px solid var(--line);border-radius:6px}
+    .chart-filter-row .hint{font-size:11px;color:var(--muted)}
     .chart-empty{padding:48px;text-align:center;color:var(--muted)}
     .matrix-wrap{overflow:auto;max-height:360px}
     table.matrix{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
@@ -209,34 +215,50 @@
         <div class="section" style="padding-top:4px">
           <div class="sec-title">
             3. 放开趋势与分站点对比
-            <span class="tip">左：刊登时间 · 右：站点 · 随上方筛选联动</span>
+            <span class="tip">独立时间筛选 · 与上方刊登时间无关</span>
           </div>
-          <div class="two-col">
+          <div class="chart-filter-row">
+            <div class="field"><span class="lbl">统计时间</span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <input class="ctrl" type="date" id="fChartFrom" style="min-width:132px" />
+                <span style="color:var(--sub)">至</span>
+                <input class="ctrl" type="date" id="fChartTo" style="min-width:132px" />
+              </div>
+            </div>
+            <button type="button" class="btn" id="btnChartApply">应用</button>
+            <button type="button" class="btn" id="btnChartReset">重置为当月</button>
+            <span class="hint" id="chartFilterHint"></span>
+          </div>
+          <div class="chart-stack">
             <div class="chart-box">
               <div class="chart-hd">
-                <div class="chart-title" id="trendTitle">日度放开趋势</div>
+                <div class="chart-title" id="trendTitle">月度放开趋势</div>
                 <div class="chart-sub" id="trendHint"></div>
                 <span class="spacer"></span>
                 <div class="seg" id="trendGrain">
-                  <button type="button" data-grain="month">按月</button>
+                  <button type="button" class="on" data-grain="month">按月</button>
                   <button type="button" data-grain="week">按周</button>
-                  <button type="button" class="on" data-grain="day">按天</button>
+                  <button type="button" data-grain="day">按天</button>
                 </div>
               </div>
-              <div class="chart-canvas-wrap">
-                <canvas id="trendChart"></canvas>
+              <div class="chart-scroll-wrap" id="trendChartScroll">
+                <div class="chart-scroll-inner" id="trendChartInner">
+                  <canvas id="trendChart"></canvas>
+                </div>
               </div>
-              <div class="chart-empty" id="trendEmpty" style="display:none">当前筛选下暂无趋势数据</div>
+              <div class="chart-empty" id="trendEmpty" style="display:none">当前统计时间下暂无趋势数据</div>
             </div>
             <div class="chart-box">
               <div class="chart-hd">
                 <div class="chart-title" id="siteChartTitle">分站点 Listing / 合规邮件 / 出单</div>
                 <div class="chart-sub" id="siteChartHint"></div>
               </div>
-              <div class="chart-canvas-wrap">
-                <canvas id="siteChart"></canvas>
+              <div class="chart-scroll-wrap" id="siteChartScroll">
+                <div class="chart-scroll-inner" id="siteChartInner">
+                  <canvas id="siteChart"></canvas>
+                </div>
               </div>
-              <div class="chart-empty" id="siteChartEmpty" style="display:none">当前筛选下暂无站点数据</div>
+              <div class="chart-empty" id="siteChartEmpty" style="display:none">当前统计时间下暂无站点数据</div>
             </div>
           </div>
         </div>
@@ -290,9 +312,11 @@
     dept: '',
     listFrom: '',
     listTo: '',
+    chartListFrom: '',
+    chartListTo: '',
     dim: 'sku', // sku | listing
     action: 'certify',
-    trendGrain: 'day', // day | week | month
+    trendGrain: 'month', // day | week | month
     actionSortKey: 'amount', // amount | orders | mail
     actionSortDir: 'desc', // asc | desc
   };
@@ -305,6 +329,49 @@
     const from = state.listFrom || ALL_DAYS[0];
     const to = state.listTo || ALL_DAYS[ALL_DAYS.length - 1];
     return ALL_DAYS.filter(d => d >= from && d <= to);
+  }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function monthBounds(y, m) {
+    const last = new Date(y, m, 0).getDate();
+    return [`${y}-${pad2(m)}-01`, `${y}-${pad2(m)}-${pad2(last)}`];
+  }
+  function clampChartRange(from, to) {
+    if (!ALL_DAYS.length) return { from: from || '', to: to || '' };
+    let f = from || ALL_DAYS[0];
+    let t = to || ALL_DAYS[ALL_DAYS.length - 1];
+    if (f < ALL_DAYS[0]) f = ALL_DAYS[0];
+    if (t > ALL_DAYS[ALL_DAYS.length - 1]) t = ALL_DAYS[ALL_DAYS.length - 1];
+    if (f > t) { const x = f; f = t; t = x; }
+    return { from: f, to: t };
+  }
+  function defaultChartMonthRange() {
+    if (!ALL_DAYS.length) return { from: '', to: '' };
+    const now = new Date();
+    let [from, to] = monthBounds(now.getFullYear(), now.getMonth() + 1);
+    let days = ALL_DAYS.filter(d => d >= from && d <= to);
+    if (!days.length) {
+      const last = ALL_DAYS[ALL_DAYS.length - 1];
+      const [y, m] = last.split('-').map(Number);
+      [from, to] = monthBounds(y, m);
+      days = ALL_DAYS.filter(d => d >= from && d <= to);
+    }
+    if (!days.length) return { from: ALL_DAYS[0], to: ALL_DAYS[ALL_DAYS.length - 1] };
+    return { from: days[0], to: days[days.length - 1] };
+  }
+  function chartSelectedDays() {
+    if (!ALL_DAYS.length) return [];
+    const from = state.chartListFrom || ALL_DAYS[0];
+    const to = state.chartListTo || ALL_DAYS[ALL_DAYS.length - 1];
+    return ALL_DAYS.filter(d => d >= from && d <= to);
+  }
+  function chartSlice() {
+    const days = chartSelectedDays();
+    if (!days.length) return emptySlice();
+    if (days.length === ALL_DAYS.length) {
+      return (DEC.by_label && DEC.by_label['']) || DEC;
+    }
+    const slices = days.map(d => (DEC.by_list_day[d] || {})['']).filter(Boolean);
+    return mergeSlices(slices);
   }
   function isFullDateRange() {
     const days = selectedDays();
@@ -526,6 +593,45 @@
     else { state.dept = ''; deptSel.value = ''; }
   }
 
+  function syncChartFiltersToUI() {
+    document.getElementById('fChartFrom').value = state.chartListFrom;
+    document.getElementById('fChartTo').value = state.chartListTo;
+    document.getElementById('chartFilterHint').textContent = state.chartListFrom && state.chartListTo
+      ? `当前：${state.chartListFrom} ~ ${state.chartListTo}` : '';
+  }
+
+  function initChartFilters() {
+    const def = defaultChartMonthRange();
+    if (!state.chartListFrom) state.chartListFrom = def.from;
+    if (!state.chartListTo) state.chartListTo = def.to;
+    if (ALL_DAYS.length) {
+      document.getElementById('fChartFrom').min = ALL_DAYS[0];
+      document.getElementById('fChartFrom').max = ALL_DAYS[ALL_DAYS.length - 1];
+      document.getElementById('fChartTo').min = ALL_DAYS[0];
+      document.getElementById('fChartTo').max = ALL_DAYS[ALL_DAYS.length - 1];
+    }
+    syncChartFiltersToUI();
+  }
+
+  function readChartFilters() {
+    state.chartListFrom = document.getElementById('fChartFrom').value;
+    state.chartListTo = document.getElementById('fChartTo').value;
+    const clamped = clampChartRange(state.chartListFrom, state.chartListTo);
+    state.chartListFrom = clamped.from;
+    state.chartListTo = clamped.to;
+    document.getElementById('fChartFrom').value = state.chartListFrom;
+    document.getElementById('fChartTo').value = state.chartListTo;
+    syncChartFiltersToUI();
+  }
+
+  function resetChartFilters() {
+    const def = defaultChartMonthRange();
+    state.chartListFrom = def.from;
+    state.chartListTo = def.to;
+    state.trendGrain = 'month';
+    syncChartFiltersToUI();
+  }
+
   function initFilters() {
     document.getElementById('fPlatform').value = state.platform;
     if (!state.listFrom && ALL_DAYS.length) state.listFrom = ALL_DAYS[0];
@@ -539,10 +645,16 @@
       document.getElementById('fListTo').max = ALL_DAYS[ALL_DAYS.length - 1];
     }
     fillSiteDeptOptions();
+    initChartFilters();
   }
 
   function filteredSiteRows() {
     let rows = (currentSlice().site_decision || []).slice();
+    if (state.site) rows = rows.filter(r => r.site === state.site);
+    return rows;
+  }
+  function filteredChartSiteRows() {
+    let rows = (chartSlice().site_decision || []).slice();
     if (state.site) rows = rows.filter(r => r.site === state.site);
     return rows;
   }
@@ -685,13 +797,60 @@
   function trendDayRows() {
     const T = DATA.trend || {};
     const byLabel = (T.by_label && T.by_label['']) || T.days || [];
-    const from = state.listFrom || '';
-    const to = state.listTo || '';
+    const from = state.chartListFrom || '';
+    const to = state.chartListTo || '';
     return byLabel.filter(r => {
       if (from && r.day < from) return false;
       if (to && r.day > to) return false;
       return true;
     });
+  }
+
+  function applyChartScroll(scrollId, innerId, barCount, barWidth) {
+    const scroll = document.getElementById(scrollId);
+    const inner = document.getElementById(innerId);
+    if (!scroll || !inner) return;
+    const viewport = scroll.clientWidth || 640;
+    const minW = Math.max(viewport, barCount * barWidth);
+    inner.style.width = minW + 'px';
+  }
+
+  function barChartOptions(rows, barWidth) {
+    const scrollable = rows.length > 12;
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { boxWidth: 12, boxHeight: 12, font: { size: 12 } },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            maxRotation: 0,
+            autoSkip: !scrollable,
+            maxTicksLimit: scrollable ? rows.length : 12,
+            font: { size: 11 },
+          },
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: '#eef1f5', borderDash: [4, 4] },
+          ticks: {
+            callback: v => shortNum(v),
+            font: { size: 11 },
+          },
+        },
+      },
+    };
   }
 
   function aggregateTrend(grain, rows) {
@@ -735,9 +894,9 @@
     }
     canvas.style.display = 'block';
     empty.style.display = 'none';
-    const hintParts = [];
-    if (!isFullDateRange() && state.listFrom && state.listTo) hintParts.push(`刊登 ${state.listFrom}~${state.listTo}`);
-    document.getElementById('trendHint').textContent = (hintParts.length ? hintParts.join(' · ') + ' · ' : '') + (axisTip[state.trendGrain] || '');
+    document.getElementById('trendHint').textContent =
+      `${state.chartListFrom || ''}~${state.chartListTo || ''} · ${axisTip[state.trendGrain] || ''}` +
+      (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
     const seriesMeta = (DATA.trend && DATA.trend.series) || [
       { key: 'listing', name: 'Listing数', color: '#4C8DFF' },
@@ -753,43 +912,16 @@
     }));
 
     if (trendChart) trendChart.destroy();
+    applyChartScroll('trendChartScroll', 'trendChartInner', rows.length, 56);
     trendChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: { labels: rows.map(r => r.label), datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'top',
-            labels: { boxWidth: 12, boxHeight: 12, font: { size: 12 } },
-          },
-          tooltip: {
-            callbacks: {
-              label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`,
-            },
-          },
-        },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12, font: { size: 11 } },
-          },
-          y: {
-            beginAtZero: true,
-            grid: { color: '#eef1f5', borderDash: [4, 4] },
-            ticks: {
-              callback: v => shortNum(v),
-              font: { size: 11 },
-            },
-          },
-        },
-      },
+      options: barChartOptions(rows, 56),
     });
   }
 
   function renderSiteChart() {
-    const rows = filteredSiteRows().slice().sort((a, b) => (b.listing || 0) - (a.listing || 0));
+    const rows = filteredChartSiteRows().slice().sort((a, b) => (b.listing || 0) - (a.listing || 0));
     const empty = document.getElementById('siteChartEmpty');
     const canvas = document.getElementById('siteChart');
     document.getElementById('siteChartTitle').textContent = state.site
@@ -805,9 +937,9 @@
     }
     canvas.style.display = 'block';
     empty.style.display = 'none';
-    const hintParts = [];
-    if (!isFullDateRange() && state.listFrom && state.listTo) hintParts.push(`刊登 ${state.listFrom}~${state.listTo}`);
-    document.getElementById('siteChartHint').textContent = hintParts.length ? hintParts.join(' · ') : '合规标签 SKU';
+    document.getElementById('siteChartHint').textContent =
+      `${state.chartListFrom || ''}~${state.chartListTo || ''} · 合规标签 SKU` +
+      (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
     const seriesMeta = [
       { key: 'listing', name: 'Listing数', color: '#4C8DFF' },
@@ -823,54 +955,28 @@
     }));
 
     if (siteChart) siteChart.destroy();
+    applyChartScroll('siteChartScroll', 'siteChartInner', rows.length, 52);
+    const siteOpts = barChartOptions(rows, 52);
+    siteOpts.plugins.tooltip.callbacks.afterBody = items => {
+      const i = items[0]?.dataIndex;
+      if (i == null || !rows[i]) return [];
+      const r = rows[i];
+      return [`出单率 ${pct(r.order_rate)}`, `邮件率 ${pct(r.mail_rate)}`, `销量 ${money(r.amount_sum)}`];
+    };
+    siteOpts.onClick = (_evt, elements) => {
+      if (!elements.length || !platformReady()) return;
+      const idx = elements[0].index;
+      const site = rows[idx]?.site;
+      if (!site) return;
+      state.site = state.site === site ? '' : site;
+      document.getElementById('fSite').value = state.site;
+      renderAll();
+      toast(state.site ? `已筛选站点：${state.site}` : '已取消站点筛选');
+    };
     siteChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: { labels: rows.map(r => r.site), datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'top',
-            labels: { boxWidth: 12, boxHeight: 12, font: { size: 12 } },
-          },
-          tooltip: {
-            callbacks: {
-              label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`,
-              afterBody: items => {
-                const i = items[0]?.dataIndex;
-                if (i == null || !rows[i]) return [];
-                const r = rows[i];
-                return [`出单率 ${pct(r.order_rate)}`, `邮件率 ${pct(r.mail_rate)}`, `销量 ${money(r.amount_sum)}`];
-              },
-            },
-          },
-        },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { maxRotation: 0, autoSkip: false, font: { size: 11 } },
-          },
-          y: {
-            beginAtZero: true,
-            grid: { color: '#eef1f5', borderDash: [4, 4] },
-            ticks: {
-              callback: v => shortNum(v),
-              font: { size: 11 },
-            },
-          },
-        },
-        onClick: (_evt, elements) => {
-          if (!elements.length || !platformReady()) return;
-          const idx = elements[0].index;
-          const site = rows[idx]?.site;
-          if (!site) return;
-          state.site = state.site === site ? '' : site;
-          document.getElementById('fSite').value = state.site;
-          renderAll();
-          toast(state.site ? `已筛选站点：${state.site}` : '已取消站点筛选');
-        },
-      },
+      options: siteOpts,
     });
   }
 
@@ -1030,6 +1136,17 @@
     state.trendGrain = b.dataset.grain;
     renderTrend();
   });
+  document.getElementById('btnChartApply').onclick = () => {
+    readChartFilters();
+    renderSiteDept();
+    toast('图表统计时间已更新');
+  };
+  document.getElementById('btnChartReset').onclick = () => {
+    resetChartFilters();
+    document.querySelectorAll('#trendGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.trendGrain));
+    renderSiteDept();
+    toast('图表时间已重置为当月');
+  };
   document.getElementById('dimSeg').addEventListener('click', e => {
     const b = e.target.closest('[data-dim]'); if (!b) return;
     state.dim = b.dataset.dim; renderAll();
