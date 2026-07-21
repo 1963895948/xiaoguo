@@ -210,6 +210,13 @@
               <div class="field"><span class="lbl">是否做CPC认证</span><select class="ctrl" id="fCpc"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
               <div class="field"><span class="lbl">刊登后是否出单</span><select class="ctrl" id="fHasOrder"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
               <div class="field"><span class="lbl">是否有合规性标签</span><select class="ctrl" id="fLabel"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
+              <div class="field"><span class="lbl">刊登时间</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <input class="ctrl" type="date" id="fListFrom" style="min-width:132px" />
+                  <span style="color:var(--sub)">至</span>
+                  <input class="ctrl" type="date" id="fListTo" style="min-width:132px" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -293,6 +300,8 @@
     cpc: qs.get('cpc') || '',
     hasOrder: qs.get('hasOrder') || '',
     label: qs.get('label') || '',
+    listFrom: qs.get('listFrom') || '',
+    listTo: qs.get('listTo') || '',
     page: 1,
     pageSize: 10,
     filtersExpanded: false,
@@ -533,6 +542,15 @@
     if (state.appeal && state.appeal !== '__none__' && r.appeal !== state.appeal) return false;
     if (state.hasOrder === '是' && !(r.orders > 0)) return false;
     if (state.hasOrder === '否' && (r.orders > 0)) return false;
+    if (state.listFrom || state.listTo) {
+      const day = String(r.list_time || '').replace(/\//g, '-').slice(0, 10);
+      if (day.length >= 10) {
+        if (state.listFrom && day < state.listFrom) return false;
+        if (state.listTo && day > state.listTo) return false;
+      } else if (state.listFrom || state.listTo) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -542,7 +560,7 @@
     return ['site', 'dept', 'sku', 'msku', 'shop'];
   }
   function moreFilterKeys() {
-    return ['cat3', 'mailStatus', 'appeal', 'cpc', 'hasOrder', 'label'];
+    return ['cat3', 'mailStatus', 'appeal', 'cpc', 'hasOrder', 'label', 'listFrom', 'listTo'];
   }
   function filterHasValue(k) {
     const v = state[k];
@@ -646,6 +664,8 @@
     state.cpc = document.getElementById('fCpc').value;
     state.hasOrder = document.getElementById('fHasOrder').value;
     state.label = document.getElementById('fLabel').value;
+    state.listFrom = document.getElementById('fListFrom').value;
+    state.listTo = document.getElementById('fListTo').value;
   }
   function syncFiltersToUI() {
     document.getElementById('fPlatform').value = state.platform;
@@ -660,6 +680,8 @@
     document.getElementById('fCpc').value = state.cpc;
     document.getElementById('fHasOrder').value = state.hasOrder;
     document.getElementById('fLabel').value = state.label;
+    document.getElementById('fListFrom').value = state.listFrom;
+    document.getElementById('fListTo').value = state.listTo;
   }
 
   document.getElementById('navOverview').onclick = () => { location.href = OVERVIEW_PAGE; };
@@ -694,6 +716,8 @@
     state.cpc = '';
     state.hasOrder = '';
     state.label = '';
+    state.listFrom = '';
+    state.listTo = '';
     state.page = 1;
     resetBulkQuery(document.getElementById('skuQuery'));
     resetBulkQuery(document.getElementById('mskuQuery'));

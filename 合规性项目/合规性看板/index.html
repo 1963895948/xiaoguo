@@ -155,6 +155,13 @@
             <div class="field"><span class="lbl">站点</span><select class="ctrl" id="fSite"><option value="">全部站点</option></select></div>
             <div class="field"><span class="lbl">刊登部门</span><select class="ctrl" id="fDept"><option value="">全部</option></select></div>
             <div class="field"><span class="lbl">是否有合规性标签</span><select class="ctrl" id="fLabel" style="min-width:100px"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
+            <div class="field"><span class="lbl">刊登时间</span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <input class="ctrl" type="date" id="fListFrom" style="min-width:132px" />
+                <span style="color:var(--sub)">至</span>
+                <input class="ctrl" type="date" id="fListTo" style="min-width:132px" />
+              </div>
+            </div>
             <button type="button" class="btn pri" id="btnQuery">查询</button>
             <button type="button" class="btn" id="btnReset">重置</button>
             <button type="button" class="btn" id="btnGoDetail">查看明细 →</button>
@@ -268,14 +275,137 @@
     site: '',
     dept: '',
     label: '',
+    listFrom: '',
+    listTo: '',
     dim: 'sku', // sku | listing
     action: 'certify',
   };
 
+  const DAY_RANGE = DEC.list_day_range || {};
+  const ALL_DAYS = (DAY_RANGE.days || Object.keys(DEC.by_list_day || {})).slice().sort();
+
+  function selectedDays() {
+    if (!ALL_DAYS.length) return [];
+    const from = state.listFrom || ALL_DAYS[0];
+    const to = state.listTo || ALL_DAYS[ALL_DAYS.length - 1];
+    return ALL_DAYS.filter(d => d >= from && d <= to);
+  }
+  function isFullDateRange() {
+    const days = selectedDays();
+    return !ALL_DAYS.length || (days.length === ALL_DAYS.length);
+  }
+  function emptySlice() {
+    return {
+      overview: {},
+      quadrant_listing: {}, quadrant_sku: {}, quadrant_cat3: {},
+      actions: {}, actions_total: {},
+      actions_cat3: {}, actions_cat3_total: {},
+      actions_listing: {}, actions_listing_total: {},
+      actions_preview_n: 50,
+      site_decision: [], dept_decision: [],
+    };
+  }
+  function mergeSlices(slices) {
+    if (!slices.length) return emptySlice();
+    if (slices.length === 1) return slices[0];
+    const out = emptySlice();
+    const ovKeys = new Set();
+    slices.forEach(s => Object.keys(s.overview || {}).forEach(k => ovKeys.add(k)));
+    ovKeys.forEach(k => {
+      out.overview[k] = slices.reduce((a, s) => a + (Number(s.overview?.[k]) || 0), 0);
+    });
+    ['order_rate_listing','mail_rate_listing','order_rate_sku','mail_rate_sku','order_rate_cat3','mail_rate_cat3','cpc_cover_sku','cpc_cover_cat3','cpc_cover_order_sku','cpc_cover_order_cat3']
+      .forEach(k => { delete out.overview[k]; });
+    const rate = (n, d) => d ? Math.round(10000 * n / d) / 100 : 0;
+    out.overview.order_rate_listing = rate(out.overview.order_listing, out.overview.listing);
+    out.overview.mail_rate_listing = rate(out.overview.mail_listing, out.overview.listing);
+    out.overview.order_rate_sku = rate(out.overview.order_sku, out.overview.sku);
+    out.overview.mail_rate_sku = rate(out.overview.mail_sku, out.overview.sku);
+    out.overview.order_rate_cat3 = rate(out.overview.order_cat3, out.overview.cat3);
+    out.overview.mail_rate_cat3 = rate(out.overview.mail_cat3, out.overview.cat3);
+    out.overview.cpc_cover_sku = rate(out.overview.cpc_sku, out.overview.sku);
+    out.overview.cpc_cover_cat3 = rate(out.overview.cpc_cat3, out.overview.cat3);
+    out.overview.cpc_cover_order_sku = rate(
+      slices.reduce((a, s) => a + ((Number(s.overview?.cpc_cover_order_sku) || 0) / 100) * (Number(s.overview?.order_sku) || 0), 0),
+      Math.max(out.overview.order_sku, 1)
+    );
+    out.overview.cpc_cover_order_cat3 = rate(
+      slices.reduce((a, s) => a + ((Number(s.overview?.cpc_cover_order_cat3) || 0) / 100) * (Number(s.overview?.order_cat3) || 0), 0),
+      Math.max(out.overview.order_cat3, 1)
+    );
+
+    ['quadrant_listing','quadrant_sku','quadrant_cat3'].forEach(qk => {
+      out[qk] = {};
+      slices.forEach(s => {
+        Object.entries(s[qk] || {}).forEach(([k, v]) => { out[qk][k] = (out[qk][k] || 0) + (v || 0); });
+      });
+    });
+
+    function mergeActions(key, totalKey, idFn) {
+      const map = new Map();
+      slices.forEach(s => {
+        Object.entries(s[key] || {}).forEach(([ak, list]) => {
+          if (!map.has(ak)) map.set(ak, new Map());
+          const m = map.get(ak);
+          (list || []).forEach(item => {
+            const id = idFn(item);
+            if (!m.has(id)) m.set(id, item);
+          });
+        });
+      });
+      out[key] = {};
+      out[totalKey] = {};
+      map.forEach((m, ak) => {
+        const arr = [...m.values()];
+        arr.sort((a, b) => (b.amount || 0) - (a.amount || 0) || (b.mail_cnt || 0) - (a.mail_cnt || 0));
+        out[key][ak] = arr.slice(0, 50);
+        out[totalKey][ak] = slices.reduce((a, s) => a + (Number(s[totalKey]?.[ak]) || 0), 0);
+      });
+    }
+    mergeActions('actions', 'actions_total', r => String(r.sku));
+    mergeActions('actions_cat3', 'actions_cat3_total', r => String(r.cat3));
+    mergeActions('actions_listing', 'actions_listing_total', r => `${r.msku}|${r.site}`);
+    out.actions_preview_n = 50;
+
+    function mergeRows(key, idKey) {
+      const m = new Map();
+      slices.forEach(s => {
+        (s[key] || []).forEach(row => {
+          const id = row[idKey];
+          const prev = m.get(id) || { [idKey]: id, listing: 0, order: 0, mail: 0, cpc: 0, amount_sum: 0, orders_sum: 0 };
+          prev.listing += row.listing || 0;
+          prev.order += row.order || 0;
+          prev.mail += row.mail || 0;
+          prev.cpc += row.cpc || 0;
+          prev.amount_sum += row.amount_sum || 0;
+          prev.orders_sum += row.orders_sum || 0;
+          m.set(id, prev);
+        });
+      });
+      return [...m.values()].map(r => ({
+        ...r,
+        order_rate: r.listing ? Math.round(10000 * r.order / r.listing) / 100 : 0,
+        mail_rate: r.listing ? Math.round(10000 * r.mail / r.listing) / 100 : 0,
+        amount_sum: Math.round(r.amount_sum * 100) / 100,
+      })).sort((a, b) => b.listing - a.listing);
+    }
+    out.site_decision = mergeRows('site_decision', 'site');
+    out.dept_decision = mergeRows('dept_decision', 'dept');
+    out._multiDay = true;
+    return out;
+  }
+
   function currentSlice() {
-    const by = DEC.by_label || {};
-    const key = state.label || '';
-    return by[key] || by[''] || DEC;
+    const label = state.label || '';
+    const byLabel = DEC.by_label || {};
+    if (isFullDateRange()) {
+      return byLabel[label] || byLabel[''] || DEC;
+    }
+    const byDay = DEC.by_list_day || {};
+    const slices = selectedDays()
+      .map(d => (byDay[d] || {})[label] || (byDay[d] || {})[''])
+      .filter(Boolean);
+    return mergeSlices(slices);
   }
 
   const ACTION_META = {
@@ -306,10 +436,10 @@
   };
 
   const QUAD_UI = [
-    { key: 'order_low_mail', cls: 'keep', axis: '有出单 × 低邮件' },
-    { key: 'order_high_mail', cls: 'cert', axis: '有出单 × 高邮件' },
-    { key: 'no_order_low_mail', cls: 'obs', axis: '无出单 × 低邮件' },
-    { key: 'no_order_high_mail', cls: 'tight', axis: '无出单 × 高邮件' },
+    { key: 'order_low_mail', cls: 'keep', axis: '有出单 × 无邮件' },
+    { key: 'order_high_mail', cls: 'cert', axis: '有出单 × 有邮件' },
+    { key: 'no_order_low_mail', cls: 'obs', axis: '无出单 × 无邮件' },
+    { key: 'no_order_high_mail', cls: 'tight', axis: '无出单 × 有邮件' },
   ];
 
   function platformReady() {
@@ -339,6 +469,8 @@
     if (state.site) p.set('site', state.site);
     if (state.dept) p.set('dept', state.dept);
     if (state.label) p.set('label', state.label);
+    if (state.listFrom) p.set('listFrom', state.listFrom);
+    if (state.listTo) p.set('listTo', state.listTo);
     Object.entries(extra || {}).forEach(([k, v]) => { if (v != null && v !== '') p.set(k, v); });
     const q = p.toString();
     return DETAIL_PAGE + (q ? '?' + q : '');
@@ -376,6 +508,16 @@
   function initFilters() {
     document.getElementById('fPlatform').value = state.platform;
     document.getElementById('fLabel').value = state.label;
+    if (!state.listFrom && ALL_DAYS.length) state.listFrom = ALL_DAYS[0];
+    if (!state.listTo && ALL_DAYS.length) state.listTo = ALL_DAYS[ALL_DAYS.length - 1];
+    document.getElementById('fListFrom').value = state.listFrom;
+    document.getElementById('fListTo').value = state.listTo;
+    if (ALL_DAYS.length) {
+      document.getElementById('fListFrom').min = ALL_DAYS[0];
+      document.getElementById('fListFrom').max = ALL_DAYS[ALL_DAYS.length - 1];
+      document.getElementById('fListTo').min = ALL_DAYS[0];
+      document.getElementById('fListTo').max = ALL_DAYS[ALL_DAYS.length - 1];
+    }
     fillSiteDeptOptions();
   }
 
@@ -443,7 +585,11 @@
     const cpcN = dim === 'listing' ? OV.cpc_sku : (OV['cpc_' + dim] ?? OV.cpc_sku);
     const cpcCover = dim === 'listing' ? OV.cpc_cover_sku : (OV['cpc_cover_' + dim] ?? OV.cpc_cover_sku);
     const cpcOrderCover = dim === 'cat3' ? OV.cpc_cover_order_cat3 : OV.cpc_cover_order_sku;
-    const poolHint = state.label === '是' ? '标签=是' : state.label === '否' ? '标签=否' : '全量';
+    const poolHint = [
+      state.label === '是' ? '标签=是' : state.label === '否' ? '标签=否' : '全量',
+      isFullDateRange() ? null : `刊登 ${state.listFrom || ''}~${state.listTo || ''}`,
+      currentSlice()._multiDay ? '多日合计' : null,
+    ].filter(Boolean).join(' · ');
     document.getElementById('kpiOverview').innerHTML = `
       <div class="kpi"><div class="k-label">放开规模</div><div class="k-val">${fmt(scale)}</div><div class="k-sub">${DIM_LABEL[dim]} · ${poolHint}</div></div>
       <div class="kpi ok"><div class="k-label">有出单</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
@@ -593,16 +739,24 @@
   }
 
   function readFilters() {
-    const prevLabel = state.label;
     state.platform = document.getElementById('fPlatform').value || '亚马逊';
     state.site = document.getElementById('fSite').value;
     state.dept = document.getElementById('fDept').value;
     state.label = document.getElementById('fLabel').value;
-    if (prevLabel !== state.label) fillSiteDeptOptions();
+    state.listFrom = document.getElementById('fListFrom').value;
+    state.listTo = document.getElementById('fListTo').value;
+    if (state.listFrom && state.listTo && state.listFrom > state.listTo) {
+      const t = state.listFrom; state.listFrom = state.listTo; state.listTo = t;
+      document.getElementById('fListFrom').value = state.listFrom;
+      document.getElementById('fListTo').value = state.listTo;
+    }
+    fillSiteDeptOptions();
   }
   function syncFiltersToUI() {
     document.getElementById('fPlatform').value = state.platform;
     document.getElementById('fLabel').value = state.label;
+    document.getElementById('fListFrom').value = state.listFrom;
+    document.getElementById('fListTo').value = state.listTo;
     fillSiteDeptOptions();
     document.getElementById('fSite').value = state.site;
     document.getElementById('fDept').value = state.dept;
@@ -615,7 +769,9 @@
     toast(platformReady() ? '已刷新' : `${state.platform} 暂未接入`);
   };
   document.getElementById('btnReset').onclick = () => {
-    state.platform = '亚马逊'; state.site = ''; state.dept = ''; state.label = ''; state.dim = 'sku'; state.action = 'certify';
+    state.platform = '亚马逊'; state.site = ''; state.dept = ''; state.label = '';
+    state.listFrom = ALL_DAYS[0] || ''; state.listTo = ALL_DAYS[ALL_DAYS.length - 1] || '';
+    state.dim = 'sku'; state.action = 'certify';
     syncFiltersToUI(); renderAll(); toast('已重置');
   };
   document.getElementById('fPlatform').onchange = () => {
