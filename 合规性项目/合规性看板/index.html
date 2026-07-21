@@ -239,7 +239,7 @@
 
         <div class="section" style="padding-top:4px">
           <div class="sec-title">
-            3. 放开趋势与分站点对比
+            3. 放开趋势、分站点与一级类目对比
             <span class="tip">独立时间筛选 · 与上方刊登时间无关</span>
           </div>
           <div class="chart-filter-row">
@@ -284,6 +284,18 @@
                 </div>
               </div>
               <div class="chart-empty" id="siteChartEmpty" style="display:none">当前统计时间下暂无站点数据</div>
+            </div>
+            <div class="chart-box">
+              <div class="chart-hd">
+                <div class="chart-title" id="cat1ChartTitle">分一级类目 Listing / 合规邮件 / 出单</div>
+                <div class="chart-sub" id="cat1ChartHint"></div>
+              </div>
+              <div class="chart-scroll-wrap" id="cat1ChartScroll">
+                <div class="chart-scroll-inner" id="cat1ChartInner">
+                  <canvas id="cat1Chart"></canvas>
+                </div>
+              </div>
+              <div class="chart-empty" id="cat1ChartEmpty" style="display:none">当前统计时间下暂无一级类目数据</div>
             </div>
           </div>
         </div>
@@ -444,7 +456,7 @@
       actions_cat3: {}, actions_cat3_total: {},
       actions_listing: {}, actions_listing_total: {},
       actions_preview_n: 50,
-      site_decision: [], dept_decision: [],
+      site_decision: [], dept_decision: [], cat1_decision: [],
     };
   }
   function mergeSlices(slices) {
@@ -533,6 +545,7 @@
     }
     out.site_decision = mergeRows('site_decision', 'site');
     out.dept_decision = mergeRows('dept_decision', 'dept');
+    out.cat1_decision = mergeRows('cat1_decision', 'cat1');
     out._multiDay = true;
     return out;
   }
@@ -904,8 +917,19 @@
     }).join('');
   }
 
+  function filteredChartCat1Rows() {
+    return (chartSlice().cat1_decision || []).slice();
+  }
+
+  function cat1ChartLabel(row) {
+    const label = row.label || row.cat1 || '-';
+    if (label.length > 14) return label.slice(0, 13) + '…';
+    return label;
+  }
+
   let trendChart = null;
   let siteChart = null;
+  let cat1Chart = null;
 
   function shortNum(n) {
     if (n == null) return '';
@@ -1146,9 +1170,62 @@
     });
   }
 
+  function renderCat1Chart() {
+    const rows = filteredChartCat1Rows().slice().sort((a, b) => (b.listing || 0) - (a.listing || 0));
+    const empty = document.getElementById('cat1ChartEmpty');
+    const canvas = document.getElementById('cat1Chart');
+    if (!platformReady() || !rows.length || typeof Chart === 'undefined') {
+      if (cat1Chart) { cat1Chart.destroy(); cat1Chart = null; }
+      canvas.style.display = 'none';
+      empty.style.display = 'block';
+      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前统计时间下暂无一级类目数据');
+      document.getElementById('cat1ChartHint').textContent = '';
+      return;
+    }
+    canvas.style.display = 'block';
+    empty.style.display = 'none';
+    document.getElementById('cat1ChartHint').textContent =
+      `${state.chartListFrom || ''}~${state.chartListTo || ''} · sku类目一级 · 合规标签 SKU` +
+      (rows.length > 8 ? ' · 可左右拖动查看' : '');
+
+    const seriesMeta = [
+      { key: 'listing', name: 'Listing数', color: '#4C8DFF' },
+      { key: 'mail', name: '合规邮件Listing', color: '#3DB8A0' },
+      { key: 'order', name: '出单Listing', color: '#E8A05C' },
+    ];
+    const datasets = seriesMeta.map(s => ({
+      label: s.name,
+      data: rows.map(r => r[s.key] || 0),
+      backgroundColor: s.color,
+      borderRadius: 3,
+      maxBarThickness: rows.length > 8 ? 22 : 28,
+    }));
+
+    if (cat1Chart) cat1Chart.destroy();
+    applyChartScroll('cat1ChartScroll', 'cat1ChartInner', rows.length, 72);
+    const cat1Opts = barChartOptions(rows, 72);
+    cat1Opts.plugins.tooltip.callbacks.afterBody = items => {
+      const i = items[0]?.dataIndex;
+      if (i == null || !rows[i]) return [];
+      const r = rows[i];
+      return [
+        r.cat1 || r.label || '',
+        `出单率 ${pct(r.order_rate)}`,
+        `邮件率 ${pct(r.mail_rate)}`,
+        `销量 ${money(r.amount_sum)}`,
+      ];
+    };
+    cat1Chart = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels: rows.map(r => cat1ChartLabel(r)), datasets },
+      options: cat1Opts,
+    });
+  }
+
   function renderSiteDept() {
     renderTrend();
     renderSiteChart();
+    renderCat1Chart();
   }
 
   function actionSortValue(r, key) {
