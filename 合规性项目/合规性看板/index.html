@@ -918,7 +918,7 @@
       <div class="kpi ok"><div class="k-label">有出单对象</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
       <div class="kpi warn"><div class="k-label">收到合规邮件</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
       <div class="kpi"><div class="k-label">已做CPC认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim === 'listing' ? 'sku' : dim]} 覆盖率 ${pct(cpcCover)}</div></div>
-      <div class="kpi"><div class="k-label">出单对象已认证</div><div class="k-val">${fmt(cpcOrderN)}</div><div class="k-sub">${dim === 'cat3' ? '有出单且已认证类目数' : '有出单且已认证SKU数'}</div></div>
+      <div class="kpi"><div class="k-label">出单对象已认证</div><div class="k-val">${fmt(cpcOrderN)}</div><div class="k-sub">${dim === 'cat3' ? '含「出单且认证」SKU的类目数' : '有出单且已认证SKU数'}</div></div>
     `;
   }
 
