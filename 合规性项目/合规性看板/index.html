@@ -283,6 +283,13 @@
               <div class="chart-hd">
                 <div class="chart-title" id="siteChartTitle">分站点 Listing / SKU / CPC认证</div>
                 <div class="chart-sub" id="siteChartHint"></div>
+                <span class="spacer"></span>
+                <div class="seg" id="siteGrain">
+                  <button type="button" class="on" data-grain="site">按站点</button>
+                  <button type="button" data-grain="month">按月</button>
+                  <button type="button" data-grain="week">按周</button>
+                  <button type="button" data-grain="day">按天</button>
+                </div>
               </div>
               <div class="chart-scroll-wrap" id="siteChartScroll">
                 <div class="chart-scroll-inner" id="siteChartInner">
@@ -394,6 +401,7 @@
     dim: 'sku', // sku | listing
     action: 'certify',
     trendGrain: 'month', // day | week | month
+    siteGrain: 'site', // site | day | week | month
     actionSortKey: 'amount', // amount | orders | mail
     actionSortDir: 'desc', // asc | desc
   };
@@ -849,6 +857,44 @@
     if (state.site) rows = rows.filter(r => r.site === state.site);
     return rows;
   }
+  function daySiteDecisionRows(day) {
+    const sl = (chartDayMap()[day] || {})[''];
+    let rows = (sl && sl.site_decision) || [];
+    if (state.site) rows = rows.filter(r => r.site === state.site);
+    return rows;
+  }
+  function buildSiteChartRows() {
+    const grain = state.siteGrain || 'site';
+    if (grain === 'site') {
+      return filteredChartSiteRows().slice()
+        .map(r => ({
+          key: r.site,
+          label: r.site,
+          site: r.site,
+          listing: r.listing || 0,
+          sku: r.sku || 0,
+          cpc: r.cpc || 0,
+        }))
+        .sort((a, b) => b.listing - a.listing);
+    }
+    const days = chartSelectedDays();
+    const map = new Map();
+    days.forEach(day => {
+      const periodKey = grain === 'day' ? day : (grain === 'month' ? day.slice(0, 7) : isoWeekKey(day));
+      const label = grain === 'day'
+        ? day.slice(5).replace(/-/g, '/')
+        : (grain === 'month' ? periodKey : periodKey.replace(/-/g, ''));
+      const prev = map.get(periodKey) || { key: periodKey, label, site: '', listing: 0, sku: 0, cpc: 0 };
+      daySiteDecisionRows(day).forEach(r => {
+        prev.listing += r.listing || 0;
+        prev.sku += r.sku || 0;
+        prev.cpc += r.cpc || 0;
+      });
+      map.set(periodKey, prev);
+    });
+    return [...map.values()].filter(r => r.listing || r.sku || r.cpc)
+      .sort((a, b) => a.key.localeCompare(b.key));
+  }
   function filteredDeptRows() {
     let rows = (currentSlice().dept_decision || []).slice();
     if (state.dept) rows = rows.filter(r => r.dept === state.dept);
@@ -1165,12 +1211,18 @@
   }
 
   function renderSiteChart() {
-    const rows = filteredChartSiteRows().slice().sort((a, b) => (b.listing || 0) - (a.listing || 0));
+    document.querySelectorAll('#siteGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.siteGrain));
+    const rows = buildSiteChartRows();
     const empty = document.getElementById('siteChartEmpty');
     const canvas = document.getElementById('siteChart');
-    document.getElementById('siteChartTitle').textContent = state.site
-      ? `站点 ${state.site} · Listing / SKU / CPC认证`
-      : '分站点 Listing / SKU / CPC认证';
+    const grain = state.siteGrain || 'site';
+    const titles = {
+      site: state.site ? `站点 ${state.site} · Listing / SKU / CPC认证` : '分站点 Listing / SKU / CPC认证',
+      day: state.site ? `站点 ${state.site} · 日度` : '分站点合计 · 日度',
+      week: state.site ? `站点 ${state.site} · 周度` : '分站点合计 · 周度',
+      month: state.site ? `站点 ${state.site} · 月度` : '分站点合计 · 月度',
+    };
+    document.getElementById('siteChartTitle').textContent = titles[grain] || titles.site;
     if (!platformReady() || !rows.length || typeof Chart === 'undefined') {
       if (siteChart) { siteChart.destroy(); siteChart = null; }
       canvas.style.display = 'none';
@@ -1181,8 +1233,9 @@
     }
     canvas.style.display = 'block';
     empty.style.display = 'none';
+    const grainTip = { site: '按站点对比', day: `${chartAxisName()}(天)`, week: `${chartAxisName()}(周)`, month: `${chartAxisName()}(月)` };
     document.getElementById('siteChartHint').textContent =
-      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''} · 合规标签 SKU` +
+      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''} · ${grainTip[grain] || ''} · 合规标签 SKU` +
       (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
     const datasets = CHART_SERIES.map(s => ({
@@ -1194,8 +1247,8 @@
     }));
 
     if (siteChart) siteChart.destroy();
-    applyChartScroll('siteChartScroll', 'siteChartInner', rows.length, 52);
-    const siteOpts = barChartOptions(rows, 52);
+    applyChartScroll('siteChartScroll', 'siteChartInner', rows.length, grain === 'site' ? 52 : 56);
+    const siteOpts = barChartOptions(rows, grain === 'site' ? 52 : 56);
     siteOpts.plugins.tooltip.callbacks.afterBody = items => {
       const i = items[0]?.dataIndex;
       if (i == null || !rows[i]) return [];
@@ -1203,6 +1256,7 @@
       return [`SKU ${fmt(r.sku)}`, `CPC认证 ${fmt(r.cpc)}`];
     };
     siteOpts.onClick = (_evt, elements) => {
+      if (grain !== 'site') return;
       if (!elements.length || !platformReady()) return;
       const idx = elements[0].index;
       const site = rows[idx]?.site;
@@ -1214,7 +1268,7 @@
     };
     siteChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
-      data: { labels: rows.map(r => r.site), datasets },
+      data: { labels: rows.map(r => r.label), datasets },
       options: siteOpts,
     });
   }
@@ -1417,6 +1471,11 @@
     const b = e.target.closest('[data-grain]'); if (!b) return;
     state.trendGrain = b.dataset.grain;
     renderTrend();
+  });
+  document.getElementById('siteGrain').addEventListener('click', e => {
+    const b = e.target.closest('[data-grain]'); if (!b) return;
+    state.siteGrain = b.dataset.grain;
+    renderSiteChart();
   });
   document.getElementById('fChartTimeAxis').onchange = () => onChartTimeAxisChange();
   document.getElementById('btnChartApply').onclick = () => {
