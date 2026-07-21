@@ -65,6 +65,9 @@
     .axis-note{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;color:var(--muted)}
     .quad{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:900px){.quad{grid-template-columns:1fr}}
+    .quad-block{margin-bottom:4px}
+    .quad-subtitle{font-size:12px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .quad-subtitle .tip{font-weight:400;color:var(--muted)}
     .qcard{border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;transition:.15s;min-height:118px;position:relative}
     .qcard:hover{box-shadow:0 4px 14px rgba(31,39,51,.08);transform:translateY(-1px)}
     .qcard.keep{background:var(--keep-bg);border-color:#99f6e4}
@@ -192,8 +195,15 @@
         </div>
 
         <div class="section" style="padding-top:4px">
-          <div class="sec-title">2. 风险 × 收益四象限</div>
-          <div class="quad" id="quadGrid"></div>
+          <div class="sec-title">2. 四象限分析</div>
+          <div class="quad-block">
+            <div class="quad-subtitle">刊登结果四象限 <span class="tip">风险 × 收益 · 按出单 / 邮件</span></div>
+            <div class="quad" id="quadGrid"></div>
+          </div>
+          <div class="quad-block" style="margin-top:18px">
+            <div class="quad-subtitle">合规四象限 <span class="tip">业务等级 × 邮件SKU占比 · 按三级类目汇总表分类</span></div>
+            <div class="quad" id="complianceQuadGrid"></div>
+          </div>
         </div>
 
         <div class="section" style="padding-top:4px">
@@ -232,7 +242,7 @@
         </div>
 
         <div class="section" style="padding-top:4px;padding-bottom:24px">
-          <div class="sec-title">4. 认证 / 处置候选清单<span style="margin-left:8px;font-size:12px;font-weight:400;color:var(--sub)">与上方四象限一一对应 · 列表为 Top 预览</span></div>
+          <div class="sec-title">4. 认证 / 处置候选清单<span style="margin-left:8px;font-size:12px;font-weight:400;color:var(--sub)">与刊登结果四象限一一对应 · 列表为 Top 预览</span></div>
           <div class="action-tabs" id="actionTabs">
             <div class="atab on" data-action="certify">优先认证 <span class="n" id="nCert">0</span></div>
             <div class="atab" data-action="tighten">建议收紧 <span class="n" id="nTight">0</span></div>
@@ -267,6 +277,7 @@
 
   const DEC = DATA.decision;
   const LEGEND = DEC.legend || {};
+  const COMPLIANCE_LEGEND = DEC.compliance_legend || {};
   const DIM_LABEL = { sku: 'SKU', cat3: '三级类目', listing: 'Listing' };
 
   const DETAIL_PAGE = /总览|决策/.test(decodeURIComponent(location.pathname))
@@ -303,6 +314,7 @@
     return {
       overview: {},
       quadrant_listing: {}, quadrant_sku: {}, quadrant_cat3: {},
+      quadrant_compliance_listing: {}, quadrant_compliance_sku: {}, quadrant_compliance_cat3: {},
       actions: {}, actions_total: {},
       actions_cat3: {}, actions_cat3_total: {},
       actions_listing: {}, actions_listing_total: {},
@@ -339,7 +351,7 @@
       Math.max(out.overview.order_cat3, 1)
     );
 
-    ['quadrant_listing','quadrant_sku','quadrant_cat3'].forEach(qk => {
+    ['quadrant_listing','quadrant_sku','quadrant_cat3','quadrant_compliance_listing','quadrant_compliance_sku','quadrant_compliance_cat3'].forEach(qk => {
       out[qk] = {};
       slices.forEach(s => {
         Object.entries(s[qk] || {}).forEach(([k, v]) => { out[qk][k] = (out[qk][k] || 0) + (v || 0); });
@@ -443,6 +455,13 @@
     { key: 'order_high_mail', cls: 'cert', axis: '有出单 × 有邮件' },
     { key: 'no_order_low_mail', cls: 'obs', axis: '无出单 × 无邮件' },
     { key: 'no_order_high_mail', cls: 'tight', axis: '无出单 × 有邮件' },
+  ];
+
+  const COMPLIANCE_QUAD_UI = [
+    { key: 'biz_high_mail_low', cls: 'keep', axis: '业务高 × 邮件占比低' },
+    { key: 'biz_high_mail_high', cls: 'cert', axis: '业务高 × 邮件占比高' },
+    { key: 'biz_low_mail_low', cls: 'obs', axis: '业务低 × 邮件占比低' },
+    { key: 'biz_low_mail_high', cls: 'tight', axis: '业务低 × 邮件占比高' },
   ];
 
   function platformReady() {
@@ -603,6 +622,7 @@
   function renderQuad() {
     if (!platformReady()) {
       document.getElementById('quadGrid').innerHTML = '<div class="empty">待接入</div>';
+      document.getElementById('complianceQuadGrid').innerHTML = '<div class="empty">待接入</div>';
       return;
     }
     const slice = currentSlice();
@@ -617,6 +637,22 @@
       const leg = LEGEND[item.key] || {};
       const n = q[item.key] || 0;
       return `<div class="qcard ${item.cls}" data-quadrant="${item.key}">
+        <span class="q-tag">${leg.title || item.key}</span>
+        <div class="q-title">${item.axis}</div>
+        <div class="q-nums"><div><b>${fmt(n)}</b><span>${unit}</span></div></div>
+      </div>`;
+    }).join('');
+
+    const cqMap = {
+      sku: slice.quadrant_compliance_sku,
+      cat3: slice.quadrant_compliance_cat3,
+      listing: slice.quadrant_compliance_listing,
+    };
+    const cq = cqMap[state.dim] || slice.quadrant_compliance_sku || {};
+    document.getElementById('complianceQuadGrid').innerHTML = COMPLIANCE_QUAD_UI.map(item => {
+      const leg = COMPLIANCE_LEGEND[item.key] || {};
+      const n = cq[item.key] || 0;
+      return `<div class="qcard ${item.cls}" data-compliance-quadrant="${item.key}">
         <span class="q-tag">${leg.title || item.key}</span>
         <div class="q-title">${item.axis}</div>
         <div class="q-nums"><div><b>${fmt(n)}</b><span>${unit}</span></div></div>
