@@ -209,7 +209,6 @@
               <div class="field"><span class="lbl">销售申诉结果</span><select class="ctrl" id="fAppeal" style="min-width:120px"><option value="">全部</option><option value="__none__">无</option></select></div>
               <div class="field"><span class="lbl">是否做CPC认证</span><select class="ctrl" id="fCpc"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
               <div class="field"><span class="lbl">刊登后是否出单</span><select class="ctrl" id="fHasOrder"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
-              <div class="field"><span class="lbl">是否有合规性标签</span><select class="ctrl" id="fLabel"><option value="">全部</option><option value="是">是</option><option value="否">否</option></select></div>
               <div class="field"><span class="lbl">刊登时间</span>
                 <div style="display:flex;align-items:center;gap:6px">
                   <input class="ctrl" type="date" id="fListFrom" style="min-width:132px" />
@@ -300,7 +299,6 @@
     appeal: qs.get('appeal') || '',
     cpc: qs.get('cpc') || '',
     hasOrder: qs.get('hasOrder') || '',
-    label: qs.get('label') || '',
     listFrom: qs.get('listFrom') || '',
     listTo: qs.get('listTo') || '',
     page: 1,
@@ -541,7 +539,6 @@
     if (state.msku.length && !state.msku.includes(String(r.msku ?? ''))) return false;
     if (state.shop.length && !state.shop.includes(String(r.shop ?? ''))) return false;
     if (state.cat3 && String(r.cat3 || '') !== state.cat3) return false;
-    if (state.label && r.label !== state.label) return false;
     if (state.cpc && r.cpc !== state.cpc) return false;
     if (state.mailStatus === '__none__' && r.mail_status) return false;
     if (state.mailStatus === '__has__' && !r.mail_time && !r.mail_status) return false;
@@ -569,7 +566,7 @@
     return ['site', 'dept', 'sku', 'msku', 'shop'];
   }
   function moreFilterKeys() {
-    return ['cat3', 'mailStatus', 'appeal', 'cpc', 'hasOrder', 'label', 'listFrom', 'listTo'];
+    return ['cat3', 'mailStatus', 'appeal', 'cpc', 'hasOrder', 'listFrom', 'listTo'];
   }
   function filterHasValue(k) {
     const v = state[k];
@@ -674,7 +671,6 @@
     state.appeal = document.getElementById('fAppeal').value;
     state.cpc = document.getElementById('fCpc').value;
     state.hasOrder = document.getElementById('fHasOrder').value;
-    state.label = document.getElementById('fLabel').value;
     state.listFrom = document.getElementById('fListFrom').value;
     state.listTo = document.getElementById('fListTo').value;
   }
@@ -690,7 +686,6 @@
     document.getElementById('fAppeal').value = state.appeal;
     document.getElementById('fCpc').value = state.cpc;
     document.getElementById('fHasOrder').value = state.hasOrder;
-    document.getElementById('fLabel').value = state.label;
     document.getElementById('fListFrom').value = state.listFrom;
     document.getElementById('fListTo').value = state.listTo;
   }
@@ -726,7 +721,6 @@
     state.appeal = '';
     state.cpc = '';
     state.hasOrder = '';
-    state.label = '';
     state.listFrom = '';
     state.listTo = '';
     state.page = 1;
