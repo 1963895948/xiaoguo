@@ -114,6 +114,9 @@
     .arow .meta{font-size:12px;color:var(--text)}
     .arow .sub{font-size:11px;color:var(--muted);margin-top:2px}
     .arow .m{text-align:right;font-size:12px}
+    #actionHead .sort-th{border:none;background:transparent;padding:0;font:inherit;font-weight:600;color:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:flex-end;gap:2px;width:100%;white-space:nowrap}
+    #actionHead .sort-th:hover,#actionHead .sort-th.on{color:var(--pri)}
+    #actionHead .sort-th .arr{font-size:10px;line-height:1}
     .tag{display:inline-flex;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600}
     .tag.ok{background:var(--ok-bg);color:var(--ok)}
     .tag.muted{background:#f0f2f5;color:var(--sub)}
@@ -194,24 +197,18 @@
 
         <div class="section" style="padding-top:4px">
           <div class="sec-title">
-            3. 放开趋势（按月 / 周 / 天）
-            <span class="tip">横轴为刊登时间</span>
-            <span class="spacer"></span>
-            <div class="seg" id="trendGrain">
-              <button type="button" data-grain="month">按月</button>
-              <button type="button" data-grain="week">按周</button>
-              <button type="button" class="on" data-grain="day">按天</button>
-            </div>
+            3. 分站点对比
+            <span class="tip">横轴为站点 · 随上方筛选联动</span>
           </div>
           <div class="chart-box">
             <div class="chart-hd">
-              <div class="chart-title" id="trendTitle">日度放开趋势</div>
-              <div class="chart-sub" id="trendHint"></div>
+              <div class="chart-title" id="siteChartTitle">分站点 Listing / 合规邮件 / 出单</div>
+              <div class="chart-sub" id="siteChartHint"></div>
             </div>
             <div class="chart-canvas-wrap">
-              <canvas id="trendChart"></canvas>
+              <canvas id="siteChart"></canvas>
             </div>
-            <div class="chart-empty" id="trendEmpty" style="display:none">当前筛选下暂无趋势数据</div>
+            <div class="chart-empty" id="siteChartEmpty" style="display:none">当前筛选下暂无站点数据</div>
           </div>
         </div>
 
@@ -266,7 +263,8 @@
     listTo: '',
     dim: 'sku', // sku | listing
     action: 'certify',
-    trendGrain: 'day', // day | week | month
+    actionSortKey: 'amount', // amount | orders | mail
+    actionSortDir: 'desc', // asc | desc
   };
 
   const DAY_RANGE = DEC.list_day_range || {};
@@ -611,53 +609,7 @@
     }).join('');
   }
 
-  let trendChart = null;
-
-  function isoWeekKey(dayStr) {
-    const d = new Date(dayStr + 'T00:00:00');
-    const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    const dayNum = tmp.getUTCDay() || 7;
-    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
-    const y = tmp.getUTCFullYear();
-    return y + '-W' + String(weekNo).padStart(2, '0');
-  }
-
-  function trendDayRows() {
-    const T = DATA.trend || {};
-    const label = state.label || '';
-    const byLabel = (T.by_label && T.by_label[label]) || T.days || [];
-    const from = state.listFrom || '';
-    const to = state.listTo || '';
-    return byLabel.filter(r => {
-      if (from && r.day < from) return false;
-      if (to && r.day > to) return false;
-      return true;
-    });
-  }
-
-  function aggregateTrend(grain, rows) {
-    if (grain === 'day') {
-      return rows.map(r => ({
-        key: r.day,
-        label: r.day.replace(/-/g, ''),
-        listing: r.listing,
-        mail_listing: r.mail_listing,
-        order_listing: r.order_listing,
-      }));
-    }
-    const map = new Map();
-    rows.forEach(r => {
-      const key = grain === 'month' ? r.day.slice(0, 7) : isoWeekKey(r.day);
-      const prev = map.get(key) || { key, label: key.replace(/-/g, ''), listing: 0, mail_listing: 0, order_listing: 0 };
-      prev.listing += r.listing || 0;
-      prev.mail_listing += r.mail_listing || 0;
-      prev.order_listing += r.order_listing || 0;
-      map.set(key, prev);
-    });
-    return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
-  }
+  let siteChart = null;
 
   function shortNum(n) {
     if (n == null) return '';
@@ -667,43 +619,46 @@
     return String(v);
   }
 
-  function renderTrend() {
-    document.querySelectorAll('#trendGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.trendGrain));
-    const titles = { day: '日度放开趋势', week: '周度放开趋势', month: '月度放开趋势' };
-    const axisTip = { day: '刊登时间(天)', week: '刊登时间(周)', month: '刊登时间(月)' };
-    document.getElementById('trendTitle').textContent = titles[state.trendGrain] || '放开趋势';
-    const rows = aggregateTrend(state.trendGrain, trendDayRows());
-    const empty = document.getElementById('trendEmpty');
-    const canvas = document.getElementById('trendChart');
+  function renderSiteChart() {
+    const rows = filteredSiteRows().slice().sort((a, b) => (b.listing || 0) - (a.listing || 0));
+    const empty = document.getElementById('siteChartEmpty');
+    const canvas = document.getElementById('siteChart');
+    document.getElementById('siteChartTitle').textContent = state.site
+      ? `站点 ${state.site} · Listing / 合规邮件 / 出单`
+      : '分站点 Listing / 合规邮件 / 出单';
     if (!platformReady() || !rows.length || typeof Chart === 'undefined') {
-      if (trendChart) { trendChart.destroy(); trendChart = null; }
+      if (siteChart) { siteChart.destroy(); siteChart = null; }
       canvas.style.display = 'none';
       empty.style.display = 'block';
-      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前筛选下暂无趋势数据');
-      document.getElementById('trendHint').textContent = '';
+      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前筛选下暂无站点数据');
+      document.getElementById('siteChartHint').textContent = '';
       return;
     }
     canvas.style.display = 'block';
     empty.style.display = 'none';
-    document.getElementById('trendHint').textContent = axisTip[state.trendGrain] + ' · 随上方筛选联动';
+    const hintParts = [];
+    if (state.label === '是') hintParts.push('标签=是');
+    else if (state.label === '否') hintParts.push('标签=否');
+    if (!isFullDateRange() && state.listFrom && state.listTo) hintParts.push(`刊登 ${state.listFrom}~${state.listTo}`);
+    document.getElementById('siteChartHint').textContent = hintParts.length ? hintParts.join(' · ') : '全部放开数据';
 
-    const seriesMeta = (DATA.trend && DATA.trend.series) || [
+    const seriesMeta = [
       { key: 'listing', name: 'Listing数', color: '#4C8DFF' },
-      { key: 'mail_listing', name: '合规邮件Listing', color: '#3DB8A0' },
-      { key: 'order_listing', name: '出单Listing', color: '#E8A05C' },
+      { key: 'mail', name: '合规邮件Listing', color: '#3DB8A0' },
+      { key: 'order', name: '出单Listing', color: '#E8A05C' },
     ];
     const datasets = seriesMeta.map(s => ({
       label: s.name,
       data: rows.map(r => r[s.key] || 0),
       backgroundColor: s.color,
       borderRadius: 3,
-      maxBarThickness: 28,
+      maxBarThickness: rows.length > 10 ? 22 : 28,
     }));
 
-    if (trendChart) trendChart.destroy();
-    trendChart = new Chart(canvas.getContext('2d'), {
+    if (siteChart) siteChart.destroy();
+    siteChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
-      data: { labels: rows.map(r => r.label), datasets },
+      data: { labels: rows.map(r => r.site), datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -715,13 +670,19 @@
           tooltip: {
             callbacks: {
               label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`,
+              afterBody: items => {
+                const i = items[0]?.dataIndex;
+                if (i == null || !rows[i]) return [];
+                const r = rows[i];
+                return [`出单率 ${pct(r.order_rate)}`, `邮件率 ${pct(r.mail_rate)}`, `销量 ${money(r.amount_sum)}`];
+              },
             },
           },
         },
         scales: {
           x: {
             grid: { display: false },
-            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 16, font: { size: 11 } },
+            ticks: { maxRotation: 0, autoSkip: false, font: { size: 11 } },
           },
           y: {
             beginAtZero: true,
@@ -732,13 +693,45 @@
             },
           },
         },
+        onClick: (_evt, elements) => {
+          if (!elements.length || !platformReady()) return;
+          const idx = elements[0].index;
+          const site = rows[idx]?.site;
+          if (!site) return;
+          state.site = state.site === site ? '' : site;
+          document.getElementById('fSite').value = state.site;
+          renderAll();
+          toast(state.site ? `已筛选站点：${state.site}` : '已取消站点筛选');
+        },
       },
     });
   }
 
   function renderSiteDept() {
-    // 保留站点下拉数据源；第3区已改为趋势图
-    renderTrend();
+    renderSiteChart();
+  }
+
+  function actionSortValue(r, key) {
+    if (key === 'amount') return Number(r.amount) || 0;
+    if (key === 'orders') return Number(r.orders) || 0;
+    if (key === 'mail') return Number(r.mail_cnt) || 0;
+    return 0;
+  }
+  function sortActionRows(rows) {
+    const key = state.actionSortKey;
+    const dir = state.actionSortDir === 'asc' ? 1 : -1;
+    return rows.slice().sort((a, b) => (actionSortValue(a, key) - actionSortValue(b, key)) * dir);
+  }
+  function actionSortBtn(key, label) {
+    const on = state.actionSortKey === key;
+    const arrow = on ? `<span class="arr">${state.actionSortDir === 'asc' ? '↑' : '↓'}</span>` : '';
+    return `<button type="button" class="sort-th${on ? ' on' : ''}" data-sort="${key}">${label}${arrow}</button>`;
+  }
+  function actionHeadHtml(byCat3, byListing) {
+    const metrics = `<div class="m">${actionSortBtn('amount', '销量金额')}</div><div class="m">${actionSortBtn('orders', '出单量')}</div><div class="m">${actionSortBtn('mail', '合规邮件')}</div><div class="m">CPC认证</div>`;
+    if (byCat3) return `<div>三级类目</div><div>站点 / 部门</div>${metrics}`;
+    if (byListing) return `<div>msku</div><div>标题 / 站点</div>${metrics}`;
+    return `<div>SKU</div><div>标题 / 类目</div>${metrics}`;
   }
 
   function renderActions() {
@@ -750,7 +743,7 @@
     const byListing = state.dim === 'listing';
     const unit = byCat3 ? '三级类目' : (byListing ? 'Listing' : 'SKU');
     const totalN = totals[state.action] || 0;
-    const previewRows = filteredActions(src[state.action]);
+    const previewRows = sortActionRows(filteredActions(src[state.action]));
     const previewN = (currentSlice().actions_preview_n) || previewRows.length;
     const dimHint = byCat3 ? '（三级类目）' : (byListing ? '（Listing / msku）' : '');
     document.getElementById('actionTitle').textContent =
@@ -761,11 +754,7 @@
     document.getElementById('nTight').textContent = fmt(totals.tighten || 0);
     document.getElementById('nKeep').textContent = fmt(totals.keep || 0);
     document.getElementById('nObs').textContent = fmt(totals.observe || 0);
-    document.getElementById('actionHead').innerHTML = byCat3
-      ? `<div>三级类目</div><div>站点 / 部门</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>`
-      : byListing
-        ? `<div>msku</div><div>标题 / 站点</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>`
-        : `<div>SKU</div><div>标题 / 类目</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>`;
+    document.getElementById('actionHead').innerHTML = actionHeadHtml(byCat3, byListing);
     if (!platformReady()) {
       document.getElementById('actionList').innerHTML = '<div class="empty">待接入</div>';
       return;
@@ -862,6 +851,7 @@
     state.platform = '亚马逊'; state.site = ''; state.dept = ''; state.label = '';
     state.listFrom = ALL_DAYS[0] || ''; state.listTo = ALL_DAYS[ALL_DAYS.length - 1] || '';
     state.dim = 'sku'; state.action = 'certify';
+    state.actionSortKey = 'amount'; state.actionSortDir = 'desc';
     syncFiltersToUI(); renderAll(); toast('已重置');
   };
   document.getElementById('fPlatform').onchange = () => {
@@ -874,11 +864,6 @@
     renderAll();
     toast(state.label ? `合规标签：${state.label}` : '合规标签：全部');
   };
-  document.getElementById('trendGrain').addEventListener('click', e => {
-    const b = e.target.closest('[data-grain]'); if (!b) return;
-    state.trendGrain = b.dataset.grain;
-    renderTrend();
-  });
   document.getElementById('dimSeg').addEventListener('click', e => {
     const b = e.target.closest('[data-dim]'); if (!b) return;
     state.dim = b.dataset.dim; renderAll();
@@ -898,6 +883,18 @@
   document.getElementById('actionTabs').addEventListener('click', e => {
     const t = e.target.closest('[data-action]'); if (!t) return;
     state.action = t.dataset.action; renderActions();
+  });
+  document.getElementById('actionHead').addEventListener('click', e => {
+    const btn = e.target.closest('[data-sort]'); if (!btn) return;
+    e.stopPropagation();
+    const key = btn.dataset.sort;
+    if (state.actionSortKey === key) {
+      state.actionSortDir = state.actionSortDir === 'desc' ? 'asc' : 'desc';
+    } else {
+      state.actionSortKey = key;
+      state.actionSortDir = 'desc';
+    }
+    renderActions();
   });
   document.getElementById('btnActionDetail').onclick = () => {
     readFilters();
