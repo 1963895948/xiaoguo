@@ -136,6 +136,31 @@
     .empty{padding:28px;text-align:center;color:var(--muted)}
     .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#1f2733;color:#fff;padding:10px 18px;border-radius:8px;z-index:200;opacity:0;transition:.25s;pointer-events:none}
     .toast.show{opacity:1;top:34px}
+    .link-tip{border:none;background:none;padding:0;color:var(--pri);cursor:pointer;font-size:12px;text-decoration:underline;text-underline-offset:2px}
+    .link-tip:hover{color:#1a52d4}
+    .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal-box{background:#fff;border-radius:10px;width:min(920px,96vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(15,23,42,.18)}
+    .modal-hd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .modal-hd h3{margin:0;font-size:15px;font-weight:700}
+    .modal-close{border:none;background:#f0f2f5;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:18px;line-height:1;color:var(--sub)}
+    .modal-close:hover{background:#e8ebf0;color:var(--text)}
+    .modal-bd{padding:14px 18px 18px;overflow:auto}
+    .modal-quad-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+    @media (max-width:700px){.modal-quad-grid{grid-template-columns:1fr}}
+    .modal-qcard{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px}
+    .modal-qcard .mq-tag{font-weight:700;margin-bottom:4px}
+    .modal-qcard.keep{background:var(--keep-bg);border-color:#99f6e4}
+    .modal-qcard.cert{background:var(--cert-bg);border-color:#fcd34d}
+    .modal-qcard.obs{background:var(--obs-bg);border-color:#cbd5e1}
+    .modal-qcard.tight{background:var(--tight-bg);border-color:#fecdd3}
+    .modal-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center}
+    .modal-toolbar input.ctrl,.modal-toolbar select.ctrl{min-width:200px}
+    .modal-table-wrap{max-height:48vh;overflow:auto;border:1px solid var(--line);border-radius:6px}
+    table.modal-table{width:100%;border-collapse:collapse;font-size:12px}
+    table.modal-table th,table.modal-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+    table.modal-table thead th{position:sticky;top:0;background:#fafbfd;z-index:1;font-weight:600;color:var(--sub)}
+    table.modal-table tbody tr:hover{background:#f6f8fb}
+    .modal-foot{font-size:11px;color:var(--muted);margin-top:10px}
   </style>
 </head>
 <body>
@@ -207,7 +232,7 @@
             <div class="quad" id="quadGrid"></div>
           </div>
           <div class="quad-block" style="margin-top:18px">
-            <div class="quad-subtitle">合规四象限 <span class="tip">业绩等级 × 邮件SKU占比 · 按三级类目汇总表分类</span></div>
+            <div class="quad-subtitle">合规四象限 <span class="tip">业绩等级 × 邮件SKU占比 · <button type="button" class="link-tip" id="btnComplianceCat3Rule">按三级类目汇总表分类</button></span></div>
             <div class="quad" id="complianceQuadGrid"></div>
           </div>
         </div>
@@ -288,6 +313,38 @@
 
   <div class="toast" id="toast"></div>
 
+  <div class="modal-mask" id="complianceCat3Modal" style="display:none" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-labelledby="complianceCat3ModalTitle">
+      <div class="modal-hd">
+        <h3 id="complianceCat3ModalTitle">三级类目四象限划分</h3>
+        <button type="button" class="modal-close" id="btnCloseComplianceModal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd">
+        <div class="modal-quad-grid" id="complianceRuleGrid"></div>
+        <div class="modal-toolbar">
+          <input type="text" class="ctrl" id="complianceCat3Search" placeholder="搜索三级类目…" style="flex:1;min-width:180px" />
+          <select class="ctrl" id="complianceCat3QuadFilter" style="min-width:160px">
+            <option value="">全部象限</option>
+          </select>
+        </div>
+        <div class="modal-table-wrap">
+          <table class="modal-table">
+            <thead>
+              <tr>
+                <th style="width:36%">三级类目</th>
+                <th style="width:18%">象限</th>
+                <th style="width:22%">业绩 / 占比</th>
+                <th>分类规则</th>
+              </tr>
+            </thead>
+            <tbody id="complianceCat3Body"></tbody>
+          </table>
+        </div>
+        <div class="modal-foot" id="complianceCat3Foot"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="./dashboard_payload_v1_2.js"></script>
   <script>
@@ -300,6 +357,7 @@
   const DEC = DATA.decision;
   const LEGEND = DEC.legend || {};
   const COMPLIANCE_LEGEND = DEC.compliance_legend || {};
+  const COMPLIANCE_CAT3 = DATA.compliance_cat3 || { items: [], quadrants: [] };
   const DIM_LABEL = { sku: 'SKU', cat3: '三级类目', listing: 'Listing' };
 
   const DETAIL_PAGE = /总览|决策/.test(decodeURIComponent(location.pathname))
@@ -530,6 +588,80 @@
     { key: 'biz_low_mail_low', cls: 'obs', axis: '业绩低 × 邮件占比低' },
     { key: 'biz_low_mail_high', cls: 'tight', axis: '业绩低 × 邮件占比高' },
   ];
+  const COMPLIANCE_MODAL_CLS = {
+    biz_high_mail_low: 'keep',
+    biz_high_mail_high: 'cert',
+    biz_low_mail_low: 'obs',
+    biz_low_mail_high: 'tight',
+  };
+
+  function complianceQuadrantLabel(key) {
+    const leg = COMPLIANCE_LEGEND[key] || {};
+    const ui = COMPLIANCE_QUAD_UI.find(x => x.key === key);
+    return leg.title || ui?.axis || key;
+  }
+
+  function renderComplianceCat3Modal() {
+    const quads = COMPLIANCE_CAT3.quadrants || [];
+    document.getElementById('complianceRuleGrid').innerHTML = COMPLIANCE_QUAD_UI.map(item => {
+      const meta = quads.find(q => q.key === item.key) || {};
+      const leg = COMPLIANCE_LEGEND[item.key] || {};
+      return `<div class="modal-qcard ${item.cls}">
+        <div class="mq-tag">${leg.title || meta.title || item.key}</div>
+        <div>${item.axis}</div>
+        <div style="margin-top:6px;color:var(--muted)">类目数 ${fmt(meta.count || 0)}</div>
+      </div>`;
+    }).join('');
+
+    const filter = document.getElementById('complianceCat3QuadFilter');
+    if (filter.options.length <= 1) {
+      COMPLIANCE_QUAD_UI.forEach(item => {
+        const o = document.createElement('option');
+        o.value = item.key;
+        o.textContent = complianceQuadrantLabel(item.key);
+        filter.appendChild(o);
+      });
+    }
+
+    const q = (document.getElementById('complianceCat3Search').value || '').trim().toLowerCase();
+    const qk = document.getElementById('complianceCat3QuadFilter').value;
+    const rows = (COMPLIANCE_CAT3.items || []).filter(r => {
+      if (qk && r.quadrant !== qk) return false;
+      if (q && !String(r.cat3 || '').toLowerCase().includes(q)) return false;
+      return true;
+    });
+    document.getElementById('complianceCat3Body').innerHTML = rows.slice(0, 500).map(r => `
+      <tr>
+        <td>${r.cat3 || '-'}</td>
+        <td><span class="tag ${COMPLIANCE_MODAL_CLS[r.quadrant] === 'cert' ? 'warn' : 'muted'}">${complianceQuadrantLabel(r.quadrant)}</span></td>
+        <td>业绩${r.perf_lv || '-'} · 占比${r.mail_lv || '-'}</td>
+        <td>${r.rule || '-'}</td>
+      </tr>
+    `).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">无匹配类目</td></tr>`;
+    const total = (COMPLIANCE_CAT3.items || []).length;
+    const foot = `数据源：${COMPLIANCE_CAT3.source || '三级类目汇总表'} · 共 ${fmt(total)} 个三级类目`;
+    document.getElementById('complianceCat3Foot').textContent =
+      rows.length > 500 ? `${foot} · 当前展示前 500 条，请搜索缩小范围` : foot;
+  }
+
+  function openComplianceCat3Modal() {
+    if (!(COMPLIANCE_CAT3.items || []).length) {
+      toast('暂无三级类目划分数据');
+      return;
+    }
+    document.getElementById('complianceCat3Search').value = '';
+    document.getElementById('complianceCat3QuadFilter').value = '';
+    renderComplianceCat3Modal();
+    const modal = document.getElementById('complianceCat3Modal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeComplianceCat3Modal() {
+    const modal = document.getElementById('complianceCat3Modal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
 
   function platformReady() {
     return PLATFORMS_READY.includes(state.platform);
@@ -1253,6 +1385,17 @@
       dim: state.dim,
       sku: rowSku.dataset.sku,
     });
+  });
+
+  document.getElementById('btnComplianceCat3Rule').onclick = openComplianceCat3Modal;
+  document.getElementById('btnCloseComplianceModal').onclick = closeComplianceCat3Modal;
+  document.getElementById('complianceCat3Modal').addEventListener('click', e => {
+    if (e.target.id === 'complianceCat3Modal') closeComplianceCat3Modal();
+  });
+  document.getElementById('complianceCat3Search').addEventListener('input', renderComplianceCat3Modal);
+  document.getElementById('complianceCat3QuadFilter').addEventListener('change', renderComplianceCat3Modal);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeComplianceCat3Modal();
   });
 
   initFilters();
