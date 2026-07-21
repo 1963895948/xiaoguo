@@ -86,6 +86,12 @@
     @media (max-width:1100px){.two-col{grid-template-columns:1fr}}
     .panel-box{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
     .panel-hd{padding:10px 14px;background:#f6f8fb;border-bottom:1px solid var(--line);font-weight:600;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+    .chart-box{border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px 16px 8px}
+    .chart-box .chart-hd{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+    .chart-box .chart-title{font-size:13px;font-weight:700}
+    .chart-box .chart-sub{font-size:12px;color:var(--muted)}
+    .chart-canvas-wrap{position:relative;height:340px}
+    .chart-empty{padding:48px;text-align:center;color:var(--muted)}
     .matrix-wrap{overflow:auto;max-height:360px}
     table.matrix{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
     table.matrix th,table.matrix td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
@@ -187,45 +193,25 @@
         </div>
 
         <div class="section" style="padding-top:4px">
-          <div class="sec-title">3. 分站点 / 部门对比</div>
-          <div class="two-col">
-            <div class="panel-box">
-              <div class="panel-hd"><span>分站点</span></div>
-              <div class="matrix-wrap">
-                <table class="matrix">
-                  <thead>
-                    <tr>
-                      <th>站点</th>
-                      <th title="Listing 数量">Listing数</th>
-                      <th title="刊登后有出单的 Listing 数">出单Listing</th>
-                      <th title="出单Listing / Listing数">出单率</th>
-                      <th title="收到过合规性邮件的 Listing 数">合规邮件</th>
-                      <th title="合规邮件 Listing / Listing数">邮件率</th>
-                      <th title="已做 CPC 认证的 Listing 数">CPC认证</th>
-                      <th title="刊登后销量金额合计">销量金额</th>
-                    </tr>
-                  </thead>
-                  <tbody id="siteBody"></tbody>
-                </table>
-              </div>
+          <div class="sec-title">
+            3. 放开趋势（按月 / 周 / 天）
+            <span class="tip">横轴为刊登时间</span>
+            <span class="spacer"></span>
+            <div class="seg" id="trendGrain">
+              <button type="button" data-grain="month">按月</button>
+              <button type="button" data-grain="week">按周</button>
+              <button type="button" class="on" data-grain="day">按天</button>
             </div>
-            <div class="panel-box">
-              <div class="panel-hd"><span>刊登部门</span></div>
-              <div class="matrix-wrap">
-                <table class="matrix" style="min-width:480px">
-                  <thead>
-                    <tr>
-                      <th>部门</th>
-                      <th title="Listing 数量">Listing数</th>
-                      <th title="出单Listing / Listing数">出单率</th>
-                      <th title="合规邮件 Listing / Listing数">邮件率</th>
-                      <th title="刊登后销量金额合计">销量金额</th>
-                    </tr>
-                  </thead>
-                  <tbody id="deptBody"></tbody>
-                </table>
-              </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-hd">
+              <div class="chart-title" id="trendTitle">日度放开趋势</div>
+              <div class="chart-sub" id="trendHint"></div>
             </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="trendChart"></canvas>
+            </div>
+            <div class="chart-empty" id="trendEmpty" style="display:none">当前筛选下暂无趋势数据</div>
           </div>
         </div>
 
@@ -254,6 +240,7 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="./dashboard_payload_v1_2.js"></script>
   <script>
   const DATA = window.DASHBOARD_DATA;
@@ -279,6 +266,7 @@
     listTo: '',
     dim: 'sku', // sku | listing
     action: 'certify',
+    trendGrain: 'day', // day | week | month
   };
 
   const DAY_RANGE = DEC.list_day_range || {};
@@ -623,32 +611,134 @@
     }).join('');
   }
 
-  function renderSiteDept() {
-    if (!platformReady()) {
-      document.getElementById('siteBody').innerHTML = '<tr><td colspan="8" class="empty">待接入</td></tr>';
-      document.getElementById('deptBody').innerHTML = '<tr><td colspan="5" class="empty">待接入</td></tr>';
+  let trendChart = null;
+
+  function isoWeekKey(dayStr) {
+    const d = new Date(dayStr + 'T00:00:00');
+    const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = tmp.getUTCDay() || 7;
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+    const y = tmp.getUTCFullYear();
+    return y + '-W' + String(weekNo).padStart(2, '0');
+  }
+
+  function trendDayRows() {
+    const T = DATA.trend || {};
+    const label = state.label || '';
+    const byLabel = (T.by_label && T.by_label[label]) || T.days || [];
+    const from = state.listFrom || '';
+    const to = state.listTo || '';
+    return byLabel.filter(r => {
+      if (from && r.day < from) return false;
+      if (to && r.day > to) return false;
+      return true;
+    });
+  }
+
+  function aggregateTrend(grain, rows) {
+    if (grain === 'day') {
+      return rows.map(r => ({
+        key: r.day,
+        label: r.day.replace(/-/g, ''),
+        listing: r.listing,
+        mail_listing: r.mail_listing,
+        order_listing: r.order_listing,
+      }));
+    }
+    const map = new Map();
+    rows.forEach(r => {
+      const key = grain === 'month' ? r.day.slice(0, 7) : isoWeekKey(r.day);
+      const prev = map.get(key) || { key, label: key.replace(/-/g, ''), listing: 0, mail_listing: 0, order_listing: 0 };
+      prev.listing += r.listing || 0;
+      prev.mail_listing += r.mail_listing || 0;
+      prev.order_listing += r.order_listing || 0;
+      map.set(key, prev);
+    });
+    return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  function shortNum(n) {
+    if (n == null) return '';
+    const v = Number(n);
+    if (v >= 10000) return (v / 10000).toFixed(v >= 100000 ? 1 : 2).replace(/\.0+$/, '') + '万';
+    if (v >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return String(v);
+  }
+
+  function renderTrend() {
+    document.querySelectorAll('#trendGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.trendGrain));
+    const titles = { day: '日度放开趋势', week: '周度放开趋势', month: '月度放开趋势' };
+    const axisTip = { day: '刊登时间(天)', week: '刊登时间(周)', month: '刊登时间(月)' };
+    document.getElementById('trendTitle').textContent = titles[state.trendGrain] || '放开趋势';
+    const rows = aggregateTrend(state.trendGrain, trendDayRows());
+    const empty = document.getElementById('trendEmpty');
+    const canvas = document.getElementById('trendChart');
+    if (!platformReady() || !rows.length || typeof Chart === 'undefined') {
+      if (trendChart) { trendChart.destroy(); trendChart = null; }
+      canvas.style.display = 'none';
+      empty.style.display = 'block';
+      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前筛选下暂无趋势数据');
+      document.getElementById('trendHint').textContent = '';
       return;
     }
-    document.getElementById('siteBody').innerHTML = filteredSiteRows().map(s => `
-      <tr data-site="${s.site}">
-        <td><b>${s.site}</b></td>
-        <td>${fmt(s.listing)}</td>
-        <td class="num-ok">${fmt(s.order)}</td>
-        <td>${pct(s.order_rate)}</td>
-        <td class="${s.mail ? 'num-warn' : ''}">${fmt(s.mail)}</td>
-        <td class="${s.mail_rate > 1 ? 'num-danger' : ''}">${pct(s.mail_rate)}</td>
-        <td>${fmt(s.cpc)}</td>
-        <td>${money(s.amount_sum)}</td>
-      </tr>`).join('') || '<tr><td colspan="8" class="empty">无数据</td></tr>';
+    canvas.style.display = 'block';
+    empty.style.display = 'none';
+    document.getElementById('trendHint').textContent = axisTip[state.trendGrain] + ' · 随上方筛选联动';
 
-    document.getElementById('deptBody').innerHTML = filteredDeptRows().map(d => `
-      <tr data-dept="${d.dept}">
-        <td><b>${d.dept}</b></td>
-        <td>${fmt(d.listing)}</td>
-        <td>${pct(d.order_rate)}</td>
-        <td class="${d.mail_rate > 1 ? 'num-warn' : ''}">${pct(d.mail_rate)}</td>
-        <td>${money(d.amount_sum)}</td>
-      </tr>`).join('') || '<tr><td colspan="5" class="empty">无数据</td></tr>';
+    const seriesMeta = (DATA.trend && DATA.trend.series) || [
+      { key: 'listing', name: 'Listing数', color: '#4C8DFF' },
+      { key: 'mail_listing', name: '合规邮件Listing', color: '#3DB8A0' },
+      { key: 'order_listing', name: '出单Listing', color: '#E8A05C' },
+    ];
+    const datasets = seriesMeta.map(s => ({
+      label: s.name,
+      data: rows.map(r => r[s.key] || 0),
+      backgroundColor: s.color,
+      borderRadius: 3,
+      maxBarThickness: 28,
+    }));
+
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels: rows.map(r => r.label), datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { boxWidth: 12, boxHeight: 12, font: { size: 12 } },
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 16, font: { size: 11 } },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#eef1f5', borderDash: [4, 4] },
+            ticks: {
+              callback: v => shortNum(v),
+              font: { size: 11 },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  function renderSiteDept() {
+    // 保留站点下拉数据源；第3区已改为趋势图
+    renderTrend();
   }
 
   function renderActions() {
@@ -784,6 +874,11 @@
     renderAll();
     toast(state.label ? `合规标签：${state.label}` : '合规标签：全部');
   };
+  document.getElementById('trendGrain').addEventListener('click', e => {
+    const b = e.target.closest('[data-grain]'); if (!b) return;
+    state.trendGrain = b.dataset.grain;
+    renderTrend();
+  });
   document.getElementById('dimSeg').addEventListener('click', e => {
     const b = e.target.closest('[data-dim]'); if (!b) return;
     state.dim = b.dataset.dim; renderAll();
@@ -844,20 +939,6 @@
       dim: state.dim,
       sku: rowSku.dataset.sku,
     });
-  });
-  document.getElementById('siteBody').addEventListener('click', e => {
-    const tr = e.target.closest('[data-site]'); if (!tr || !platformReady()) return;
-    state.site = state.site === tr.dataset.site ? '' : tr.dataset.site;
-    document.getElementById('fSite').value = state.site;
-    renderAll();
-    toast(state.site ? `筛选站点：${state.site}` : '已取消站点筛选');
-  });
-  document.getElementById('deptBody').addEventListener('click', e => {
-    const tr = e.target.closest('[data-dept]'); if (!tr || !platformReady()) return;
-    state.dept = state.dept === tr.dataset.dept ? '' : tr.dataset.dept;
-    document.getElementById('fDept').value = state.dept;
-    renderAll();
-    toast(state.dept ? `筛选部门：${state.dept}` : '已取消部门筛选');
   });
 
   initFilters();
