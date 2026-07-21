@@ -298,23 +298,32 @@
     return m;
   })();
 
+  function formatComplianceRule(rule) {
+    const s = String(rule || '').trim();
+    if (!s) return '';
+    // Excel: "4-业绩低+邮件SKU占比高" → "业绩低+邮件SKU占比高"
+    return s.replace(/^\d+-/, '');
+  }
   function complianceQuadOf(r) {
     const cat3 = String(r.cat3 || '').trim();
     const hit = CAT3_QUAD_MAP[cat3];
     if (!hit) return null;
     const leg = COMPLIANCE_LEGEND[hit.quadrant] || {};
+    const label = formatComplianceRule(hit.rule) || leg.desc || hit.quadrant;
     return {
       key: hit.quadrant,
-      title: leg.title || hit.quadrant,
-      axis: leg.desc || hit.rule || '',
+      title: label,
+      axis: leg.title || '',
       rule: hit.rule || '',
+      label,
     };
   }
   function complianceQuadTag(r) {
     const q = complianceQuadOf(r);
     if (!q) return '<span class="tag muted">未分类</span>';
     const cls = COMPLIANCE_TAG_CLS[q.key] || 'muted';
-    return `<span class="tag ${cls}" title="${q.axis || q.rule || ''}">${q.title}</span>`;
+    const tip = [q.axis, q.rule].filter(Boolean).join(' · ');
+    return `<span class="tag ${cls}" title="${tip}">${q.label}</span>`;
   }
 
   const OVERVIEW_PAGE = /明细/.test(decodeURIComponent(location.pathname))
@@ -560,12 +569,18 @@
       document.getElementById('fCat3').appendChild(o);
     });
     const quadSel = document.getElementById('fComplianceQuad');
+    const QUAD_RULE_LABEL = {
+      biz_high_mail_high: '业绩高+邮件SKU占比高',
+      biz_high_mail_low: '业绩高+邮件SKU占比低',
+      biz_low_mail_low: '业绩低+邮件SKU占比低',
+      biz_low_mail_high: '业绩低+邮件SKU占比高',
+    };
     (COMPLIANCE_CAT3.quadrants || []).forEach(q => {
       const leg = COMPLIANCE_LEGEND[q.key] || {};
       const o = document.createElement('option');
       o.value = q.key;
-      o.textContent = `${leg.title || q.title || q.key}（${q.count || 0}）`;
-      o.title = leg.desc || q.axis || '';
+      o.textContent = `${QUAD_RULE_LABEL[q.key] || leg.desc || q.axis || q.key}（${q.count || 0}）`;
+      o.title = leg.title || '';
       quadSel.appendChild(o);
     });
     const oNone = document.createElement('option');
@@ -712,7 +727,7 @@
         <div class="k">中文标题</div><div class="v">${r.title || '-'}</div>
         <div class="k">类目</div><div class="v">${r.cat || '-'}</div>
         <div class="k">三级类目</div><div class="v">${r.cat3 || '-'}</div>
-        <div class="k">四象限分类</div><div class="v">${(() => { const q = complianceQuadOf(r); return q ? `${q.title}${q.axis ? ' · ' + q.axis : ''}` : '未分类'; })()}</div>
+        <div class="k">四象限分类</div><div class="v">${(() => { const q = complianceQuadOf(r); return q ? `${q.label}${q.axis ? '（' + q.axis + '）' : ''}` : '未分类'; })()}</div>
         <div class="k">是否有合规标签</div><div class="v">${r.label || '-'} ${r.label_time ? ('· ' + r.label_time) : ''}</div>
         <div class="k">是否CPC认证</div><div class="v">${r.cpc || '-'}</div>
         <div class="k">收到合规性邮件时间</div><div class="v">${fmtMailTime(r.mail_time) || '-'}</div>
