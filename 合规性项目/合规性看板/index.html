@@ -240,7 +240,7 @@
         <div class="section" style="padding-top:4px">
           <div class="sec-title">
             3. 放开趋势、分站点与一级类目对比
-            <span class="tip">独立时间筛选 · 与上方筛选无关</span>
+            <span class="tip">独立筛选 · 与上方筛选无关</span>
           </div>
           <div class="chart-filter-row">
             <div class="field"><span class="lbl">统计时间</span>
@@ -248,6 +248,9 @@
                 <option value="list">刊登时间</option>
                 <option value="mail">邮件时间</option>
               </select>
+            </div>
+            <div class="field"><span class="lbl">部门</span>
+              <select class="ctrl" id="fChartDept" style="min-width:140px"><option value="">全部</option></select>
             </div>
             <div class="field"><span class="lbl">时间范围</span>
               <div style="display:flex;align-items:center;gap:6px">
@@ -391,6 +394,7 @@
     chartListFrom: '',
     chartListTo: '',
     chartTimeAxis: 'list', // list | mail
+    chartDept: '',
     dim: 'sku', // sku | listing
     action: 'certify',
     trendGrain: 'month', // day | week | month
@@ -455,18 +459,18 @@
     return daysAll.filter(d => d >= from && d <= to);
   }
   function chartDayMap() {
-    if (state.dept) {
+    if (state.chartDept) {
       return state.chartTimeAxis === 'mail'
         ? (DEC.by_mail_day_dept || {})
         : (DEC.by_list_day_dept || {});
     }
     return state.chartTimeAxis === 'mail' ? (DEC.by_mail_day || {}) : (DEC.by_list_day || {});
   }
-  function pickDaySlice(byDay, day) {
+  function pickDaySlice(byDay, day, dept) {
     const cell = byDay[day];
     if (!cell) return null;
-    if (state.dept) {
-      const deptCell = cell[state.dept];
+    if (dept) {
+      const deptCell = cell[dept];
       return deptCell ? (deptCell[''] || null) : null;
     }
     return cell[''] || null;
@@ -475,16 +479,17 @@
     const days = chartSelectedDays();
     const daysAll = chartAxisDays();
     const byDay = chartDayMap();
+    const dept = state.chartDept || '';
     if (!days.length) return emptySlice();
     // 邮件时间全选：合并邮件日切片（不可用总览全量，因全量含未收邮件 Listing）
     if (days.length === daysAll.length && state.chartTimeAxis === 'list') {
-      if (state.dept) {
-        const ds = (DEC.by_dept || {})[state.dept];
+      if (dept) {
+        const ds = (DEC.by_dept || {})[dept];
         return ds ? (ds[''] || emptySlice()) : emptySlice();
       }
       return (DEC.by_label && DEC.by_label['']) || DEC;
     }
-    const slices = days.map(d => pickDaySlice(byDay, d)).filter(Boolean);
+    const slices = days.map(d => pickDaySlice(byDay, d, dept)).filter(Boolean);
     return mergeSlices(slices);
   }
   function isFullDateRange() {
@@ -601,7 +606,7 @@
     }
     const byDay = state.dept ? (DEC.by_list_day_dept || {}) : (DEC.by_list_day || {});
     const slices = selectedDays()
-      .map(d => pickDaySlice(byDay, d))
+      .map(d => pickDaySlice(byDay, d, state.dept || ''))
       .filter(Boolean);
     return mergeSlices(slices);
   }
@@ -785,14 +790,33 @@
     else { state.dept = ''; deptSel.value = ''; }
   }
 
+  function fillChartDeptOptions() {
+    const sel = document.getElementById('fChartDept');
+    if (!sel) return;
+    const keep = state.chartDept || '';
+    const allSlice = (DEC.by_label && DEC.by_label['']) || DEC;
+    sel.innerHTML = '<option value="">全部</option>';
+    (allSlice.dept_decision || []).forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.dept;
+      o.textContent = `${d.dept}（Listing ${fmt(d.listing)}）`;
+      sel.appendChild(o);
+    });
+    if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
+    else { state.chartDept = ''; sel.value = ''; }
+  }
+
   function syncChartFiltersToUI() {
     const axisSel = document.getElementById('fChartTimeAxis');
     if (axisSel) axisSel.value = state.chartTimeAxis || 'list';
+    const deptSel = document.getElementById('fChartDept');
+    if (deptSel) deptSel.value = state.chartDept || '';
     document.getElementById('fChartFrom').value = state.chartListFrom;
     document.getElementById('fChartTo').value = state.chartListTo;
     const axis = chartAxisName();
+    const deptHint = state.chartDept ? ` · ${state.chartDept}` : '';
     document.getElementById('chartFilterHint').textContent = state.chartListFrom && state.chartListTo
-      ? `当前：${axis} ${state.chartListFrom} ~ ${state.chartListTo}` : '';
+      ? `当前：${axis} ${state.chartListFrom} ~ ${state.chartListTo}${deptHint}` : '';
   }
 
   function bindChartDateLimits() {
@@ -812,6 +836,7 @@
     const def = defaultChartMonthRange();
     if (!state.chartListFrom) state.chartListFrom = def.from;
     if (!state.chartListTo) state.chartListTo = def.to;
+    fillChartDeptOptions();
     bindChartDateLimits();
     syncChartFiltersToUI();
   }
@@ -819,6 +844,8 @@
   function readChartFilters() {
     const axisSel = document.getElementById('fChartTimeAxis');
     state.chartTimeAxis = (axisSel && axisSel.value) || 'list';
+    const deptSel = document.getElementById('fChartDept');
+    state.chartDept = (deptSel && deptSel.value) || '';
     state.chartListFrom = document.getElementById('fChartFrom').value;
     state.chartListTo = document.getElementById('fChartTo').value;
     const clamped = clampChartRange(state.chartListFrom, state.chartListTo);
@@ -840,11 +867,20 @@
     toast(`已切换为按${chartAxisName()}统计`);
   }
 
+  function onChartDeptChange() {
+    state.chartDept = document.getElementById('fChartDept').value || '';
+    syncChartFiltersToUI();
+    renderSiteDept();
+    toast(state.chartDept ? `图表已筛选部门：${state.chartDept}` : '图表已取消部门筛选');
+  }
+
   function resetChartFilters() {
     const def = defaultChartMonthRange();
     state.chartListFrom = def.from;
     state.chartListTo = def.to;
+    state.chartDept = '';
     state.trendGrain = 'month';
+    fillChartDeptOptions();
     bindChartDateLimits();
     syncChartFiltersToUI();
   }
@@ -1035,12 +1071,31 @@
   }
 
   function trendDayRows() {
+    const from = state.chartListFrom || '';
+    const to = state.chartListTo || '';
+    const dept = state.chartDept || '';
+    if (dept) {
+      const byDay = state.chartTimeAxis === 'mail'
+        ? (DEC.by_mail_day_dept || {})
+        : (DEC.by_list_day_dept || {});
+      return chartAxisDays()
+        .filter(d => (!from || d >= from) && (!to || d <= to))
+        .map(day => {
+          const sl = pickDaySlice(byDay, day, dept);
+          const ov = (sl && sl.overview) || {};
+          return {
+            day,
+            listing: ov.listing || 0,
+            sku: ov.sku || 0,
+            cpc: ov.cpc_listing != null ? ov.cpc_listing : (ov.cpc || 0),
+          };
+        })
+        .filter(r => r.listing || r.sku || r.cpc);
+    }
     const T = DATA.trend || {};
     const axisKey = state.chartTimeAxis === 'mail' ? 'mail' : 'list';
     const axis = (T.axes && T.axes[axisKey]) || T;
     const byLabel = (axis.by_label && axis.by_label['']) || axis.days || [];
-    const from = state.chartListFrom || '';
-    const to = state.chartListTo || '';
     return byLabel.filter(r => {
       if (from && r.day < from) return false;
       if (to && r.day > to) return false;
@@ -1152,6 +1207,14 @@
     return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
   }
 
+  function chartScopeHint() {
+    const parts = [
+      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''}`,
+      state.chartDept || null,
+    ].filter(Boolean);
+    return parts.join(' · ');
+  }
+
   function renderTrend() {
     document.querySelectorAll('#trendGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.trendGrain));
     const titles = { day: '日度放开趋势', week: '周度放开趋势', month: '月度放开趋势' };
@@ -1175,7 +1238,7 @@
     canvas.style.display = 'block';
     empty.style.display = 'none';
     document.getElementById('trendHint').textContent =
-      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''} · ${axisTip[state.trendGrain] || ''}` +
+      `${chartScopeHint()} · ${axisTip[state.trendGrain] || ''}` +
       (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
     const seriesMeta = (DATA.trend && DATA.trend.series) || CHART_SERIES;
@@ -1214,7 +1277,7 @@
     canvas.style.display = 'block';
     empty.style.display = 'none';
     document.getElementById('siteChartHint').textContent =
-      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''} · 合规标签 SKU` +
+      `${chartScopeHint()} · 合规标签 SKU` +
       (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
     const datasets = CHART_SERIES.map(s => ({
@@ -1266,7 +1329,7 @@
     canvas.style.display = 'block';
     empty.style.display = 'none';
     document.getElementById('cat1ChartHint').textContent =
-      `${chartAxisName()} ${state.chartListFrom || ''}~${state.chartListTo || ''} · sku类目一级 · 合规标签 SKU` +
+      `${chartScopeHint()} · sku类目一级 · 合规标签 SKU` +
       (rows.length > 8 ? ' · 可左右拖动查看' : '');
 
     const datasets = CHART_SERIES.map(s => ({
@@ -1460,16 +1523,17 @@
     renderTrend();
   });
   document.getElementById('fChartTimeAxis').onchange = () => onChartTimeAxisChange();
+  document.getElementById('fChartDept').onchange = () => onChartDeptChange();
   document.getElementById('btnChartApply').onclick = () => {
     readChartFilters();
     renderSiteDept();
-    toast('图表统计时间已更新');
+    toast('图表筛选已更新');
   };
   document.getElementById('btnChartReset').onclick = () => {
     resetChartFilters();
     document.querySelectorAll('#trendGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.trendGrain));
     renderSiteDept();
-    toast('图表时间已重置为当月');
+    toast('图表筛选已重置');
   };
   document.getElementById('dimSeg').addEventListener('click', e => {
     const b = e.target.closest('[data-dim]'); if (!b) return;
