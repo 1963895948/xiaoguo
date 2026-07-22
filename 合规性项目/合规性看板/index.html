@@ -246,7 +246,7 @@
             <div class="field"><span class="lbl">统计时间</span>
               <select class="ctrl" id="fChartTimeAxis" style="min-width:128px">
                 <option value="list">刊登时间</option>
-                <option value="mail">收到邮件时间</option>
+                <option value="mail">邮件时间</option>
               </select>
             </div>
             <div class="field"><span class="lbl">时间范围</span>
@@ -402,7 +402,7 @@
   const ALL_DAYS = (DAY_RANGE.days || Object.keys(DEC.by_list_day || {})).slice().sort();
   const MAIL_DAY_RANGE = DEC.mail_day_range || {};
   const MAIL_DAYS = (MAIL_DAY_RANGE.days || Object.keys(DEC.by_mail_day || {})).slice().sort();
-  const CHART_AXIS_LABEL = { list: '刊登时间', mail: '收到邮件时间' };
+  const CHART_AXIS_LABEL = { list: '刊登时间', mail: '邮件时间' };
 
   function chartAxisDays() {
     return state.chartTimeAxis === 'mail' ? MAIL_DAYS : ALL_DAYS;
