@@ -542,6 +542,15 @@
     .org-user:hover{background:#eaf0ff;color:var(--pri)}
     .org-user.on{background:#eaf0ff;color:var(--pri);font-weight:600}
     .org-user.hidden,.org-dept.hidden,.org-team.hidden{display:none}
+    .assign-org-panel{
+      margin-top:10px;border:1px solid var(--line);border-radius:4px;
+      padding:10px;background:#fff;
+    }
+    .assign-org-panel .org-user.disabled,
+    .assign-org-panel .org-dept-hd.locked{
+      opacity:.55;cursor:default;color:var(--sub);
+    }
+    .assign-org-panel .org-user input[type="radio"]{accent-color:var(--pri)}
     .detect-operator-row{align-items:center}
     .detect-operator-row .sel{min-width:100px;flex:none}
     .detect-time-range{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -850,7 +859,7 @@
             <div class="detect-filter-grid">
               <div class="df-item">
                 <span class="df-label">系统检测结果</span>
-                <select class="sel"><option value="">全部</option><option>有合规义务</option><option>无合规义务</option></select>
+                <select class="sel"><option value="">全部</option><option>有合规风险</option><option>无合规风险</option></select>
               </div>
               <div class="df-item">
                 <span class="df-label">审核结果</span>
@@ -948,7 +957,7 @@
               <tr class="detect-data-row" data-sku="1941272"
                   data-title-cn="不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭"
                   data-title-en="Stainless Steel Candle Snuffer with Handle for Birthday Candles"
-                  data-sys-result="有合规义务" data-sys-desc="命中儿童产品相关关键词，建议核实 CPC 资质路径"
+                  data-sys-result="有合规风险" data-sys-desc="命中儿童产品相关关键词，建议核实 CPC 资质路径"
                   data-risk-sites="亚马逊：澳大利亚"
                   data-safe-sites="亚马逊：美国、英国、加拿大、法国、德国、日本"
                   data-audit="待审核" data-audit-remark="—" data-status="检测完成">
@@ -962,7 +971,7 @@
                 <td class="cell-ellipsis" title="不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭">不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭</td>
                 <td><span class="tag t-y">检测完成</span></td>
                 <td class="cell-sites">亚马逊：澳大利亚</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td class="cell-desc">命中儿童产品相关关键词，建议核实 CPC 资质路径</td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="">—</td>
@@ -987,7 +996,7 @@
               <tr class="detect-data-row" data-sku="SKU-A1001"
                   data-title-cn="儿童毛绒玩具套装 带音乐功能"
                   data-title-en="Plush Toy Set with Music for Kids"
-                  data-sys-result="有合规义务" data-sys-desc="玩具类目，命中 CPC 义务类型"
+                  data-sys-result="有合规风险" data-sys-desc="玩具类目，命中 CPC 义务类型"
                   data-risk-sites="亚马逊：美国" data-safe-sites="—"
                   data-audit="待审核" data-audit-remark="—" data-status="检测完成">
                 <td><input type="checkbox" class="detect-row-cb" /></td>
@@ -1000,7 +1009,7 @@
                 <td class="cell-ellipsis" title="儿童毛绒玩具套装 带音乐功能">儿童毛绒玩具套装 带音乐功能</td>
                 <td><span class="tag t-y">检测完成</span></td>
                 <td class="cell-sites">亚马逊：美国</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td class="cell-desc">玩具类目，命中 CPC 义务类型</td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="">—</td>
@@ -1025,7 +1034,7 @@
               <tr class="detect-data-row" data-sku="SKU-A1002"
                   data-title-cn="不锈钢厨房收纳架 三层"
                   data-title-en="3-Tier Stainless Steel Kitchen Storage Rack"
-                  data-sys-result="无合规义务" data-sys-desc="当前检测站点下未识别合规义务"
+                  data-sys-result="无合规风险" data-sys-desc="当前检测站点下未识别合规风险"
                   data-risk-sites="—"
                   data-safe-sites="亚马逊：美国、英国、德国、法国、日本"
                   data-audit="无需合规" data-audit-remark="经核实当前站点无需走合规路径" data-status="检测完成">
@@ -1036,8 +1045,8 @@
                 <td class="cell-ellipsis" title="不锈钢厨房收纳架 三层">不锈钢厨房收纳架 三层</td>
                 <td><span class="tag t-y">检测完成</span></td>
                 <td class="cell-sites">—</td>
-                <td><span class="tag t-y">无合规义务</span></td>
-                <td class="cell-desc">当前检测站点下未识别合规义务</td>
+                <td><span class="tag t-y">无合规风险</span></td>
+                <td class="cell-desc">当前检测站点下未识别合规风险</td>
                 <td>无需合规</td>
                 <td class="cell-ellipsis" title="经核实当前站点无需走合规路径">经核实当前站点无需走合规路径</td>
                 <td class="cell-meta"><div><b>提交</b> 王五</div><div><b>审核</b> 王五</div></td>
@@ -1222,15 +1231,22 @@
                 </div>
 
                 <div class="form-field">
-                  <label>合规政策或邮件</label>
+                  <label>合规政策</label>
                   <div class="ctl">
-                    <div class="rte">
-                      <div class="rte-bar">
-                        <span>↺</span><span>↻</span><span>正文</span><span>14px</span>
-                        <span><b>B</b></span><span><i>I</i></span><span><u>U</u></span>
-                        <span>≡</span><span>☰</span><span>🔗</span>
-                      </div>
-                      <div class="rte-body">Amazon US 儿童产品需符合 CPSIA，12 岁以下玩具须提供 CPC 及第三方测试报告；产品页需展示合规信息…</div>
+                    <div class="radio-group" id="policySourceMode" style="margin-bottom:10px">
+                      <label><input type="radio" name="policySource" value="pick" checked /> 从政策管理选择</label>
+                      <label><input type="radio" name="policySource" value="manual" /> 手动填写</label>
+                    </div>
+                    <div id="policyPickWrap">
+                      <select class="sel block" id="rescanPolicySelect">
+                        <option value="">请选择政策</option>
+                      </select>
+                      <div class="hint" style="margin-top:6px">选项来自「政策管理」；选择后下方展示政策内容，可再编辑。</div>
+                      <textarea class="textarea lg" id="rescanPolicyContent" style="margin-top:8px" placeholder="选择政策后自动带出内容，也可继续修改">Amazon US 儿童产品需符合 CPSIA，12 岁以下玩具须提供 CPC 及第三方测试报告；产品页需展示合规信息…</textarea>
+                    </div>
+                    <div id="policyManualWrap" hidden>
+                      <textarea class="textarea lg" id="rescanPolicyManual" placeholder="手动填写合规政策内容…"></textarea>
+                      <div class="hint" style="margin-top:6px">不依赖政策库，直接输入本次回扫使用的政策说明。</div>
                     </div>
                   </div>
                 </div>
@@ -1276,7 +1292,7 @@
             <input class="input" placeholder="任务编号 / 任务名称" />
             <select class="sel"><option>回扫类型</option><option>存量非定期</option><option>存量定期</option><option>增量政策回扫 SKU</option><option>增量 SKU 回扫政策</option><option>增量邮件回扫 SKU</option></select>
             <select class="sel"><option>回扫状态</option><option>待回扫</option><option>回扫中</option><option>回扫完成</option></select>
-            <select class="sel"><option>任务处理状态</option><option>待处理</option><option>处理中</option><option>处理完成</option></select>
+            <select class="sel"><option>审核状态</option><option>待分配</option><option>审核中</option><option>审核完成</option></select>
             <input class="input" placeholder="生成时间起" />
             <input class="input" placeholder="生成时间止" />
             <button class="btn pri">搜索</button>
@@ -1284,12 +1300,13 @@
           </div>
           <div class="toolbar row">
             <button class="btn pri" data-go="rescan-create">添加回扫任务</button>
+            <button class="btn pri">审核统计</button>
           </div>
           <table>
             <thead>
               <tr>
                 <th>任务编号</th><th>任务名称</th><th>回扫类型</th><th>平台/站点</th>
-                <th>回扫状态</th><th>任务处理状态</th><th>回扫结果</th>
+                <th>回扫状态</th><th>审核状态</th><th>回扫结果</th>
                 <th>生成时间</th><th>回扫完成时间</th><th>操作</th>
               </tr>
             </thead>
@@ -1300,11 +1317,11 @@
                 <td>存量非定期</td>
                 <td>亚马逊：美国</td>
                 <td><span class="tag t-y">回扫完成</span></td>
-                <td><span class="tag t-w">待处理</span></td>
+                <td><span class="tag t-w">待分配</span></td>
                 <td><span class="link" data-go="rescan-detail">总量 1,200 / 有风险 137 / 无风险 1,055 / 失败 8</span></td>
                 <td>2026-06-10 14:20</td>
                 <td>2026-06-11 09:05</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>100002</td>
@@ -1312,11 +1329,11 @@
                 <td>存量定期</td>
                 <td>亚马逊：美国</td>
                 <td><span class="tag t-w">回扫中</span></td>
-                <td><span class="tag t-w">处理中</span></td>
+                <td><span class="tag t-w">审核中</span></td>
                 <td>—</td>
                 <td>2026-06-01 08:00</td>
                 <td>—</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>100003</td>
@@ -1324,11 +1341,11 @@
                 <td>存量非定期</td>
                 <td>亚马逊：美国、加拿大</td>
                 <td><span class="tag t-y">回扫完成</span></td>
-                <td><span class="tag t-y">处理完成</span></td>
+                <td><span class="tag t-y">审核完成</span></td>
                 <td><span class="link" data-go="rescan-detail">总量 640 / 有风险 28 / 无风险 612 / 失败 0</span></td>
                 <td>2026-05-28 10:15</td>
                 <td>2026-05-28 16:40</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>100004</td>
@@ -1340,55 +1357,55 @@
                 <td>—</td>
                 <td>2026-06-22 09:00</td>
                 <td>—</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>200008</td>
                 <td>增量政策回扫-2026W24</td>
                 <td>增量政策回扫 SKU</td>
-                <td>亚马逊：全站点</td>
+                <td>亚马逊：美国、加拿大</td>
                 <td><span class="tag t-y">回扫完成</span></td>
-                <td><span class="tag t-w">待处理</span></td>
+                <td><span class="tag t-w">待分配</span></td>
                 <td><span class="link" data-go="rescan-detail">总量 1,286 / 有风险 86 / 无风险 1,194 / 失败 6</span></td>
                 <td>2026-06-05 02:00</td>
                 <td>2026-06-05 06:18</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>200009</td>
                 <td>增量SKU回扫-2026W24</td>
                 <td>增量 SKU 回扫政策</td>
-                <td>亚马逊：全站点</td>
+                <td>亚马逊：美国、英国、德国</td>
                 <td><span class="tag t-w">回扫中</span></td>
-                <td><span class="tag t-w">处理中</span></td>
+                <td><span class="tag t-w">审核中</span></td>
                 <td>—</td>
                 <td>2026-06-12 02:00</td>
                 <td>—</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>200010</td>
                 <td>增量政策回扫-锂电池UN38.3</td>
                 <td>增量政策回扫 SKU</td>
-                <td>亚马逊：全站点</td>
+                <td>亚马逊：德国、日本</td>
                 <td><span class="tag t-y">回扫完成</span></td>
-                <td><span class="tag t-y">处理完成</span></td>
+                <td><span class="tag t-y">审核完成</span></td>
                 <td><span class="link" data-go="rescan-detail">总量 512 / 有风险 41 / 无风险 471 / 失败 0</span></td>
                 <td>2026-06-18 11:05</td>
                 <td>2026-06-18 14:22</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>200011</td>
                 <td>增量SKU回扫-2026W25</td>
                 <td>增量 SKU 回扫政策</td>
-                <td>亚马逊：全站点</td>
+                <td>亚马逊：美国、法国、意大利</td>
                 <td><span class="tag t-y">回扫完成</span></td>
-                <td><span class="tag t-w">待处理</span></td>
+                <td><span class="tag t-w">待分配</span></td>
                 <td><span class="link" data-go="rescan-detail">总量 2,180 / 有风险 210 / 无风险 1,942 / 失败 28</span></td>
                 <td>2026-06-21 02:00</td>
                 <td>2026-06-21 07:10</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>100005</td>
@@ -1396,47 +1413,47 @@
                 <td>存量非定期</td>
                 <td>亚马逊：美国</td>
                 <td><span class="tag t-y">回扫完成</span></td>
-                <td><span class="tag t-y">处理完成</span></td>
+                <td><span class="tag t-y">审核完成</span></td>
                 <td><span class="link" data-go="rescan-detail">总量 320 / 有风险 0 / 无风险 320 / 失败 0</span></td>
                 <td>2026-06-08 15:30</td>
                 <td>2026-06-08 17:05</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>200012</td>
                 <td>增量政策回扫-儿童睡衣易燃性</td>
                 <td>增量政策回扫 SKU</td>
-                <td>亚马逊：全站点</td>
+                <td>亚马逊：美国、加拿大、英国</td>
                 <td><span class="tag t-w">待回扫</span></td>
                 <td>—</td>
                 <td>—</td>
                 <td>2026-06-22 16:40</td>
                 <td>—</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>200013</td>
                 <td>增量邮件回扫-CPC合规提醒</td>
                 <td>增量邮件回扫 SKU</td>
-                <td>亚马逊：全站点</td>
+                <td>亚马逊：美国、澳大利亚</td>
                 <td><span class="tag t-y">回扫完成</span></td>
-                <td><span class="tag t-w">待处理</span></td>
+                <td><span class="tag t-w">待分配</span></td>
                 <td><span class="link" data-go="rescan-detail">总量 186 / 有风险 42 / 无风险 138 / 失败 6</span></td>
                 <td>2026-06-19 09:20</td>
                 <td>2026-06-19 11:05</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
               <tr>
                 <td>200014</td>
                 <td>增量邮件回扫-FCC邮件通知</td>
                 <td>增量邮件回扫 SKU</td>
-                <td>亚马逊：全站点</td>
+                <td>亚马逊：美国、日本、新加坡</td>
                 <td><span class="tag t-w">回扫中</span></td>
-                <td><span class="tag t-w">处理中</span></td>
+                <td><span class="tag t-w">审核中</span></td>
                 <td>—</td>
                 <td>2026-06-22 14:10</td>
                 <td>—</td>
-                <td><span class="link" data-go="rescan-detail">回扫详情</span></td>
+                <td><span class="link rescan-assign-btn">分配任务</span> · <span class="link" data-go="rescan-detail">回扫详情</span></td>
               </tr>
             </tbody>
           </table>
@@ -1444,17 +1461,9 @@
         </section>
 
         <section id="rescan-detail" class="route">
-          <div class="task-banner">
-            <span>任务编号：<b>200008</b></span>
-            <span>任务名称：<b>增量政策回扫-2026W24</b></span>
-            <span>回扫类型：<b>增量政策回扫 SKU</b></span>
-            <span>平台/站点：<b>亚马逊 · 全站点</b></span>
-            <span class="link" data-go="rescan-result">← 返回任务列表</span>
-          </div>
-
           <div class="row">
             <input class="input" placeholder="任务编号" value="200008" style="min-width:120px" />
-            <select class="sel"><option>系统检测结果</option><option>有合规义务</option><option>无合规义务</option></select>
+            <select class="sel"><option>系统检测结果</option><option>有合规风险</option><option>无合规风险</option></select>
             <select class="sel"><option>审核结果</option><option>待审核</option><option>需合规</option><option>无需合规</option></select>
             <select class="sel"><option>审核人</option></select>
             <input class="input" placeholder="请输入 SKU" style="min-width:140px" />
@@ -1483,7 +1492,6 @@
               </div>
             </div>
             <button class="btn">批量提取 SKU</button>
-            <button class="btn pri">审核统计</button>
             <button class="btn pri">按筛选条件同步结果</button>
             <button class="btn pri">按筛选条件导出</button>
           </div>
@@ -1509,7 +1517,7 @@
                 <td class="cell-prod-info"><div class="prod-name">不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭</div><div class="prod-cat">Home & Kitchen › Home Decor › …</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">亚马逊：美国、阿联酋、澳大利亚</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="—">—</td>
                 <td><span class="link rescan-audit-btn">审核</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1526,7 +1534,7 @@
                 <td class="cell-prod-info"><div class="prod-name">儿童毛绒玩具套装 带音乐功能</div><div class="prod-cat">Toys & Games › Stuffed Animals</div></td>
                 <td class="cell-sites">亚马逊：美国</td>
                 <td class="cell-sites">亚马逊：美国</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="—">—</td>
                 <td><span class="link rescan-audit-btn">审核</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1540,7 +1548,7 @@
                 <td class="cell-prod-info"><div class="prod-name">不锈钢厨房收纳架 三层</div><div class="prod-cat">Home & Kitchen › Storage</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">—</td>
-                <td><span class="tag t-y">无合规义务</span></td>
+                <td><span class="tag t-y">无合规风险</span></td>
                 <td>无需合规</td>
                 <td class="cell-ellipsis" title="系统判定无义务，人工确认无需合规">系统判定无义务，人工确认无需合规</td>
                 <td><span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1557,7 +1565,7 @@
                 <td class="cell-prod-info"><div class="prod-name">儿童学习桌 可调节高度</div><div class="prod-cat">Home & Kitchen › Kids Furniture</div></td>
                 <td class="cell-sites">亚马逊：美国</td>
                 <td class="cell-sites">亚马逊：美国</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td><span class="tag t-d">需合规</span></td>
                 <td class="cell-ellipsis" title="需补充 CPC，标记美国站合规">需补充 CPC，标记美国站合规</td>
                 <td><span class="link rescan-sync-btn">同步</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1574,7 +1582,7 @@
                 <td class="cell-prod-info"><div class="prod-name">锂电池移动电源 10000mAh</div><div class="prod-cat">Electronics › Power Banks</div></td>
                 <td class="cell-sites">亚马逊：德国、日本</td>
                 <td class="cell-sites">亚马逊：德国、日本</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td><span class="tag t-d">需合规</span></td>
                 <td class="cell-ellipsis" title="锂电池需 UN38.3，德日站已打标">锂电池需 UN38.3，德日站已打标</td>
                 <td><span class="link rescan-sync-btn">同步</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1588,7 +1596,7 @@
                 <td class="cell-prod-info"><div class="prod-name">蓝牙音箱 便携防水</div><div class="prod-cat">Electronics › Audio</div></td>
                 <td class="cell-sites">亚马逊：美国、加拿大</td>
                 <td class="cell-sites">亚马逊：美国</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td><span class="tag t-d">需合规</span></td>
                 <td class="cell-ellipsis" title="缺 FCC 证书，同步美国、加拿大">缺 FCC 证书，同步美国、加拿大</td>
                 <td><span class="link rescan-sync-btn">同步</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1605,7 +1613,7 @@
                 <td class="cell-prod-info"><div class="prod-name">儿童睡衣套装 纯棉</div><div class="prod-cat">Clothing › Sleepwear</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">亚马逊：美国</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td><span class="tag t-y">无需合规</span></td>
                 <td class="cell-ellipsis" title="文案误报，审核为无需合规">文案误报，审核为无需合规</td>
                 <td><span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1619,7 +1627,7 @@
                 <td class="cell-prod-info"><div class="prod-name">硅胶烘焙模具套装</div><div class="prod-cat">Home › Bakeware</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">—</td>
-                <td><span class="tag t-y">无合规义务</span></td>
+                <td><span class="tag t-y">无合规风险</span></td>
                 <td>无需合规</td>
                 <td class="cell-ellipsis" title="无风险，无需处理">无风险，无需处理</td>
                 <td><span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1636,7 +1644,7 @@
                 <td class="cell-prod-info"><div class="prod-name">婴儿安抚巾 带牙胶</div><div class="prod-cat">Baby › Comfort</div></td>
                 <td class="cell-sites">亚马逊：美国、英国、加拿大</td>
                 <td class="cell-sites">亚马逊：美国、英国、加拿大</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td><span class="tag t-d">需合规</span></td>
                 <td class="cell-ellipsis" title="婴幼儿用品，多站点需合规">婴幼儿用品，多站点需合规</td>
                 <td><span class="link rescan-sync-btn">同步</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1653,7 +1661,7 @@
                 <td class="cell-prod-info"><div class="prod-name">无线充电器 三合一</div><div class="prod-cat">Electronics › Chargers</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">亚马逊：美国</td>
-                <td><span class="tag t-d">有合规义务</span></td>
+                <td><span class="tag t-d">有合规风险</span></td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="—">—</td>
                 <td><span class="link rescan-audit-btn">审核</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1816,6 +1824,33 @@
     </div>
   </div>
 
+
+  <!-- 分配任务 · 选人（单选，仅知产与产品合规部） -->
+  <div class="modal-mask" id="assignTaskModal" aria-hidden="true">
+    <div class="modal-box sm" role="dialog" aria-labelledby="assignTaskTitle">
+      <div class="modal-hd">
+        <span id="assignTaskTitle">分配任务</span>
+        <button type="button" class="modal-x" id="closeAssignTaskModal" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd">
+        <p class="hint" style="margin:0 0 10px">任务编号：<b id="assignTaskId">—</b> · 仅可选择「知产与产品合规部」人员（单选）</p>
+        <div class="org-filter" style="max-width:none;width:100%">
+          <div class="org-filter-trigger" style="cursor:default">
+            <span class="val" id="assignPickedLabel"><span class="ph">请选择审核人</span></span>
+            <span class="ico">⌕</span>
+          </div>
+        </div>
+        <div class="assign-org-panel">
+          <input class="site-filter-search" id="assignOrgSearch" placeholder="搜索姓名" style="margin-bottom:8px" />
+          <div class="org-tree" id="assignOrgTree" style="max-height:320px"></div>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" id="cancelAssignTaskModal">取消</button>
+        <button type="button" class="btn pri" id="confirmAssignTaskModal">确定</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 同步二次确认 -->
   <div class="modal-mask" id="syncConfirmModal" aria-hidden="true">
@@ -2034,6 +2069,7 @@
       renderTabs(id);
       location.hash = id;
       document.title = routeMeta[id].title + ' - 合规品管理';
+      if (id === 'rescan-create') refreshRescanPolicySelect?.();
     }
 
     jumpers.forEach(v => v.addEventListener('click', e => {
@@ -2094,6 +2130,54 @@
     }
     taskTypeSelect?.addEventListener('change', () => setTaskType(taskTypeSelect.value));
     setTaskType(taskTypeSelect?.value || 'once');
+
+    /* 合规政策：从政策管理选择 / 手动填写 */
+    const policyPickWrap = document.getElementById('policyPickWrap');
+    const policyManualWrap = document.getElementById('policyManualWrap');
+    const rescanPolicySelect = document.getElementById('rescanPolicySelect');
+    const rescanPolicyContent = document.getElementById('rescanPolicyContent');
+    function getPolicyListFromTable(){
+      const rows = [...document.querySelectorAll('#policyTableBody tr')];
+      return rows.map(tr => {
+        const tds = tr.querySelectorAll('td');
+        return {
+          name: (tds[0]?.textContent || '').trim(),
+          content: tds[1]?.getAttribute('title') || (tds[1]?.textContent || '').trim(),
+          platform: (tds[2]?.textContent || '').trim(),
+          sites: (tds[3]?.textContent || '').trim()
+        };
+      }).filter(p => p.name);
+    }
+    function refreshRescanPolicySelect(){
+      if (!rescanPolicySelect) return;
+      const list = getPolicyListFromTable();
+      const cur = rescanPolicySelect.value;
+      rescanPolicySelect.innerHTML = '<option value="">请选择政策</option>' + list.map((p, i) =>
+        `<option value="${i}">${p.name.replace(/</g, '&lt;')}（亚马逊 · ${p.sites.replace(/</g, '&lt;')}）</option>`
+      ).join('');
+      if (cur && +cur < list.length) {
+        rescanPolicySelect.value = cur;
+      }
+    }
+    function syncPolicySourceMode(){
+      const mode = document.querySelector('input[name="policySource"]:checked')?.value || 'pick';
+      if (policyPickWrap) policyPickWrap.hidden = mode !== 'pick';
+      if (policyManualWrap) policyManualWrap.hidden = mode !== 'manual';
+      if (mode === 'pick') refreshRescanPolicySelect();
+    }
+    document.querySelectorAll('input[name="policySource"]').forEach(r => {
+      r.addEventListener('change', syncPolicySourceMode);
+    });
+    rescanPolicySelect?.addEventListener('change', () => {
+      const list = getPolicyListFromTable();
+      const p = list[+rescanPolicySelect.value];
+      if (p && rescanPolicyContent) {
+        rescanPolicyContent.value = p.content || '';
+        const ruleName = document.querySelector('#rescan-create input.input.block[maxlength="30"]');
+        if (ruleName && !ruleName.value) ruleName.value = p.name.slice(0, 30);
+      }
+    });
+    syncPolicySourceMode();
 
     document.querySelectorAll('#rescanSkuMode input[name="skuMode"]').forEach(radio => {
       radio.addEventListener('change', () => {
@@ -2482,6 +2566,158 @@
         ]
       }
     ];
+
+    /* 分配任务 · 组织树（仅知产与产品合规部人员可选） */
+    const ASSIGN_ORG_TREE = [
+      {
+        id: 'scp', name: '供应链产品部', selectable: false,
+        children: [
+          { id: 'scp-ow', name: '海外仓产品开发部', selectable: false, users: [] },
+          { id: 'scp-pur', name: '开发采购部', selectable: false, users: [] },
+          { id: 'scp-content', name: '内容部', selectable: false, users: [] },
+          { id: 'scp-design', name: '设计部', selectable: false, users: [] },
+          {
+            id: 'scp-ip', name: '知产与产品合规部', selectable: true,
+            users: ['马婷婷'],
+            teams: [
+              { id: 'scp-ip-group', name: '知识产权组', users: ['李庆（知产）', '王敏（知产）'] },
+              { id: 'scp-comp-group', name: '产品合规组', users: ['林佳丽', '陈晓'] }
+            ]
+          }
+        ]
+      }
+    ];
+    let assignTaskId = '';
+    let assignSelectedUser = '';
+
+    function renderAssignOrgTree(keyword = ''){
+      const tree = document.getElementById('assignOrgTree');
+      if (!tree) return;
+      const kw = (keyword || '').trim().toLowerCase();
+      tree.innerHTML = ASSIGN_ORG_TREE.map(root => {
+        const childrenHtml = (root.children || []).map(node => {
+          const isIp = node.selectable;
+          const users = [
+            ...(node.users || []).map(u => ({ name: u, team: '' })),
+            ...(node.teams || []).flatMap(t => (t.users || []).map(u => ({ name: u, team: t.name })))
+          ];
+          const filteredUsers = kw
+            ? users.filter(u => u.name.toLowerCase().includes(kw) || (u.team && u.team.toLowerCase().includes(kw)))
+            : users;
+          if (kw && !isIp && !node.name.toLowerCase().includes(kw)) return '';
+          if (kw && isIp && !filteredUsers.length && !node.name.toLowerCase().includes(kw)) return '';
+
+          let body = '';
+          if (isIp) {
+            const direct = (node.users || []).filter(u => !kw || u.toLowerCase().includes(kw));
+            const teamsHtml = (node.teams || []).map(team => {
+              const tus = (team.users || []).filter(u => !kw || u.toLowerCase().includes(kw) || team.name.toLowerCase().includes(kw));
+              if (kw && !tus.length) return '';
+              return `
+                <div class="org-team">
+                  <div class="org-team-hd"><span class="org-dept-arrow">▾</span><span>${team.name}</span></div>
+                  <div class="org-users">
+                    ${tus.map(u => `
+                      <label class="org-user${assignSelectedUser === u ? ' on' : ''}">
+                        <input type="radio" name="assignUser" value="${u}" ${assignSelectedUser === u ? 'checked' : ''} />
+                        <span>${u}</span>
+                      </label>
+                    `).join('')}
+                  </div>
+                </div>`;
+            }).join('');
+            body = `
+              <div class="org-users" style="padding-left:28px">
+                ${direct.map(u => `
+                  <label class="org-user${assignSelectedUser === u ? ' on' : ''}">
+                    <input type="radio" name="assignUser" value="${u}" ${assignSelectedUser === u ? 'checked' : ''} />
+                    <span>${u}</span>
+                  </label>
+                `).join('')}
+              </div>
+              ${teamsHtml}`;
+          } else {
+            body = `<div class="hint" style="padding:4px 10px 8px 28px;margin:0">不可分配</div>`;
+          }
+          return `
+            <div class="org-dept">
+              <div class="org-dept-hd${isIp ? '' : ' locked'}">
+                <span class="org-dept-arrow">▾</span>
+                <span>${node.name}${isIp ? '' : '（不可选）'}</span>
+              </div>
+              ${body}
+            </div>`;
+        }).join('');
+        return `
+          <div class="org-dept">
+            <div class="org-dept-hd locked">
+              <span class="org-dept-arrow">▾</span>
+              <span>${root.name}</span>
+            </div>
+            <div style="padding-left:12px">${childrenHtml}</div>
+          </div>`;
+      }).join('');
+
+      tree.querySelectorAll('input[name="assignUser"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          assignSelectedUser = radio.value;
+          updateAssignPickedLabel();
+          tree.querySelectorAll('.org-user').forEach(el => el.classList.remove('on'));
+          radio.closest('.org-user')?.classList.add('on');
+        });
+      });
+    }
+    function updateAssignPickedLabel(){
+      const el = document.getElementById('assignPickedLabel');
+      if (!el) return;
+      el.innerHTML = assignSelectedUser
+        ? assignSelectedUser
+        : '<span class="ph">请选择审核人</span>';
+    }
+    function openAssignTaskModal(taskId){
+      assignTaskId = taskId || '—';
+      assignSelectedUser = '';
+      const idEl = document.getElementById('assignTaskId');
+      if (idEl) idEl.textContent = assignTaskId;
+      updateAssignPickedLabel();
+      const search = document.getElementById('assignOrgSearch');
+      if (search) search.value = '';
+      renderAssignOrgTree();
+      document.getElementById('assignTaskModal')?.classList.add('show');
+    }
+    function closeAssignTaskModal(){
+      document.getElementById('assignTaskModal')?.classList.remove('show');
+      assignTaskId = '';
+      assignSelectedUser = '';
+    }
+    document.getElementById('closeAssignTaskModal')?.addEventListener('click', closeAssignTaskModal);
+    document.getElementById('cancelAssignTaskModal')?.addEventListener('click', closeAssignTaskModal);
+    document.getElementById('assignTaskModal')?.addEventListener('click', e => {
+      if (e.target.id === 'assignTaskModal') closeAssignTaskModal();
+    });
+    document.getElementById('assignOrgSearch')?.addEventListener('input', e => {
+      renderAssignOrgTree(e.target.value);
+    });
+    document.getElementById('confirmAssignTaskModal')?.addEventListener('click', () => {
+      if (!assignSelectedUser) {
+        showToast('请选择知产与产品合规部人员');
+        return;
+      }
+      const tip = `任务 ${assignTaskId} 已分配给 ${assignSelectedUser}`;
+      closeAssignTaskModal();
+      showToast(tip);
+    });
+
+    const rescanResultSection = document.getElementById('rescan-result');
+    rescanResultSection?.addEventListener('click', e => {
+      const btn = e.target.closest('.rescan-assign-btn');
+      if (!btn) return;
+      e.preventDefault();
+      const row = btn.closest('tr');
+      const taskId = row?.querySelector('td')?.textContent?.trim() || '—';
+      openAssignTaskModal(taskId);
+    });
+
     const detectOperatorFilter = document.getElementById('detectOperatorFilter');
     const detectOperatorLabel = document.getElementById('detectOperatorLabel');
     const detectOperatorRole = document.getElementById('detectOperatorRole');
@@ -2825,7 +3061,7 @@
       const sysEl = document.getElementById('detailSysResult');
       if (sysEl) {
         const t = data.sysResult || '—';
-        sysEl.className = 'v' + (t === '有合规义务' || t === '有风险' ? ' danger' : (t === '无合规义务' || t === '无风险' ? ' ok' : ''));
+        sysEl.className = 'v' + (t === '有合规风险' || t === '有风险' ? ' danger' : (t === '无合规风险' || t === '无风险' ? ' ok' : ''));
         sysEl.textContent = t;
       }
       fillDetailField('detailSysDesc', data.sysDesc);
@@ -2859,7 +3095,7 @@
       const tds = [...row.children];
       const text = (i) => (tds[i]?.innerText || '').replace(/\s+/g, ' ').trim() || '—';
       const riskRaw = text(7);
-      const riskSites = (!riskRaw || riskRaw === '—' || riskRaw === '无合规义务')
+      const riskSites = (!riskRaw || riskRaw === '—' || riskRaw === '无合规风险')
         ? '—'
         : riskRaw.replace(/^需合规：/, '');
       const sysResult = text(8);
@@ -2869,7 +3105,7 @@
         category: row.querySelector('.prod-cat')?.textContent?.trim() || '—',
         riskSites,
         sysResult,
-        sysDesc: sysResult === '有合规义务' ? '系统判定存在合规义务，请结合政策核实' : '—',
+        sysDesc: sysResult === '有合规风险' ? '系统判定存在合规风险，请结合政策核实' : '—',
         audit: text(9),
         auditRemark: text(10)
       });
