@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>合规回扫详情 - 审核/复核/同步原型</title>
+  <title>合规回扫详情 - 审核/同步原型</title>
   <link rel="stylesheet" href="../../import/prototype-annotate.css" />
   <style>
     :root{
@@ -290,13 +290,12 @@
     <div class="topbar">
       <div>
         <div class="title">合规回扫详情</div>
-        <div class="subtitle">审核 → 复核 → 同步 · 任务 SKU 明细（MVP 展示）</div>
+        <div class="subtitle">审核 → 同步 · 任务 SKU 明细（不设复核）</div>
       </div>
 
       <div class="steps">
         <div class="step done"><div class="dot">1</div><div>审核</div></div>
-        <div class="step on"><div class="dot">2</div><div>复核</div></div>
-        <div class="step"><div class="dot">3</div><div>同步</div></div>
+        <div class="step on"><div class="dot">2</div><div>同步</div></div>
       </div>
     </div>
 
@@ -310,8 +309,7 @@
       </div>
       <div class="right">
         <button class="btn btn-primary" id="btnBatchAudit" type="button">批量审核</button>
-        <button class="btn" id="btnBatchRecheck" type="button">批量复核</button>
-        <button class="btn btn-success" id="btnBatchSync" type="button" disabled>批量同步产品库</button>
+        <button class="btn btn-success" id="btnBatchSync" type="button">批量同步产品库</button>
       </div>
     </div>
 
@@ -325,7 +323,6 @@
             <th style="width:140px;">义务类型</th>
             <th style="width:140px;">系统检测结果</th>
             <th style="width:140px;">审核结果</th>
-            <th style="width:140px;">复核结果</th>
             <th style="width:120px;">是否同步</th>
             <th style="min-width:250px;">操作</th>
           </tr>
@@ -346,12 +343,10 @@
             <td><span class="tag">TOY_CPC</span></td>
             <td><span class="tag danger">有合规义务</span></td>
             <td><span class="tag success">需合规</span></td>
-            <td><span class="tag warn">待复核</span></td>
-            <td><span class="muted">—</span></td>
+            <td><span class="muted">待同步</span></td>
             <td>
               <div class="row-actions">
-                <span class="linklike" onclick="openRecheck()">复核</span>
-                <span class="linklike" style="opacity:.35; pointer-events:none;">同步</span>
+                <span class="linklike" onclick="openSync()">同步</span>
                 <span class="linklike" onclick="openLog()">日志</span>
               </div>
             </td>
@@ -371,12 +366,10 @@
             <td><span class="tag danger">Amazon US</span></td>
             <td><span class="tag">BATT_UN38</span></td>
             <td><span class="tag danger">有合规义务</span></td>
-            <td><span class="tag success">需合规</span></td>
-            <td><span class="tag success">无需合规（示意）</span></td>
+            <td><span class="tag">无需合规</span></td>
             <td><span class="muted">无需同步</span></td>
             <td>
               <div class="row-actions">
-                <span class="linklike" onclick="openRecheck()">复核（只读/待确认）</span>
                 <span class="linklike" style="opacity:.35; pointer-events:none;">同步</span>
                 <span class="linklike" onclick="openLog()">日志</span>
               </div>
@@ -399,11 +392,10 @@
             <td><span class="tag warn">待确认</span></td>
             <td><span class="muted">待审核</span></td>
             <td><span class="muted">—</span></td>
-            <td><span class="muted">—</span></td>
             <td>
               <div class="row-actions">
                 <span class="linklike" style="opacity:.35; pointer-events:none;">审核</span>
-                <span class="linklike" style="opacity:.35; pointer-events:none;">复核</span>
+                <span class="linklike" style="opacity:.35; pointer-events:none;">同步</span>
                 <span class="linklike" onclick="openLog()">日志</span>
               </div>
             </td>
@@ -414,7 +406,7 @@
     </div>
 
     <div class="muted" style="margin-top:12px;">
-      规则：未复核的数据不可同步；复核结果为「需合规」才可同步产品库。
+      规则：审核=需合规 方可同步产品库；<b>不设复核</b>。
     </div>
   </div>
 
@@ -462,42 +454,6 @@
     </div>
   </div>
 
-  <!-- 批量复核弹窗 -->
-  <div class="overlay" id="recheckOverlay">
-    <div class="modal">
-      <div class="modal-head">
-        <div>批量复核</div>
-        <div class="x" onclick="closeAll()">×</div>
-      </div>
-      <div class="form">
-        <div class="field">
-          <label>复核结果（必填）</label>
-          <select class="ctrl" id="recheckResult">
-            <option value="pending">待确认</option>
-            <option value="yes">需合规</option>
-            <option value="no">无需合规</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>需合规站点（多选）</label>
-          <select class="ctrl" id="recheckSites" multiple size="3">
-            <option selected>Amazon US</option>
-            <option>Amazon CA</option>
-            <option>Amazon GB</option>
-          </select>
-        </div>
-        <div class="field full">
-          <label>复核说明（非必填）</label>
-          <textarea class="ctrl" id="recheckNote" placeholder="复核原因/证据（原型示意）"></textarea>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn" onclick="closeAll()">取消</button>
-        <button class="btn btn-primary" onclick="toast('批量复核完成（原型示意）'); setSyncEnable(); closeAll();">确认复核</button>
-      </div>
-    </div>
-  </div>
-
   <!-- 同步确认弹窗 -->
   <div class="overlay" id="syncOverlay">
     <div class="modal">
@@ -506,7 +462,7 @@
         <div class="x" onclick="closeAll()">×</div>
       </div>
       <div style="color:var(--text-2); font-size:13px; line-height:1.7;">
-        <div><b style="color:var(--text);">仅</b> 复核结果=「需合规」的 SKU 会同步。</div>
+        <div><b style="color:var(--text);">仅</b> 审核结果=「需合规」的 SKU 会同步。</div>
         <div style="margin-top:10px;" class="muted">同步成功后将回写「是否同步=是」。</div>
       </div>
       <div class="modal-foot">
@@ -542,32 +498,23 @@
       document.getElementById(id).classList.remove('show');
     }
     function closeAll(){
-      ['auditOverlay','recheckOverlay','syncOverlay'].forEach(hideOverlay);
+      ['auditOverlay','syncOverlay'].forEach(hideOverlay);
     }
-    function openRecheck(){ showOverlay('recheckOverlay'); }
+    function openSync(){ showOverlay('syncOverlay'); }
     function openLog(){ toast('日志弹窗（原型占位）'); }
-    function setSyncEnable(){
-      document.getElementById('btnBatchSync').disabled = false;
-      toast('可同步（原型示意）');
-    }
 
     document.getElementById('btnBatchAudit').onclick = () => showOverlay('auditOverlay');
-    document.getElementById('btnBatchRecheck').onclick = () => showOverlay('recheckOverlay');
     document.getElementById('btnBatchSync').onclick = () => showOverlay('syncOverlay');
-
-    // 初始化：同步按钮默认不可用（表示尚未复核）
-    setSyncEnable = setSyncEnable;
   </script>
 
   <script>
     PrototypeAnnotate.init({
       storageKey: 'compliance-rescan-detail-annotations',
-      exportTitle: '合规回扫详情 - 原型（审核/复核/同步）',
+      exportTitle: '合规回扫详情 - 原型（审核/同步）',
       exportFilename: '合规回扫详情-原型标注.md',
       scopeLabels: {
         page: '合规回扫详情页',
         auditOverlay: '批量审核弹窗',
-        recheckOverlay: '批量复核弹窗',
         syncOverlay: '同步确认弹窗',
         auditPanel: '操作区'
       },
