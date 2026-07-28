@@ -1290,7 +1290,7 @@
           <p class="hint" style="margin:0 0 12px">统一展示<strong>存量回扫任务</strong>与<strong>增量回扫任务</strong>（一个回扫队列批次 = 一条任务）。</p>
           <div class="row">
             <input class="input" placeholder="任务编号 / 任务名称" />
-            <select class="sel"><option>回扫类型</option><option>存量非定期</option><option>存量定期</option><option>增量政策回扫 SKU</option><option>增量 SKU 回扫政策</option><option>增量邮件回扫 SKU</option></select>
+            <select class="sel"><option>回扫类型</option><option>存量非定期</option><option>存量定期</option><option>增量 SKU 回扫</option><option>增量政策回扫</option><option>增量邮件回扫</option></select>
             <select class="sel"><option>回扫状态</option><option>待回扫</option><option>回扫中</option><option>回扫完成</option></select>
             <select class="sel"><option>审核状态</option><option>待分配</option><option>审核中</option><option>审核完成</option></select>
             <input class="input" placeholder="生成时间起" />
@@ -1362,7 +1362,7 @@
               <tr>
                 <td>200008</td>
                 <td>增量政策回扫-2026W24</td>
-                <td>增量政策回扫 SKU</td>
+                <td>增量政策回扫</td>
                 <td>亚马逊：美国、加拿大</td>
                 <td><span class="tag t-y">回扫完成</span></td>
                 <td><span class="tag t-w">待分配</span></td>
@@ -1374,7 +1374,7 @@
               <tr>
                 <td>200009</td>
                 <td>增量SKU回扫-2026W24</td>
-                <td>增量 SKU 回扫政策</td>
+                <td>增量 SKU 回扫</td>
                 <td>亚马逊：美国、英国、德国</td>
                 <td><span class="tag t-w">回扫中</span></td>
                 <td><span class="tag t-w">审核中</span></td>
@@ -1386,7 +1386,7 @@
               <tr>
                 <td>200010</td>
                 <td>增量政策回扫-锂电池UN38.3</td>
-                <td>增量政策回扫 SKU</td>
+                <td>增量政策回扫</td>
                 <td>亚马逊：德国、日本</td>
                 <td><span class="tag t-y">回扫完成</span></td>
                 <td><span class="tag t-y">审核完成</span></td>
@@ -1398,7 +1398,7 @@
               <tr>
                 <td>200011</td>
                 <td>增量SKU回扫-2026W25</td>
-                <td>增量 SKU 回扫政策</td>
+                <td>增量 SKU 回扫</td>
                 <td>亚马逊：美国、法国、意大利</td>
                 <td><span class="tag t-y">回扫完成</span></td>
                 <td><span class="tag t-w">待分配</span></td>
@@ -1422,7 +1422,7 @@
               <tr>
                 <td>200012</td>
                 <td>增量政策回扫-儿童睡衣易燃性</td>
-                <td>增量政策回扫 SKU</td>
+                <td>增量政策回扫</td>
                 <td>亚马逊：美国、加拿大、英国</td>
                 <td><span class="tag t-w">待回扫</span></td>
                 <td>—</td>
@@ -1434,7 +1434,7 @@
               <tr>
                 <td>200013</td>
                 <td>增量邮件回扫-CPC合规提醒</td>
-                <td>增量邮件回扫 SKU</td>
+                <td>增量邮件回扫</td>
                 <td>亚马逊：美国、澳大利亚</td>
                 <td><span class="tag t-y">回扫完成</span></td>
                 <td><span class="tag t-w">待分配</span></td>
@@ -1446,7 +1446,7 @@
               <tr>
                 <td>200014</td>
                 <td>增量邮件回扫-FCC邮件通知</td>
-                <td>增量邮件回扫 SKU</td>
+                <td>增量邮件回扫</td>
                 <td>亚马逊：美国、日本、新加坡</td>
                 <td><span class="tag t-w">回扫中</span></td>
                 <td><span class="tag t-w">审核中</span></td>
@@ -1678,7 +1678,18 @@
               <option value="">合规分类</option>
             </select>
             <select class="sel"><option selected>亚马逊</option></select>
-            <select class="sel"><option>站点</option><option selected>美国</option><option>英国</option><option>加拿大</option></select>
+            <div class="site-filter" id="policySiteFilter" style="flex:none;width:200px;max-width:200px;min-width:160px">
+              <div class="site-filter-trigger" id="policySiteFilterTrigger">
+                <span class="val ph" id="policySiteFilterLabel">站点（可多选）</span>
+                <span class="ico">▾</span>
+              </div>
+              <div class="site-filter-panel" id="policySiteFilterPanel">
+                <div class="site-filter-search-wrap">
+                  <input type="text" class="site-filter-search" id="policySiteFilterSearch" placeholder="搜索站点" />
+                </div>
+                <div class="site-tree" id="policySiteFilterTree" style="max-height:220px;overflow:auto;padding:4px 10px"></div>
+              </div>
+            </div>
             <select class="sel" id="policyStatusFilter">
               <option value="">状态</option>
               <option>待审核</option>
@@ -1785,7 +1796,7 @@
               </div>
             </div>
 
-            <p class="hint" style="margin:8px 0 0">提交后进入<strong>待审核</strong>。知产与产品合规部<strong>审核通过</strong>后：写入大模型学习 → 触发<strong>增量政策回扫 SKU（全量 SKU）</strong>。确认后不可再改，只能停用或新增。</p>
+            <p class="hint" style="margin:8px 0 0">提交后进入<strong>待审核</strong>。知产与产品合规部<strong>审核通过</strong>后：写入大模型学习 → 触发<strong>增量政策回扫（全量 SKU）</strong>。确认后不可再改，只能停用或新增。</p>
 
             <div class="form-footer">
               <button type="button" class="btn" data-go="policy">取消</button>
@@ -2585,6 +2596,79 @@
     function getAmazonSites(){
       return PLATFORM_SITES.find(p => p.id === 'amazon')?.sites || [];
     }
+
+    /* 政策管理 · 站点筛选多选（亚马逊站点） */
+    const policySiteFilter = document.getElementById('policySiteFilter');
+    const policySiteFilterLabel = document.getElementById('policySiteFilterLabel');
+    const policyFilterSites = new Set();
+    function updatePolicySiteFilterLabel(){
+      if (!policySiteFilterLabel) return;
+      if (!policyFilterSites.size) {
+        policySiteFilterLabel.textContent = '站点（可多选）';
+        policySiteFilterLabel.classList.add('ph');
+        return;
+      }
+      const text = [...policyFilterSites].join('、');
+      policySiteFilterLabel.textContent = text.length > 18 ? text.slice(0, 18) + '…' : text;
+      policySiteFilterLabel.classList.remove('ph');
+    }
+    function renderPolicySiteFilterTree(keyword = ''){
+      const tree = document.getElementById('policySiteFilterTree');
+      if (!tree) return;
+      const kw = keyword.trim().toLowerCase();
+      const sites = getAmazonSites().filter(s => !kw || s.toLowerCase().includes(kw));
+      const allSites = getAmazonSites();
+      const allChecked = allSites.length && allSites.every(s => policyFilterSites.has(s));
+      const someChecked = allSites.some(s => policyFilterSites.has(s));
+      tree.innerHTML = `
+        <label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px">
+          <input type="checkbox" id="policySiteFilterAll" ${allChecked ? 'checked' : ''} />
+          <span>全选亚马逊站点</span>
+        </label>
+        ${sites.map(s => {
+          const checked = policyFilterSites.has(s) ? 'checked' : '';
+          return `<label style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px"><input type="checkbox" class="policy-site-cb" data-site="${s}" ${checked} /> ${s}</label>`;
+        }).join('') || '<div class="hint" style="padding:8px 0">无匹配站点</div>'}`;
+      const allCb = document.getElementById('policySiteFilterAll');
+      if (allCb && someChecked && !allChecked) allCb.indeterminate = true;
+      allCb?.addEventListener('change', () => {
+        allSites.forEach(s => {
+          if (allCb.checked) policyFilterSites.add(s);
+          else policyFilterSites.delete(s);
+        });
+        renderPolicySiteFilterTree(document.getElementById('policySiteFilterSearch')?.value || '');
+        updatePolicySiteFilterLabel();
+      });
+      tree.querySelectorAll('.policy-site-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const site = cb.getAttribute('data-site');
+          if (cb.checked) policyFilterSites.add(site);
+          else policyFilterSites.delete(site);
+          renderPolicySiteFilterTree(document.getElementById('policySiteFilterSearch')?.value || '');
+          updatePolicySiteFilterLabel();
+        });
+      });
+    }
+    function closePolicySiteFilter(){
+      policySiteFilter?.classList.remove('open');
+    }
+    document.getElementById('policySiteFilterTrigger')?.addEventListener('click', e => {
+      e.stopPropagation();
+      const willOpen = !policySiteFilter?.classList.contains('open');
+      closePolicySiteFilter();
+      if (willOpen) {
+        renderPolicySiteFilterTree();
+        policySiteFilter?.classList.add('open');
+      }
+    });
+    document.getElementById('policySiteFilterSearch')?.addEventListener('input', e => {
+      renderPolicySiteFilterTree(e.target.value);
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#policySiteFilter')) closePolicySiteFilter();
+    });
+    updatePolicySiteFilterLabel();
+
     function renderDetectSiteTree(){
       const tree = document.getElementById('detectSiteTree');
       if (!tree) return;
@@ -3825,7 +3909,7 @@
         policyModalRow.setAttribute('data-status', '已通过');
         if (statusTd) statusTd.innerHTML = '<span class="tag t-y">已通过</span>';
         if (opsTd) opsTd.innerHTML = '<span class="link policy-view-btn">查看</span> · <span class="link policy-disable-btn">停用</span>';
-        showToast('审核通过：已写入大模型学习，并触发增量政策回扫 SKU（全量 SKU）');
+        showToast('审核通过：已写入大模型学习，并触发增量政策回扫（全量 SKU）');
       } else {
         policyModalRow.setAttribute('data-status', '已驳回');
         if (statusTd) statusTd.innerHTML = '<span class="tag t-d">已驳回</span>';
