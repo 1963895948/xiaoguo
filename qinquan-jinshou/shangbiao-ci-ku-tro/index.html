@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../../import/prototype-annotate.css" />
+  <title>商标词库 · 是否TRO词</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #f0f2f5;
+      color: #303133;
+      font-size: 13px;
+      min-height: 100vh;
+    }
+    .layout { display: flex; min-height: 100vh; }
+    .sider {
+      width: 200px; flex-shrink: 0; background: #001529; color: rgba(255,255,255,.65);
+      padding: 16px 0;
+    }
+    .sider-brand {
+      padding: 8px 20px 18px; color: #fff; font-size: 15px; font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 8px;
+    }
+    .sider-brand small { display: block; margin-top: 6px; font-size: 12px; font-weight: 400; color: rgba(255,255,255,.45); }
+    .sider a {
+      display: block; padding: 10px 20px; color: rgba(255,255,255,.65); text-decoration: none;
+    }
+    .sider a.active { background: #1890ff; color: #fff; }
+
+    .main { flex: 1; min-width: 0; padding: 16px 20px 28px; }
+    .tabs {
+      display: flex; gap: 0; background: #fff; border-radius: 4px 4px 0 0;
+      border-bottom: 1px solid #f0f0f0; padding: 0 16px;
+    }
+    .tab {
+      padding: 12px 16px; color: #595959; cursor: default; border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab.active { color: #1890ff; border-bottom-color: #1890ff; font-weight: 500; }
+
+    .card {
+      background: #fff; border-radius: 0 0 4px 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06); padding: 16px 20px 20px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 12px 16px;
+      margin-bottom: 12px;
+    }
+    .fi { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .fi label { flex: 0 0 auto; color: #606266; white-space: nowrap; }
+    .fi .input, .fi .select { flex: 1; min-width: 0; }
+    .fi.highlight label { color: #1890ff; font-weight: 600; }
+    .fi.highlight .select { border-color: #91d5ff; box-shadow: 0 0 0 2px rgba(24,144,255,.12); }
+    .filter-actions {
+      display: flex; gap: 8px; align-items: center; grid-column: 1 / -1;
+      padding-top: 4px;
+    }
+    .new-tag {
+      display: inline-block; background: #f5222d; color: #fff; font-size: 10px;
+      line-height: 14px; padding: 0 4px; border-radius: 2px; margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .input, .select, .textarea {
+      height: 32px; border: 1px solid #dcdfe6; border-radius: 4px;
+      padding: 0 10px; color: #606266; background: #fff; font-size: 13px;
+      font-family: inherit; outline: none; width: 100%;
+    }
+    .input:focus, .select:focus, .textarea:focus { border-color: #409eff; }
+    .input[readonly] { background: #f5f7fa; color: #909399; }
+    .select {
+      appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c0c4cc'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+    .textarea { height: 72px; padding: 8px 10px; resize: vertical; }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; flex-wrap: wrap;
+    }
+    .toolbar .meta { color: #909399; font-size: 12px; margin-left: 4px; }
+    .btn-dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 4px); left: 0; min-width: 150px;
+      background: #fff; border: 1px solid #e4e7ed; border-radius: 4px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.12); display: none; z-index: 20; overflow: hidden;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+      display: block; width: 100%; text-align: left; border: none; background: #fff;
+      padding: 9px 14px; font-size: 13px; color: #606266; cursor: pointer; font-family: inherit;
+    }
+    .dropdown-item:hover { background: #ecf5ff; color: #409eff; }
+
+    .btn {
+      height: 32px; padding: 0 14px; border-radius: 4px; font-size: 13px;
+      font-family: inherit; cursor: pointer; border: 1px solid #dcdfe6;
+      background: #fff; color: #606266; white-space: nowrap;
+    }
+    .btn:hover { color: #409eff; border-color: #c6e2ff; background: #ecf5ff; }
+    .btn-primary { background: #409eff; border-color: #409eff; color: #fff; }
+    .btn-primary:hover { background: #66b1ff; border-color: #66b1ff; color: #fff; }
+
+    .table-wrap { overflow: auto; border: 1px solid #ebeef5; border-radius: 2px; }
+    table.data { width: 100%; border-collapse: collapse; min-width: 1100px; }
+    table.data th, table.data td {
+      padding: 10px 12px; border-bottom: 1px solid #ebeef5; text-align: left;
+      color: #606266; white-space: nowrap; vertical-align: middle;
+    }
+    table.data th {
+      background: #fafafa; color: #909399; font-weight: 500; position: sticky; top: 0;
+    }
+    table.data th.tro-col, table.data td.tro-col {
+      background: #e6f7ff; color: #1890ff; font-weight: 600;
+    }
+    table.data td.tro-col { color: #595959; font-weight: 400; }
+    table.data tbody tr:hover { background: #f5f7fa; }
+    table.data .check { width: 42px; text-align: center; }
+    .ops { display: flex; gap: 10px; }
+    .link {
+      border: none; background: transparent; color: #409eff; cursor: pointer;
+      font-size: 13px; font-family: inherit; padding: 0;
+    }
+    .link:hover { color: #66b1ff; }
+    .tag-risk {
+      display: inline-block; padding: 0 8px; height: 22px; line-height: 22px;
+      border-radius: 2px; font-size: 12px;
+    }
+    .tag-risk.high { background: #fff1f0; color: #f5222d; border: 1px solid #ffa39e; }
+    .tag-risk.normal { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+    .tag-risk.empty { color: #c0c4cc; border: none; background: transparent; padding: 0; }
+
+    .hint {
+      margin-top: 12px; padding: 10px 12px; background: #f6ffed; border: 1px solid #b7eb8f;
+      border-radius: 4px; color: #389e0d; font-size: 12px; line-height: 1.6;
+    }
+
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,.78); color: #fff; padding: 10px 18px; border-radius: 4px;
+      font-size: 13px; z-index: 300; opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .toast.show { opacity: 1; }
+
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100; padding: 16px; overflow: auto;
+    }
+    .overlay.open { display: flex; }
+    .modal, .dialog {
+      background: #fff; border-radius: 4px; box-shadow: 0 8px 28px rgba(0,0,0,.22); overflow: hidden;
+    }
+    .modal { width: min(960px, 100%); max-height: 92vh; overflow: auto; }
+    .dialog { width: 420px; }
+    .modal-header, .dialog-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px 10px; border-bottom: 1px solid #f0f0f0;
+      position: sticky; top: 0; background: #fff; z-index: 1;
+    }
+    .modal-title, .dialog-title { font-size: 15px; font-weight: 500; }
+    .close {
+      width: 22px; height: 22px; border: none; background: transparent;
+      cursor: pointer; color: #409eff; font-size: 18px; line-height: 1;
+    }
+    .modal-body { padding: 18px 24px 8px; }
+    .dialog-body { padding: 22px 20px 8px; }
+    .grid3 {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 16px; row-gap: 12px;
+    }
+    .field { display: flex; align-items: center; min-height: 32px; }
+    .field.hidden { display: none !important; }
+    .label {
+      flex: 0 0 100px; text-align: right; padding-right: 10px;
+      color: #606266; line-height: 32px; white-space: nowrap;
+    }
+    .req { color: #f56c6c; margin-right: 2px; }
+    .control { flex: 1; min-width: 0; }
+    .section { margin-top: 14px; }
+    .section-title { color: #606266; margin-bottom: 8px; }
+    .process-row { display: flex; align-items: center; margin-bottom: 8px; }
+    .process-label { width: 72px; text-align: right; padding-right: 12px; color: #606266; }
+    .radios { display: flex; gap: 22px; }
+    .radio {
+      display: inline-flex; align-items: center; gap: 6px; color: #606266;
+      cursor: pointer; user-select: none;
+    }
+    .radio input { position: absolute; opacity: 0; pointer-events: none; }
+    .radio i {
+      width: 14px; height: 14px; border-radius: 50%; border: 1px solid #dcdfe6;
+      display: inline-block; position: relative; background: #fff;
+    }
+    .radio.on i, .radio:has(input:checked) i { border-color: #409eff; }
+    .radio.on i::after, .radio:has(input:checked) i::after {
+      content: ""; position: absolute; left: 3px; top: 3px;
+      width: 6px; height: 6px; border-radius: 50%; background: #409eff;
+    }
+    .meta-row { display: flex; gap: 16px; margin: 12px 0 8px; color: #606266; align-items: center; flex-wrap: wrap; }
+    .plus-btn {
+      width: 22px; height: 22px; border-radius: 50%; border: 1px solid #67c23a;
+      color: #67c23a; background: #fff; cursor: pointer;
+    }
+    .list-box { border: 1px solid #ebeef5; max-height: 140px; overflow: auto; background: #fff; }
+    .list-item {
+      display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid #f5f7fa;
+    }
+    .tag { background: #67c23a; color: #fff; font-size: 12px; padding: 0 6px; border-radius: 2px; }
+    .item-text { flex: 1; color: #606266; }
+    .item-x { border: none; background: transparent; color: #f56c6c; cursor: pointer; }
+    .remark-row { display: flex; margin-top: 12px; align-items: flex-start; }
+    .ban-row { display: flex; align-items: center; gap: 10px; margin: 10px 0 0 100px; color: #606266; }
+    .ban-select, .cat-select { height: 28px; border: 1px solid #dcdfe6; border-radius: 4px; padding: 0 8px; }
+    .modal-footer, .dialog-footer {
+      display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px 16px;
+    }
+    .form-row { display: flex; align-items: flex-start; margin-bottom: 16px; }
+    .form-row.hidden { display: none !important; }
+    .form-label { width: 88px; text-align: right; padding-right: 12px; color: #606266; line-height: 32px; }
+    .form-control { display: flex; gap: 24px; align-items: center; min-height: 32px; padding-top: 4px; }
+    .span2 { grid-column: span 2; }
+    @media (max-width: 1100px) {
+      .filters { grid-template-columns: repeat(2, 1fr); }
+      .grid3 { grid-template-columns: 1fr; }
+      .span2 { grid-column: auto; }
+      .sider { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast"></div>
+  <div class="layout">
+    <aside class="sider">
+      <div class="sider-brand">侵权禁售<small>商标词库原型</small></div>
+      <a href="javascript:;" class="active">商标词库</a>
+      <a href="javascript:;">白名单库</a>
+      <a href="javascript:;">投诉溯源检测</a>
+    </aside>
+
+    <div class="main">
+      <div class="tabs">
+        <div class="tab">白名单库</div>
+        <div class="tab active">商标库</div>
+        <div class="tab">投诉溯源检测</div>
+      </div>
+
+      <div class="card">
+        <div class="filters">
+          <div class="fi">
+            <label>商标名称</label>
+            <input class="input" id="filterName" placeholder="请输入" />
+          </div>
+          <div class="fi">
+            <label>注册国</label>
+            <input class="input" placeholder="请输入" />
+          </div>
+          <div class="fi">
+            <label>尼斯分类</label>
+            <input class="input" placeholder="请输入" />
+          </div>
+          <div class="fi">
+            <label>风险等级</label>
+            <select class="select" id="filterRisk">
+              <option value="">全部</option>
+              <option value="普通">普通</option>
+              <option value="高危">高危</option>
+            </select>
+          </div>
+          <div class="fi">
+            <label>是否白名单</label>
+            <select class="select"><option value="">全部</option><option>是</option><option>否</option></select>
+          </div>
+          <div class="fi">
+            <label>注册人</label>
+            <input class="input" placeholder="请输入" />
+          </div>
+          <div class="fi">
+            <label>是否近似商标</label>
+            <select class="select"><option value="">全部</option><option>是</option><option>否</option></select>
+          </div>
+          <div class="fi highlight">
+            <label>是否TRO词<span class="new-tag">新</span></label>
+            <select class="select" id="filterTro">
+              <option value="">全部</option>
+              <option value="是">是</option>
+              <option value="否">否</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button type="button" class="btn btn-primary" id="btnSearch">查询</button>
+            <button type="button" class="btn" id="btnReset">重置</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button type="button" class="btn btn-primary" id="btnAdd">+ 新增</button>
+          <button type="button" class="btn">+ 新增近似商标</button>
+          <div class="btn-dropdown">
+            <button type="button" class="btn" id="btnBatch">批量操作 ▾</button>
+            <div class="dropdown-menu" id="batchMenu">
+              <button type="button" class="dropdown-item" id="menuSetRisk">设置风险等级</button>
+            </div>
+          </div>
+          <span class="meta" id="selMeta">已选择 0 条</span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th class="check"><input type="checkbox" id="checkAll" /></th>
+                <th>商标名称</th>
+                <th>注册国</th>
+                <th>注册人</th>
+                <th>尼斯分类</th>
+                <th>风险等级</th>
+                <th class="tro-col">是否TRO词 <span class="new-tag">新</span></th>
+                <th>是否白名单</th>
+                <th>备注</th>
+                <th>更新时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="hint">
+          演示：①「+ 新增」选风险等级「高危」后出现「是否TRO词」；②勾选行 →「批量操作 → 设置风险等级」；③行内「编辑」同理。非高危时 TRO 列显示「-」。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增 -->
+  <div class="overlay" id="overlayAdd">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">新增</div>
+        <button class="close" type="button" data-close="overlayAdd">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid3">
+          <div class="field">
+            <div class="label"><span class="req">*</span>商标名称</div>
+            <div class="control"><input class="input" id="addName" placeholder="请输入" /></div>
+          </div>
+          <div class="field">
+            <div class="label">商标注册国家</div>
+            <div class="control"><input class="input" placeholder="请输入" /></div>
+          </div>
+          <div class="field">
+            <div class="label"><span class="req">*</span>注册国</div>
+            <div class="control">
+              <select class="select" id="addCountry">
+                <option value="">请选择</option>
+                <option>US</option><option>GB</option><option>DE</option><option>CN</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <div class="label">注册人</div>
+            <div class="control"><input class="input" id="addOwner" placeholder="请输入" /></div>
+          </div>
+          <div class="field">
+            <div class="label">注册人所属国家</div>
+            <div class="control"><select class="select"><option value="">请选择</option><option>美国</option><option>英国</option><option>中国</option></select></div>
+          </div>
+          <div class="field">
+            <div class="label">商标注册编码</div>
+            <div class="control"><input class="input" placeholder="请输入" /></div>
+          </div>
+          <div class="field">
+            <div class="label">商标申请时间</div>
+            <div class="control"><input class="input" type="date" value="2026-07-24" /></div>
+          </div>
+          <div class="field">
+            <div class="label">尼斯分类</div>
+            <div class="control"><input class="input" id="addNice" placeholder="请输入" /></div>
+          </div>
+          <div class="field">
+            <div class="label">风险等级</div>
+            <div class="control">
+              <select class="select" id="addRisk">
+                <option value="">请选择</option>
+                <option value="普通">普通</option>
+                <option value="高危">高危</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <div class="label">替代词</div>
+            <div class="control"><input class="input" placeholder="请输入" /></div>
+          </div>
+          <div class="field hidden" id="addTroField">
+            <div class="label">是否TRO词<span class="new-tag">新</span></div>
+            <div class="control">
+              <select class="select" id="addTro">
+                <option value="">请选择</option>
+                <option value="是">是</option>
+                <option value="否">否</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"></div>
+          <div class="field">
+            <div class="label">图片</div>
+            <div class="control"><a class="link" href="javascript:;" data-toast="上传图片（示意）">上传图片</a></div>
+          </div>
+          <div class="field span2">
+            <div class="label">投放禁售平台</div>
+            <div class="control" style="color:#909399;">（原字段）</div>
+          </div>
+        </div>
+        <div class="ban-row">
+          <span>禁售项目</span>
+          <select class="ban-select"><option>拦截</option><option>放过</option></select>
+        </div>
+        <div class="remark-row">
+          <div class="label">备注</div>
+          <div class="control"><textarea class="textarea" id="addRemark" placeholder="请输入"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" data-close="overlayAdd">取消</button>
+        <button class="btn btn-primary" type="button" id="btnAddOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑 -->
+  <div class="overlay" id="overlayEdit">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">编辑</div>
+        <button class="close" type="button" data-close="overlayEdit">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid3">
+          <div class="field">
+            <div class="label"><span class="req">*</span>商标名称</div>
+            <div class="control"><input class="input" id="editName" readonly /></div>
+          </div>
+          <div class="field">
+            <div class="label">注册国</div>
+            <div class="control"><input class="input" id="editCountry" readonly /></div>
+          </div>
+          <div class="field">
+            <div class="label">尼斯分类</div>
+            <div class="control"><input class="input" id="editNice" readonly /></div>
+          </div>
+          <div class="field">
+            <div class="label">风险等级</div>
+            <div class="control">
+              <select class="select" id="editRisk">
+                <option value="">请选择</option>
+                <option value="普通">普通</option>
+                <option value="高危">高危</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <div class="label">是否白名单</div>
+            <div class="control"><select class="select" id="editWhite"><option>否</option><option>是</option></select></div>
+          </div>
+          <div class="field">
+            <div class="label">增量检测时间</div>
+            <div class="control"><input class="input" type="date" value="2024-10-02" /></div>
+          </div>
+          <div class="field">
+            <div class="label">是否近似商标</div>
+            <div class="control"><select class="select"><option>否</option><option>是</option></select></div>
+          </div>
+          <div class="field">
+            <div class="label">替换词</div>
+            <div class="control"><input class="input" placeholder="请输入" /></div>
+          </div>
+          <div class="field hidden" id="editTroField">
+            <div class="label">是否TRO词<span class="new-tag">新</span></div>
+            <div class="control">
+              <select class="select" id="editTro">
+                <option value="">请选择</option>
+                <option value="是">是</option>
+                <option value="否">否</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">处理方式</div>
+          <div class="process-row"><div class="process-label">多套资料</div><div class="radios"><span class="radio"><i></i>保留</span><span class="radio on"><i></i>删除</span><span class="radio"><i></i>替换</span></div></div>
+          <div class="process-row"><div class="process-label">亚马逊</div><div class="radios"><span class="radio"><i></i>保留</span><span class="radio on"><i></i>删除</span><span class="radio"><i></i>替换</span></div></div>
+          <div class="process-row"><div class="process-label">eBay</div><div class="radios"><span class="radio"><i></i>保留</span><span class="radio on"><i></i>删除</span></div></div>
+          <div class="process-row"><div class="process-label">综合平台</div><div class="radios"><span class="radio"><i></i>保留</span><span class="radio on"><i></i>删除</span></div></div>
+        </div>
+        <div class="meta-row">
+          <span>放过检索平台</span><button type="button" class="plus-btn" data-toast="放过检索平台（示意）">+</button>
+          <span>禁售类目</span><select class="cat-select"><option>拦截</option></select>
+        </div>
+        <div class="list-box" id="editCatList">
+          <div class="list-item"><span class="tag">系统</span><span class="item-text">Cell Phones &amp; Accessories(手机和配件)</span><button type="button" class="item-x">×</button></div>
+          <div class="list-item"><span class="tag">系统</span><span class="item-text">Industrial &amp; Scientific(工业与科研用品)</span><button type="button" class="item-x">×</button></div>
+          <div class="list-item"><span class="tag">系统</span><span class="item-text">Clothing, Shoes &amp; Jewelry(时尚)</span><button type="button" class="item-x">×</button></div>
+        </div>
+        <div class="remark-row">
+          <div class="label">备注</div>
+          <div class="control"><textarea class="textarea" id="editRemark" placeholder="请输入"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" data-close="overlayEdit">取消</button>
+        <button class="btn btn-primary" type="button" id="btnEditOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置风险等级 -->
+  <div class="overlay" id="overlayRisk">
+    <div class="dialog">
+      <div class="dialog-header">
+        <div class="dialog-title">设置风险等级</div>
+        <button type="button" class="close" data-close="overlayRisk">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-row">
+          <div class="form-label">风险等级:</div>
+          <div class="form-control" id="riskGroup">
+            <label class="radio on"><input type="radio" name="riskSet" value="普通" checked /><i></i>普通</label>
+            <label class="radio"><input type="radio" name="riskSet" value="高危" /><i></i>高危</label>
+          </div>
+        </div>
+        <div class="form-row hidden" id="riskTroRow">
+          <div class="form-label">是否TRO词:</div>
+          <div class="form-control" id="troGroup">
+            <label class="radio on"><input type="radio" name="troSet" value="是" checked /><i></i>是</label>
+            <label class="radio"><input type="radio" name="troSet" value="否" /><i></i>否</label>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button type="button" class="btn" data-close="overlayRisk">取消</button>
+        <button type="button" class="btn btn-primary" id="btnRiskOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const rows = [
+      { id: 1, name: 'RUBY SLIPPERS', country: 'US, GB, DE, BE, FI...', owner: 'Turner Entertainment Co.', nice: '25, 9, 14, 16...', risk: '', tro: '', white: '否', remark: '原始商标', updated: '2026-07-24 10:12:03' },
+      { id: 2, name: "RUBY SLIPPER'S", country: 'US, GB, DE...', owner: 'Turner Entertainment Co.', nice: '25, 9, 14...', risk: '普通', tro: '', white: '否', remark: '系统生成', updated: '2026-07-24 10:12:03' },
+      { id: 3, name: 'RUBY SLIPPER', country: 'US, GB, DE...', owner: 'Turner Entertainment Co.', nice: '25, 9, 14...', risk: '高危', tro: '是', white: '否', remark: 'TRO相关', updated: '2026-07-23 18:01:22' },
+      { id: 4, name: 'SLIPPER RUBY', country: 'US, CN...', owner: 'Example LLC', nice: '25, 28...', risk: '高危', tro: '否', white: '是', remark: '-', updated: '2026-07-20 09:33:11' },
+      { id: 5, name: 'RED SLIPPERS', country: 'GB, DE...', owner: 'Demo Brand Inc.', nice: '25...', risk: '', tro: '', white: '否', remark: '', updated: '2026-07-18 14:20:00' }
+    ];
+    let editingId = null;
+    let nextId = 6;
+
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove('show'), 1800);
+    }
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function troDisplay(r) { return r.risk === '高危' ? (r.tro || '-') : '-'; }
+    function riskHtml(risk) {
+      if (risk === '高危') return '<span class="tag-risk high">高危</span>';
+      if (risk === '普通') return '<span class="tag-risk normal">普通</span>';
+      return '<span class="tag-risk empty">-</span>';
+    }
+    function getFiltered() {
+      const name = (document.getElementById('filterName').value || '').trim().toLowerCase();
+      const risk = document.getElementById('filterRisk').value;
+      const tro = document.getElementById('filterTro').value;
+      return rows.filter(r => {
+        if (name && !r.name.toLowerCase().includes(name)) return false;
+        if (risk && r.risk !== risk) return false;
+        if (tro) {
+          if (r.risk !== '高危') return false;
+          if (r.tro !== tro) return false;
+        }
+        return true;
+      });
+    }
+    function updateSelMeta() {
+      const n = document.querySelectorAll('.row-check:checked').length;
+      document.getElementById('selMeta').textContent = '已选择 ' + n + ' 条';
+    }
+    function renderTable() {
+      const list = getFiltered();
+      document.getElementById('tbody').innerHTML = list.map(r => `
+        <tr data-id="${r.id}">
+          <td class="check"><input type="checkbox" class="row-check" value="${r.id}" /></td>
+          <td><a class="link" href="javascript:;">${esc(r.name)}</a></td>
+          <td>${esc(r.country)}</td>
+          <td>${esc(r.owner)}</td>
+          <td>${esc(r.nice)}</td>
+          <td>${riskHtml(r.risk)}</td>
+          <td class="tro-col">${esc(troDisplay(r))}</td>
+          <td>${esc(r.white)}</td>
+          <td>${esc(r.remark || '-')}</td>
+          <td>${esc(r.updated)}</td>
+          <td>
+            <div class="ops">
+              <button type="button" class="link" data-act="view" data-id="${r.id}">查看</button>
+              <button type="button" class="link" data-act="edit" data-id="${r.id}">编辑</button>
+              <button type="button" class="link" data-act="log" data-id="${r.id}">日志</button>
+            </div>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="11" style="text-align:center;color:#c0c4cc;padding:28px;">暂无数据</td></tr>';
+      document.getElementById('checkAll').checked = false;
+      updateSelMeta();
+    }
+
+    function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+    function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+    function syncTroByRisk(riskSelect, troField, troSelect) {
+      const show = riskSelect.value === '高危';
+      troField.classList.toggle('hidden', !show);
+      if (!show) troSelect.value = '';
+    }
+    function syncRadioUI(group) {
+      group.querySelectorAll('.radio').forEach(label => {
+        const input = label.querySelector('input');
+        label.classList.toggle('on', !!(input && input.checked));
+      });
+    }
+    function syncRiskTroRow() {
+      const risk = document.querySelector('input[name="riskSet"]:checked')?.value;
+      document.getElementById('riskTroRow').classList.toggle('hidden', risk !== '高危');
+      if (risk !== '高危') {
+        document.querySelector('input[name="troSet"][value="是"]').checked = true;
+        syncRadioUI(document.getElementById('troGroup'));
+      }
+    }
+    function nowStr() {
+      const d = new Date();
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    }
+
+    document.getElementById('btnAdd').addEventListener('click', () => {
+      document.getElementById('addName').value = '';
+      document.getElementById('addCountry').value = '';
+      document.getElementById('addOwner').value = '';
+      document.getElementById('addNice').value = '';
+      document.getElementById('addRisk').value = '';
+      document.getElementById('addTro').value = '';
+      document.getElementById('addRemark').value = '';
+      syncTroByRisk(document.getElementById('addRisk'), document.getElementById('addTroField'), document.getElementById('addTro'));
+      openOverlay('overlayAdd');
+    });
+
+    const batchBtn = document.getElementById('btnBatch');
+    const batchMenu = document.getElementById('batchMenu');
+    batchBtn.addEventListener('click', e => { e.stopPropagation(); batchMenu.classList.toggle('open'); });
+    document.addEventListener('click', () => batchMenu.classList.remove('open'));
+    document.getElementById('menuSetRisk').addEventListener('click', e => {
+      e.stopPropagation();
+      batchMenu.classList.remove('open');
+      document.querySelector('input[name="riskSet"][value="普通"]').checked = true;
+      document.querySelector('input[name="troSet"][value="是"]').checked = true;
+      syncRadioUI(document.getElementById('riskGroup'));
+      syncRadioUI(document.getElementById('troGroup'));
+      syncRiskTroRow();
+      openOverlay('overlayRisk');
+    });
+
+    document.getElementById('tbody').addEventListener('click', e => {
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const id = Number(btn.dataset.id);
+      const row = rows.find(r => r.id === id);
+      if (!row) return;
+      if (btn.dataset.act === 'edit') {
+        editingId = id;
+        document.getElementById('editName').value = row.name;
+        document.getElementById('editCountry').value = row.country;
+        document.getElementById('editNice').value = row.nice;
+        document.getElementById('editRisk').value = row.risk || '';
+        document.getElementById('editWhite').value = row.white || '否';
+        document.getElementById('editRemark').value = row.remark || '';
+        document.getElementById('editTro').value = row.risk === '高危' ? (row.tro || '') : '';
+        syncTroByRisk(document.getElementById('editRisk'), document.getElementById('editTroField'), document.getElementById('editTro'));
+        if (row.risk === '高危') {
+          document.getElementById('editTroField').classList.remove('hidden');
+          document.getElementById('editTro').value = row.tro || '';
+        }
+        openOverlay('overlayEdit');
+      } else if (btn.dataset.act === 'view') toast('查看：' + row.name);
+      else toast('日志（示意）');
+    });
+    document.getElementById('tbody').addEventListener('change', e => {
+      if (e.target.classList.contains('row-check')) updateSelMeta();
+    });
+    document.getElementById('checkAll').addEventListener('change', e => {
+      document.querySelectorAll('.row-check').forEach(c => { c.checked = e.target.checked; });
+      updateSelMeta();
+    });
+
+    document.getElementById('btnSearch').addEventListener('click', renderTable);
+    document.getElementById('btnReset').addEventListener('click', () => {
+      document.getElementById('filterName').value = '';
+      document.getElementById('filterRisk').value = '';
+      document.getElementById('filterTro').value = '';
+      renderTable();
+    });
+    document.querySelectorAll('[data-close]').forEach(el => {
+      el.addEventListener('click', () => closeOverlay(el.dataset.close));
+    });
+    document.querySelectorAll('.overlay').forEach(ov => {
+      ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+    });
+
+    const addRisk = document.getElementById('addRisk');
+    addRisk.addEventListener('change', () => syncTroByRisk(addRisk, document.getElementById('addTroField'), document.getElementById('addTro')));
+    document.getElementById('btnAddOk').addEventListener('click', () => {
+      const name = (document.getElementById('addName').value || '').trim();
+      if (!name) { toast('请填写商标名称'); return; }
+      const risk = addRisk.value;
+      const tro = risk === '高危' ? document.getElementById('addTro').value : '';
+      rows.unshift({
+        id: nextId++,
+        name,
+        country: document.getElementById('addCountry').value || '-',
+        owner: document.getElementById('addOwner').value || '-',
+        nice: document.getElementById('addNice').value || '-',
+        risk, tro, white: '否',
+        remark: document.getElementById('addRemark').value || '',
+        updated: nowStr()
+      });
+      closeOverlay('overlayAdd');
+      renderTable();
+      toast(`新增成功：风险=${risk || '未选'}${risk === '高危' ? '，TRO=' + (tro || '未选') : ''}`);
+    });
+
+    const editRisk = document.getElementById('editRisk');
+    editRisk.addEventListener('change', () => syncTroByRisk(editRisk, document.getElementById('editTroField'), document.getElementById('editTro')));
+    document.getElementById('btnEditOk').addEventListener('click', () => {
+      const row = rows.find(r => r.id === editingId);
+      if (!row) return;
+      const risk = editRisk.value;
+      row.risk = risk;
+      row.tro = risk === '高危' ? document.getElementById('editTro').value : '';
+      row.white = document.getElementById('editWhite').value;
+      row.remark = document.getElementById('editRemark').value;
+      row.updated = nowStr();
+      closeOverlay('overlayEdit');
+      renderTable();
+      toast(`编辑已保存：风险=${risk || '未选'}${risk === '高危' ? '，TRO=' + (row.tro || '未选') : ''}`);
+    });
+
+    const riskGroup = document.getElementById('riskGroup');
+    const troGroup = document.getElementById('troGroup');
+    riskGroup.addEventListener('change', () => { syncRadioUI(riskGroup); syncRiskTroRow(); });
+    troGroup.addEventListener('change', () => syncRadioUI(troGroup));
+    syncRadioUI(riskGroup); syncRadioUI(troGroup); syncRiskTroRow();
+
+    document.getElementById('btnRiskOk').addEventListener('click', () => {
+      const ids = [...document.querySelectorAll('.row-check:checked')].map(el => Number(el.value));
+      if (!ids.length) { toast('请先勾选要设置的商标词'); return; }
+      const risk = document.querySelector('input[name="riskSet"]:checked')?.value || '';
+      const tro = risk === '高危' ? (document.querySelector('input[name="troSet"]:checked')?.value || '') : '';
+      ids.forEach(id => {
+        const row = rows.find(r => r.id === id);
+        if (!row) return;
+        row.risk = risk;
+        row.tro = risk === '高危' ? tro : '';
+        row.updated = nowStr();
+      });
+      closeOverlay('overlayRisk');
+      renderTable();
+      toast(`已更新 ${ids.length} 条：风险=${risk}${risk === '高危' ? '，TRO=' + tro : ''}`);
+    });
+
+    document.querySelectorAll('.process-row').forEach(row => {
+      row.querySelectorAll('.radio').forEach(radio => {
+        radio.addEventListener('click', () => {
+          row.querySelectorAll('.radio').forEach(r => r.classList.remove('on'));
+          radio.classList.add('on');
+        });
+      });
+    });
+    document.getElementById('editCatList').addEventListener('click', e => {
+      if (e.target.classList.contains('item-x')) e.target.closest('.list-item')?.remove();
+    });
+    document.querySelectorAll('[data-toast]').forEach(el => {
+      el.addEventListener('click', () => toast(el.dataset.toast));
+    });
+
+    renderTable();
+  </script>
+
+<script src="../../import/prototype-annotate.js"></script>
+<script>
+PrototypeAnnotate.init({
+  storageKey: 'shangbiao-ci-ku-tro-annotations',
+  exportTitle: '商标词库-是否TRO词',
+  exportFilename: '商标词库-是否TRO词-原型标注.md',
+  scopeLabels: {
+    page: '列表页',
+    overlayAdd: '新增弹窗',
+    overlayEdit: '编辑弹窗',
+    overlayRisk: '设置风险等级'
+  },
+  builtins: [
+    {
+      scope: 'page',
+      x: 72,
+      y: 18,
+      title: '新增字段',
+      body: '列表筛选与表格新增「是否TRO词」；仅当风险等级=高危时可在新增/编辑/批量设置中配置。'
+    }
+  ],
+  toast
+});
+</script>
+</body>
+</html>
