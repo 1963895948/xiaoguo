@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="../../import/prototype-annotate.css" />
-  <title>商标词库 · TRO商标</title>
+  <title>商标词库 · 是否TRO商标</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -283,7 +283,7 @@
             <select class="select"><option value="">全部</option><option>是</option><option>否</option></select>
           </div>
           <div class="fi highlight">
-            <label>TRO商标<span class="new-tag">新</span></label>
+            <label>是否TRO商标<span class="new-tag">新</span></label>
             <select class="select" id="filterTro">
               <option value="">全部</option>
               <option value="是">是</option>
@@ -318,7 +318,7 @@
                 <th>注册人</th>
                 <th>尼斯分类</th>
                 <th>风险等级</th>
-                <th class="tro-col">TRO商标 <span class="new-tag">新</span></th>
+                <th class="tro-col">是否TRO商标 <span class="new-tag">新</span></th>
                 <th>是否白名单</th>
                 <th>备注</th>
                 <th>更新时间</th>
@@ -330,7 +330,7 @@
         </div>
 
         <div class="hint">
-          演示：①「+ 新增」选风险等级「高危」后出现「TRO商标」；②勾选行 →「批量操作 → 设置风险等级」；③行内「编辑」同理。非高危时 TRO 列显示「-」。
+          演示：①「+ 新增」选风险等级「高危」后出现「是否TRO商标」；②勾选行 →「批量操作 → 设置风险等级」；③行内「编辑」同理。非高危时 TRO 列显示「-」。
         </div>
       </div>
     </div>
@@ -397,7 +397,7 @@
             <div class="control"><input class="input" placeholder="请输入" /></div>
           </div>
           <div class="field hidden" id="addTroField">
-            <div class="label">TRO商标<span class="new-tag">新</span></div>
+            <div class="label">是否TRO商标<span class="new-tag">新</span></div>
             <div class="control">
               <select class="select" id="addTro">
                 <option value="">请选择</option>
@@ -480,7 +480,7 @@
             <div class="control"><input class="input" placeholder="请输入" /></div>
           </div>
           <div class="field hidden" id="editTroField">
-            <div class="label">TRO商标<span class="new-tag">新</span></div>
+            <div class="label">是否TRO商标<span class="new-tag">新</span></div>
             <div class="control">
               <select class="select" id="editTro">
                 <option value="">请选择</option>
@@ -534,7 +534,7 @@
           </div>
         </div>
         <div class="form-row hidden" id="riskTroRow">
-          <div class="form-label">TRO商标:</div>
+          <div class="form-label">是否TRO商标:</div>
           <div class="form-control" id="troGroup">
             <label class="radio"><input type="radio" name="troSet" value="是" /><i></i>是</label>
             <label class="radio"><input type="radio" name="troSet" value="否" /><i></i>否</label>
@@ -803,8 +803,8 @@
 <script>
 PrototypeAnnotate.init({
   storageKey: 'shangbiao-ci-ku-tro-annotations',
-  exportTitle: '商标词库-TRO商标',
-  exportFilename: '商标词库-TRO商标-原型标注.md',
+  exportTitle: '商标词库-是否TRO商标',
+  exportFilename: '商标词库-是否TRO商标-原型标注.md',
   scopeLabels: {
     page: '列表页',
     overlayAdd: '新增弹窗',
@@ -817,7 +817,7 @@ PrototypeAnnotate.init({
       x: 72,
       y: 18,
       title: '新增字段',
-      body: '列表筛选与表格新增「TRO商标」；仅当风险等级=高危时可在新增/编辑/批量设置中配置。'
+      body: '列表筛选与表格新增「是否TRO商标」；仅当风险等级=高危时可在新增/编辑/批量设置中配置。'
     }
   ],
   toast
