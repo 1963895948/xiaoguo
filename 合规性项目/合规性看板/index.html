@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>合规标签 SKU 放开 · 效果与认证决策</title>
+  <title>合规sku刊登数据</title>
   <style>
     :root {
       --bg:#f0f2f5; --panel:#fff; --line:#e8ebf0; --text:#1f2733; --sub:#5b6577;
@@ -33,7 +33,7 @@
     .page-title{font-size:16px;font-weight:700;margin:0}
     .page-desc{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.6;max-width:920px}
     .filters{padding:12px 20px;border-bottom:1px solid var(--line)}
-    .filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;width:100%}
     .field{display:flex;align-items:stretch;height:32px}
     .field .lbl{background:#f6f8fb;border:1px solid var(--line);border-right:none;border-radius:4px 0 0 4px;padding:0 10px;display:flex;align-items:center;color:var(--sub);white-space:nowrap;font-size:12px}
     .ctrl{height:32px;border:1px solid var(--line);border-radius:4px;background:#fff;padding:0 10px;color:var(--text);font-size:12px;outline:none;min-width:110px}
@@ -49,7 +49,7 @@
     .sec-title .tip{font-weight:400;color:var(--muted);font-size:12px}
     .sec-title .spacer{flex:1}
     .seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#fff}
-    .seg button{border:none;background:#fff;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--sub);border-right:1px solid var(--line)}
+    .seg button{border:none;background:#fff;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--sub);border-right:1px solid var(--line);display:inline-flex;align-items:center}
     .seg button:last-child{border-right:none}
     .seg button.on{background:var(--pri);color:#fff}
     .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
@@ -63,45 +63,92 @@
     .kpi.ok .k-val{color:var(--ok)}
     .kpi.danger .k-val{color:var(--danger)}
     .axis-note{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;color:var(--muted)}
-    .quad{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:900px){.quad{grid-template-columns:1fr}}
-    .quad-block{margin-bottom:4px}
-    .quad-subtitle{font-size:12px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .quad-subtitle .tip{font-weight:400;color:var(--muted)}
-    .qcard{border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;transition:.15s;min-height:118px;position:relative}
+    .quad-pair{display:grid;grid-template-columns:1fr;gap:16px;align-items:start;width:100%}
+    .quad{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .quad-block{margin-bottom:0;min-width:0}
+    .quad-subtitle{font-size:12px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .quad-subtitle .tip{font-weight:400;color:var(--muted);font-size:11px}
+    .qcard{border:1px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer;transition:.15s;min-height:0;position:relative}
     .qcard:hover{box-shadow:0 4px 14px rgba(31,39,51,.08);transform:translateY(-1px)}
     .qcard.keep{background:var(--keep-bg);border-color:#99f6e4}
     .qcard.cert{background:var(--cert-bg);border-color:#fcd34d}
     .qcard.obs{background:var(--obs-bg);border-color:#cbd5e1}
     .qcard.tight{background:var(--tight-bg);border-color:#fecdd3}
-    .qcard .q-tag{display:inline-flex;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+    .qcard .q-tag{display:inline-flex;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700}
     .qcard.keep .q-tag{background:#ccfbf1;color:var(--keep)}
     .qcard.cert .q-tag{background:#fde68a;color:var(--cert)}
     .qcard.obs .q-tag{background:#e2e8f0;color:var(--obs)}
     .qcard.tight .q-tag{background:#fecdd3;color:var(--tight)}
-    .qcard .q-title{font-size:14px;font-weight:700;margin:8px 0 4px}
+    .qcard .q-title{font-size:12px;font-weight:700;margin:6px 0 2px;line-height:1.35}
     .qcard .q-desc{font-size:12px;color:var(--sub)}
-    .qcard .q-nums{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
-    .qcard .q-nums b{font-size:20px;font-weight:700}
+    .qcard .q-nums{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+    .qcard .q-nums b{font-size:18px;font-weight:700}
     .qcard .q-nums span{display:block;font-size:11px;color:var(--muted)}
     .qcard .q-go{position:absolute;right:14px;bottom:12px;font-size:11px;color:var(--pri);font-weight:600}
+    .qcard .q-cross{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(31,39,51,.12)}
+    .qcard .q-cross-hd{font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600}
+    .qcard .q-cross-row{display:flex;align-items:center;gap:6px;font-size:11px;line-height:1.45;color:var(--sub)}
+    .qcard .q-cross-row .dot{width:6px;height:6px;border-radius:50%;flex:none}
+    .qcard .q-cross-row .dot.keep{background:var(--keep)}
+    .qcard .q-cross-row .dot.cert{background:var(--cert)}
+    .qcard .q-cross-row .dot.obs{background:var(--obs)}
+    .qcard .q-cross-row .dot.tight{background:var(--tight)}
+    .qcard .q-cross-row .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .qcard .q-cross-row .val{font-variant-numeric:tabular-nums;color:var(--text);font-weight:600;white-space:nowrap}
+    .qcard .q-cross-row .pct{color:var(--muted);font-variant-numeric:tabular-nums;min-width:42px;text-align:right}
     .two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
     @media (max-width:1100px){.two-col{grid-template-columns:1fr}}
     .panel-box{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
-    .panel-hd{padding:10px 14px;background:#f6f8fb;border-bottom:1px solid var(--line);font-weight:600;font-size:12px;display:flex;justify-content:space-between;align-items:center}
-    .chart-box{border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px 16px 8px}
-    .chart-box .chart-hd{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+    .panel-hd{padding:10px 14px;background:#f6f8fb;border-bottom:1px solid var(--line);font-weight:600;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .action-hd-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;flex:1}
+    .action-preview-ctl{display:inline-flex;align-items:center;gap:6px;font-weight:400;color:var(--sub);font-size:12px}
+    .action-preview-ctl select.ctrl{height:28px;min-width:68px;padding:0 8px;font-weight:600;color:var(--text)}
+    /* Quick BI 风格图表区 */
+    .bi-sec-hd{margin:0 0 12px}
+    .bi-sec-hd .bi-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+    .bi-sec-hd .bi-title::before{content:"";width:3px;height:14px;background:var(--pri);border-radius:2px;flex:none}
+    .bi-sec-hd .bi-desc{margin-top:4px;font-size:12px;color:var(--muted);line-height:1.5}
+    .chart-filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;padding:10px 12px;background:#f7f8fa;border:1px solid var(--line);border-radius:4px}
+    .chart-filter-row .hint{font-size:11px;color:var(--muted);margin-left:4px}
+    .chart-stack{display:flex;flex-direction:column;gap:12px}
+    .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    @media (max-width:1200px){.chart-grid-3{grid-template-columns:1fr}}
+    @media (max-width:1100px){.chart-grid-2{grid-template-columns:1fr}}
+    .chart-box{border:1px solid #e5e8ef;border-radius:4px;background:#fff;padding:12px 14px 10px;min-width:0;box-shadow:0 1px 2px rgba(31,39,51,.03)}
+    .chart-box .chart-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid #f0f2f5}
     .chart-box .chart-hd .spacer{flex:1;min-width:8px}
-    .chart-box .chart-title{font-size:13px;font-weight:700}
-    .chart-box .chart-sub{font-size:12px;color:var(--muted)}
+    .chart-box .chart-title{font-size:13px;font-weight:700;color:#1f2733}
+    .chart-box .chart-sub{font-size:11px;color:var(--muted);max-width:100%}
+    .chart-box .chart-sub .demo-mark{color:#c2410c;font-weight:600}
+    .demo-badge{display:inline-flex;align-items:center;margin-left:6px;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;line-height:1.4;color:#c2410c;background:#ffedd5;border:1px solid #fdba74;vertical-align:middle}
+    .chart-box .chart-tools{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .chart-box .btn.chart-export{height:28px;padding:0 12px;font-size:12px;border-radius:4px;color:var(--sub)}
+    .chart-box .btn.chart-export:hover{color:var(--pri)}
+    .chart-box .btn.chart-zoom{height:28px;width:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:var(--sub);flex:none}
+    .chart-box .btn.chart-zoom:hover{color:var(--pri);background:#eef3ff;border-color:#c5d4f5}
+    .chart-box .btn.chart-zoom svg{width:14px;height:14px;display:block}
+    .chart-zoom-box{width:min(1100px,96vw);max-width:96vw}
+    .chart-zoom-body{padding:8px 16px 20px;min-height:420px;display:flex;align-items:center;justify-content:center}
+    .chart-zoom-body img{max-width:100%;max-height:min(72vh,640px);object-fit:contain;display:block}
     .chart-canvas-wrap{position:relative;height:340px}
-    .chart-stack{display:flex;flex-direction:column;gap:16px}
     .chart-scroll-wrap{overflow-x:auto;overflow-y:hidden;border-radius:4px;-webkit-overflow-scrolling:touch}
     .chart-scroll-wrap::-webkit-scrollbar{height:8px}
     .chart-scroll-wrap::-webkit-scrollbar-thumb{background:#c5cad3;border-radius:4px}
-    .chart-scroll-inner{position:relative;height:340px;min-width:100%}
-    .chart-filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;padding:10px 12px;background:#f6f8fb;border:1px solid var(--line);border-radius:6px}
-    .chart-filter-row .hint{font-size:11px;color:var(--muted)}
+    .chart-scroll-inner{position:relative;height:300px;min-width:100%}
+    .chart-box.chart-box-sm .chart-scroll-inner{height:260px}
+    .chart-site-field{position:relative}
+    .chart-site-trigger{height:32px;min-width:160px;max-width:240px;border:1px solid var(--line);border-radius:4px;background:#fff;padding:0 28px 0 10px;color:var(--text);font-size:12px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%2397a0b0' fill='none' stroke-width='1.4'/></svg>") no-repeat right 9px center}
+    .chart-site-trigger.on{border-color:var(--pri);color:var(--pri)}
+    .chart-site-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:40;min-width:280px;max-height:300px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 8px 24px rgba(31,39,51,.12);padding:6px 0}
+    .chart-site-panel.show{display:block}
+    .chart-site-actions{display:flex;gap:10px;padding:6px 12px 4px;border-bottom:1px dashed var(--line);margin-bottom:4px;flex-wrap:wrap}
+    .chart-site-actions button{border:none;background:none;color:var(--pri);font-size:11px;cursor:pointer;padding:0}
+    .chart-site-item{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap}
+    .chart-site-item:hover{background:#f6f8fb}
+    .chart-site-item input{margin:0;cursor:pointer}
+    .chart-site-item.top10{font-weight:600}
+    .field .chart-site-trigger{border-radius:0 4px 4px 0;min-width:140px}
     .chart-empty{padding:48px;text-align:center;color:var(--muted)}
     .matrix-wrap{overflow:auto;max-height:360px}
     table.matrix{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
@@ -119,15 +166,19 @@
     .atab.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
     .atab .n{margin-left:4px;opacity:.85}
     .action-list{max-height:420px;overflow:auto}
-    .arow{display:grid;grid-template-columns:88px 1fr 90px 70px 70px 64px;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+    .arow{display:grid;grid-template-columns:88px 1fr 72px 90px 70px 70px 64px;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+    .arow.arow-cat3{grid-template-columns:minmax(120px,1.4fr) 72px 72px 90px 70px 70px 64px}
     .arow:hover{background:#fafbfd}
     .arow .sku{font-family:Consolas,"Courier New",monospace;font-size:11px;font-weight:700;color:var(--pri)}
     .arow .meta{font-size:12px;color:var(--text)}
     .arow .sub{font-size:11px;color:var(--muted);margin-top:2px}
     .arow .m{text-align:right;font-size:12px}
-    #actionHead .sort-th{border:none;background:transparent;padding:0;font:inherit;font-weight:600;color:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:flex-end;gap:2px;width:100%;white-space:nowrap}
-    #actionHead .sort-th:hover,#actionHead .sort-th.on{color:var(--pri)}
+    #actionHead .m[data-sort]{display:flex;align-items:center;justify-content:flex-end;gap:3px;min-height:28px;cursor:pointer;user-select:none}
+    #actionHead .m[data-sort]:hover .sort-th{color:var(--pri)}
+    #actionHead .sort-th{border:none;background:transparent;padding:0;font:inherit;font-weight:600;color:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:flex-end;gap:2px;white-space:nowrap;pointer-events:none}
+    #actionHead .sort-th.on{color:var(--pri)}
     #actionHead .sort-th .arr{font-size:10px;line-height:1}
+    #actionHead .m[data-sort] .help{margin:0;flex:none;pointer-events:auto;cursor:help}
     .tag{display:inline-flex;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600}
     .tag.ok{background:var(--ok-bg);color:var(--ok)}
     .tag.muted{background:#f0f2f5;color:var(--sub)}
@@ -161,12 +212,58 @@
     table.modal-table thead th{position:sticky;top:0;background:#fafbfd;z-index:1;font-weight:600;color:var(--sub)}
     table.modal-table tbody tr:hover{background:#f6f8fb}
     .modal-foot{font-size:11px;color:var(--muted);margin-top:10px}
+    .export-modal{width:min(480px,96vw)}
+    .export-form{display:flex;flex-direction:column;gap:18px;padding:4px 0 8px}
+    .export-row{display:flex;align-items:flex-start;gap:12px}
+    .export-row .req{color:var(--danger);margin-right:2px}
+    .export-label{width:88px;flex:none;padding-top:7px;font-size:13px;color:var(--text);text-align:right}
+    .export-field{flex:1;min-width:0}
+    .export-field input.ctrl{width:100%;min-width:0}
+    .export-radios{display:flex;flex-wrap:wrap;gap:16px;padding-top:6px}
+    .export-radios label{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--text)}
+    .export-radios input{margin:0;accent-color:var(--pri)}
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px;padding:12px 18px;border-top:1px solid var(--line)}
+    .modal-actions .btn.pri{min-width:72px}
+    /* 小白友好：易疑问词右上角问号 + 悬停说明 */
+    .help{
+      position:relative;display:inline-flex;align-items:center;justify-content:center;
+      width:13px;height:13px;margin:-7px 0 0 3px;border-radius:50%;
+      border:1px solid #b8c0cc;color:#8b95a8;background:#fff;
+      font-size:9px;font-weight:700;line-height:1;cursor:help;flex:none;
+      vertical-align:super;z-index:2;
+    }
+    .help:hover,.help:focus{border-color:var(--pri);color:var(--pri);outline:none;z-index:90}
+    .help .help-pop{
+      display:none;position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);
+      width:max-content;max-width:min(280px,70vw);
+      padding:8px 10px;background:#1f2733;color:#fff;font-size:11px;font-weight:400;
+      line-height:1.55;border-radius:6px;z-index:400;white-space:normal;text-align:left;
+      box-shadow:0 8px 20px rgba(15,23,42,.22);pointer-events:none;
+    }
+    .chart-title .help .help-pop{max-width:min(360px,86vw)}
+    .help .help-pop::after{
+      content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);
+      border:5px solid transparent;border-top-color:#1f2733;
+    }
+    .help.help-down .help-pop{bottom:auto;top:calc(100% + 8px)}
+    .help.help-down .help-pop::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#1f2733}
+    .help:hover .help-pop,.help:focus .help-pop,.help:focus-within .help-pop{display:block}
+    .help .help-pop.is-fixed{
+      position:fixed;transform:none;bottom:auto;
+    }
+    .help .help-pop.is-fixed::after{display:none}
+    .kpi .k-label,.qcard .q-tag,.qcard .q-title,.sec-title,.quad-subtitle,.chart-title,.atab,.lbl,.page-title{
+      display:inline-flex;align-items:center;flex-wrap:wrap;
+    }
+    .kpi .k-label,.qcard .q-tag,.qcard .q-title{width:100%}
+    .field .lbl{display:inline-flex;align-items:center}
+    .chart-box .chart-title{display:inline-flex;align-items:center;gap:0}
   </style>
 </head>
 <body>
   <div class="header">
     <div class="brand">风控系统</div>
-    <div class="page-tabs"><div class="ptab">合规标签 SKU 放开监控</div></div>
+    <div class="page-tabs"><div class="ptab">合规sku刊登数据</div></div>
     <div class="user">
       <span>决策台</span>
       <div class="avatar">产</div>
@@ -177,15 +274,11 @@
   <div class="body">
     <aside class="sidenav">
       <div class="nav-group">合规性项目</div>
-      <div class="nav-item active">放开效果决策</div>
-      <div class="nav-item" id="navDetail">明细列表</div>
+      <div class="nav-item active">合规sku刊登数据</div>
     </aside>
 
     <main class="content">
       <div class="page">
-        <div class="page-hd">
-          <h1 class="page-title">合规标签 SKU 放开 · 效果与认证决策</h1>
-        </div>
 
         <div class="filters">
           <div class="filter-row">
@@ -197,7 +290,12 @@
                 <option value="速卖通">速卖通（待接入）</option>
               </select>
             </div>
-            <div class="field"><span class="lbl">站点</span><select class="ctrl" id="fSite"><option value="">全部站点</option></select></div>
+            <div class="field chart-site-field"><span class="lbl">站点</span>
+              <div style="position:relative">
+                <button type="button" class="chart-site-trigger" id="btnFilterSites">全部站点</button>
+                <div class="chart-site-panel" id="panelFilterSites"></div>
+              </div>
+            </div>
             <div class="field"><span class="lbl">刊登部门</span><select class="ctrl" id="fDept"><option value="">全部</option></select></div>
             <div class="field"><span class="lbl">刊登时间</span>
               <div style="display:flex;align-items:center;gap:6px">
@@ -208,13 +306,12 @@
             </div>
             <button type="button" class="btn pri" id="btnQuery">查询</button>
             <button type="button" class="btn" id="btnReset">重置</button>
-            <button type="button" class="btn" id="btnGoDetail">查看明细 →</button>
           </div>
         </div>
 
         <div class="section" style="padding-bottom:8px">
           <div class="sec-title">
-            1. 放开池概览
+            1. 合规sku刊登数据概览
             <span class="spacer"></span>
             <div class="seg" id="dimSeg">
               <button type="button" class="on" data-dim="sku">按 SKU</button>
@@ -226,104 +323,167 @@
         </div>
 
         <div class="section" style="padding-top:4px">
-          <div class="sec-title">2. 四象限分析</div>
-          <div class="quad-block">
-            <div class="quad-subtitle">刊登结果四象限 <span class="tip">风险 × 收益 · 按出单 / 邮件</span></div>
-            <div class="quad" id="quadGrid"></div>
+          <div class="sec-title">2. 四象限<span class="help" tabindex="0"><span class="help-pop">外层按「有无出单 × 有无邮件」分成刊登结果四格（继续放 / 优先认证 / 观察试放 / 建议收紧）。每格内展示以上刊登数据在原始划分表（业绩×邮件）中的比例。</span>?</span>分析
+            <span class="spacer"></span>
+            <span class="tip"><button type="button" class="link-tip" id="btnComplianceCat3Rule">查看原始划分表</button></span>
           </div>
-          <div class="quad-block" style="margin-top:18px">
-            <div class="quad-subtitle">合规四象限 <span class="tip">业绩等级 × 邮件SKU占比 · <button type="button" class="link-tip" id="btnComplianceCat3Rule">按三级类目汇总表分类</button></span></div>
-            <div class="quad" id="complianceQuadGrid"></div>
+          <div class="quad-pair">
+            <div class="quad-block">
+              <div class="quad-subtitle">刊登结果四象限<span class="help" tabindex="0"><span class="help-pop">按有没有出单、有没有收到合规邮件分成四格，对应下方处置清单。格内为以上刊登数据在原始划分表中的比例。</span>?</span></div>
+              <div class="quad" id="quadGrid"></div>
+            </div>
           </div>
         </div>
 
         <div class="section" style="padding-top:4px">
-          <div class="sec-title">
-            3. 放开趋势、分站点与一级类目对比
-            <span class="tip">独立筛选 · 与上方筛选无关</span>
+          <div class="bi-sec-hd">
+            <div class="bi-title">3. 刊登趋势与对比
+              <span class="help" tabindex="0"><span class="help-pop">看「刊登了多少、认证了多少」随时间/站点/大类的变化。本区筛选独立，不影响上方 KPI 与四象限。</span>?</span>
+            </div>
+            <div class="bi-desc">按刊登时间并排看日/周/月趋势；下方分站点、一级类目同口径（柱：SKU/邮件/CPC，线：出单率/邮件率；不含 Listing）</div>
           </div>
           <div class="chart-filter-row">
-            <div class="field"><span class="lbl">统计时间</span>
-              <select class="ctrl" id="fChartTimeAxis" style="min-width:128px">
-                <option value="list">刊登时间</option>
-                <option value="mail">邮件时间</option>
-              </select>
-            </div>
-            <div class="field"><span class="lbl">部门</span>
+            <div class="field"><span class="lbl">部门<span class="help help-down" tabindex="0"><span class="help-pop">仅作用于本区图表，与顶部「刊登部门」互不影响。</span>?</span></span>
               <select class="ctrl" id="fChartDept" style="min-width:140px"><option value="">全部</option></select>
             </div>
-            <div class="field"><span class="lbl">时间范围</span>
+            <div class="field chart-site-field"><span class="lbl">站点<span class="help help-down" tabindex="0"><span class="help-pop">分站点图默认只看十大重点站；可多选任意站点。</span>?</span></span>
+              <div style="position:relative">
+                <button type="button" class="chart-site-trigger" id="btnChartSites">十大站点</button>
+                <div class="chart-site-panel" id="panelChartSites"></div>
+              </div>
+            </div>
+            <div class="field"><span class="lbl">刊登时间<span class="help help-down" tabindex="0"><span class="help-pop">本区图表按商品刊登/上架日起止统计；默认当月，可改后点「查询」。</span>?</span></span>
               <div style="display:flex;align-items:center;gap:6px">
                 <input class="ctrl" type="date" id="fChartFrom" style="min-width:132px" />
                 <span style="color:var(--sub)">至</span>
                 <input class="ctrl" type="date" id="fChartTo" style="min-width:132px" />
               </div>
             </div>
-            <button type="button" class="btn" id="btnChartApply">应用</button>
+            <button type="button" class="btn pri" id="btnChartApply">查 询</button>
             <button type="button" class="btn" id="btnChartReset">重置为当月</button>
             <span class="hint" id="chartFilterHint"></span>
           </div>
           <div class="chart-stack">
-            <div class="chart-box">
-              <div class="chart-hd">
-                <div class="chart-title" id="trendTitle">月度放开趋势</div>
-                <div class="chart-sub" id="trendHint"></div>
-                <span class="spacer"></span>
-                <div class="seg" id="trendGrain">
-                  <button type="button" class="on" data-grain="month">按月</button>
-                  <button type="button" data-grain="week">按周</button>
-                  <button type="button" data-grain="day">按天</button>
+            <div class="chart-grid-3">
+              <div class="chart-box chart-box-sm">
+                <div class="chart-hd">
+                  <div class="chart-title">日度趋势<span class="help" tabindex="0"><span class="help-pop">按刊登日汇总（不含 Listing）。<br>· SKU数量：当日新刊登的 SKU 数<br>· 邮件SKU：当日刊登中收到过合规邮件的 SKU 数<br>· CPC认证：当日刊登中已完成 CPC 认证的数量<br>· 出单率：出单SKU ÷ SKU数量<br>· 邮件率：邮件SKU ÷ SKU数量</span>?</span></div>
+                  <div class="chart-sub" id="trendHintDay"></div>
+                  <span class="spacer"></span>
+                  <div class="chart-tools">
+                    <button type="button" class="btn chart-zoom" data-zoom="trend-day" title="放大查看" aria-label="放大查看"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/></svg></button>
+                    <button type="button" class="btn chart-export" id="btnExportTrendDay" title="导出本图">导出</button>
+                  </div>
                 </div>
-              </div>
-              <div class="chart-scroll-wrap" id="trendChartScroll">
-                <div class="chart-scroll-inner" id="trendChartInner">
-                  <canvas id="trendChart"></canvas>
+                <div class="chart-scroll-wrap" id="trendChartScrollDay">
+                  <div class="chart-scroll-inner" id="trendChartInnerDay"><canvas id="trendChartDay"></canvas></div>
                 </div>
+                <div class="chart-empty" id="trendEmptyDay" style="display:none">当前刊登时间下暂无趋势数据</div>
               </div>
-              <div class="chart-empty" id="trendEmpty" style="display:none">当前统计时间下暂无趋势数据</div>
+              <div class="chart-box chart-box-sm">
+                <div class="chart-hd">
+                  <div class="chart-title">周度趋势<span class="demo-badge" title="当前样本刊登时间偏短，周维度点太少；以下为编造数据，仅供布局展示">编造·仅展示</span><span class="help" tabindex="0"><span class="help-pop">【编造·仅展示】示意口径与日度一致（不含 Listing）。<br>· SKU数量：当周新刊登的 SKU 数<br>· 邮件SKU：当周刊登中收到过合规邮件的 SKU 数<br>· CPC认证：当周刊登中已完成 CPC 认证的数量<br>· 出单率：出单SKU ÷ SKU数量<br>· 邮件率：邮件SKU ÷ SKU数量</span>?</span></div>
+                  <div class="chart-sub" id="trendHintWeek"></div>
+                  <span class="spacer"></span>
+                  <div class="chart-tools">
+                    <button type="button" class="btn chart-zoom" data-zoom="trend-week" title="放大查看" aria-label="放大查看"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/></svg></button>
+                    <button type="button" class="btn chart-export" id="btnExportTrendWeek" title="导出本图">导出</button>
+                  </div>
+                </div>
+                <div class="chart-scroll-wrap" id="trendChartScrollWeek">
+                  <div class="chart-scroll-inner" id="trendChartInnerWeek"><canvas id="trendChartWeek"></canvas></div>
+                </div>
+                <div class="chart-empty" id="trendEmptyWeek" style="display:none">当前刊登时间下暂无趋势数据</div>
+              </div>
+              <div class="chart-box chart-box-sm">
+                <div class="chart-hd">
+                  <div class="chart-title">月度趋势<span class="demo-badge" title="当前样本刊登时间偏短，月维度点太少；以下为编造数据，仅供布局展示">编造·仅展示</span><span class="help" tabindex="0"><span class="help-pop">【编造·仅展示】示意口径与日度一致（不含 Listing）。<br>· SKU数量：当月新刊登的 SKU 数<br>· 邮件SKU：当月刊登中收到过合规邮件的 SKU 数<br>· CPC认证：当月刊登中已完成 CPC 认证的数量<br>· 出单率：出单SKU ÷ SKU数量<br>· 邮件率：邮件SKU ÷ SKU数量</span>?</span></div>
+                  <div class="chart-sub" id="trendHintMonth"></div>
+                  <span class="spacer"></span>
+                  <div class="chart-tools">
+                    <button type="button" class="btn chart-zoom" data-zoom="trend-month" title="放大查看" aria-label="放大查看"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/></svg></button>
+                    <button type="button" class="btn chart-export" id="btnExportTrendMonth" title="导出本图">导出</button>
+                  </div>
+                </div>
+                <div class="chart-scroll-wrap" id="trendChartScrollMonth">
+                  <div class="chart-scroll-inner" id="trendChartInnerMonth"><canvas id="trendChartMonth"></canvas></div>
+                </div>
+                <div class="chart-empty" id="trendEmptyMonth" style="display:none">当前刊登时间下暂无趋势数据</div>
+              </div>
             </div>
-            <div class="chart-box">
-              <div class="chart-hd">
-                <div class="chart-title" id="siteChartTitle">分站点 Listing / SKU / CPC认证</div>
-                <div class="chart-sub" id="siteChartHint"></div>
-              </div>
-              <div class="chart-scroll-wrap" id="siteChartScroll">
-                <div class="chart-scroll-inner" id="siteChartInner">
-                  <canvas id="siteChart"></canvas>
+            <div class="chart-grid-2">
+              <div class="chart-box chart-box-sm">
+                <div class="chart-hd">
+                  <div class="chart-title"><span id="siteChartTitle">分站点对比</span><span class="help" tabindex="0"><span class="help-pop">按站点汇总（不含 Listing）。默认十大站，点击柱可联动顶部站点筛选。<br>· SKU数量：该站刊登的 SKU 数<br>· 收到邮件数：该站收到过合规邮件的数量（与趋势「邮件SKU」同口径）<br>· CPC认证：该站已完成 CPC 认证的数量<br>· 出单率：有出单数 ÷ SKU数量<br>· 邮件率：收到邮件数 ÷ SKU数量</span>?</span></div>
+                  <div class="chart-sub" id="siteChartHint"></div>
+                  <span class="spacer"></span>
+                  <div class="chart-tools">
+                    <button type="button" class="btn chart-zoom" data-zoom="site" title="放大查看" aria-label="放大查看"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/></svg></button>
+                    <button type="button" class="btn chart-export" id="btnExportSite" title="导出本图">导出</button>
+                  </div>
                 </div>
-              </div>
-              <div class="chart-empty" id="siteChartEmpty" style="display:none">当前统计时间下暂无站点数据</div>
-            </div>
-            <div class="chart-box">
-              <div class="chart-hd">
-                <div class="chart-title" id="cat1ChartTitle">分一级类目 Listing / SKU / CPC认证</div>
-                <div class="chart-sub" id="cat1ChartHint"></div>
-              </div>
-              <div class="chart-scroll-wrap" id="cat1ChartScroll">
-                <div class="chart-scroll-inner" id="cat1ChartInner">
-                  <canvas id="cat1Chart"></canvas>
+                <div class="chart-scroll-wrap" id="siteChartScroll">
+                  <div class="chart-scroll-inner" id="siteChartInner">
+                    <canvas id="siteChart"></canvas>
+                  </div>
                 </div>
+                <div class="chart-empty" id="siteChartEmpty" style="display:none">当前刊登时间下暂无站点数据</div>
               </div>
-              <div class="chart-empty" id="cat1ChartEmpty" style="display:none">当前统计时间下暂无一级类目数据</div>
+              <div class="chart-box chart-box-sm">
+                <div class="chart-hd">
+                  <div class="chart-title"><span id="cat1ChartTitle">分一级类目对比</span><span class="help" tabindex="0"><span class="help-pop">按一级类目汇总（不含 Listing）。<br>· SKU数量：该类目下刊登的 SKU 数<br>· 收到邮件数：该类目收到过合规邮件的数量（与趋势「邮件SKU」同口径）<br>· CPC认证：该类目已完成 CPC 认证的数量<br>· 出单率：有出单数 ÷ SKU数量<br>· 邮件率：收到邮件数 ÷ SKU数量</span>?</span></div>
+                  <div class="chart-sub" id="cat1ChartHint"></div>
+                  <span class="spacer"></span>
+                  <div class="chart-tools">
+                    <button type="button" class="btn chart-zoom" data-zoom="cat1" title="放大查看" aria-label="放大查看"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5M11 8v6M8 11h6"/></svg></button>
+                    <button type="button" class="btn chart-export" id="btnExportCat1" title="导出本图">导出</button>
+                  </div>
+                </div>
+                <div class="chart-scroll-wrap" id="cat1ChartScroll">
+                  <div class="chart-scroll-inner" id="cat1ChartInner">
+                    <canvas id="cat1Chart"></canvas>
+                  </div>
+                </div>
+                <div class="chart-empty" id="cat1ChartEmpty" style="display:none">当前刊登时间下暂无一级类目数据</div>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="section" style="padding-top:4px;padding-bottom:24px">
-          <div class="sec-title">4. 认证 / 处置候选清单<span style="margin-left:8px;font-size:12px;font-weight:400;color:var(--sub)">与刊登结果四象限一一对应 · 列表为 Top 预览</span></div>
+          <div class="sec-title">4. 认证 / 处置候选清单<span class="help" tabindex="0"><span class="help-pop">根据刊登结果四象限，列出建议优先认证、收紧、继续放或观察的清单预览。本区可单独切换 SKU / 三级类目口径，与上方概览维度互不影响。</span>?</span>
+            <span style="margin-left:8px;font-size:12px;font-weight:400;color:var(--sub)">与刊登结果四象限一一对应 · Top 预览</span>
+            <span class="spacer"></span>
+            <div class="seg" id="actionDimSeg">
+              <button type="button" class="on" data-action-dim="sku">按 SKU</button>
+              <button type="button" data-action-dim="cat3">按三级类目</button>
+            </div>
+          </div>
           <div class="action-tabs" id="actionTabs">
-            <div class="atab on" data-action="certify">优先认证 <span class="n" id="nCert">0</span></div>
-            <div class="atab" data-action="tighten">建议收紧 <span class="n" id="nTight">0</span></div>
-            <div class="atab" data-action="keep">可继续放 <span class="n" id="nKeep">0</span></div>
+            <div class="atab on" data-action="keep">继续放 <span class="n" id="nKeep">0</span></div>
+            <div class="atab" data-action="certify">优先认证 <span class="n" id="nCert">0</span></div>
             <div class="atab" data-action="observe">观察试放 <span class="n" id="nObs">0</span></div>
+            <div class="atab" data-action="tighten">建议收紧 <span class="n" id="nTight">0</span></div>
           </div>
           <div class="panel-box">
             <div class="panel-hd">
-              <span id="actionTitle">优先认证</span>
-              <button type="button" class="btn" id="btnActionDetail" style="height:28px">整批下钻 →</button>
+              <div class="action-hd-left">
+                <span id="actionTitleMain">继续放</span>
+                <span class="action-preview-ctl">
+                  预览
+                  <select class="ctrl" id="fActionPreviewN" title="切换预览条数">
+                    <option value="20">20</option>
+                    <option value="30" selected>30</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                  <span id="actionPreviewTail">/ 0 SKU</span>
+                </span>
+              </div>
+              <button type="button" class="btn" id="btnActionExport" style="height:28px">导出本批</button>
             </div>
             <div class="arow" style="background:#fafbfd;font-weight:600;color:var(--sub);cursor:default" id="actionHead">
-              <div>SKU</div><div>标题 / 类目</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>
+              <div>SKU</div><div>标题 / 类目</div><div class="m">Listing数量</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>
             </div>
             <div class="action-list" id="actionList"></div>
           </div>
@@ -337,7 +497,7 @@
   <div class="modal-mask" id="complianceCat3Modal" style="display:none" aria-hidden="true">
     <div class="modal-box" role="dialog" aria-labelledby="complianceCat3ModalTitle">
       <div class="modal-hd">
-        <h3 id="complianceCat3ModalTitle">三级类目四象限划分</h3>
+        <h3 id="complianceCat3ModalTitle">刊登数据原始四象限划分表</h3>
         <button type="button" class="modal-close" id="btnCloseComplianceModal" aria-label="关闭">×</button>
       </div>
       <div class="modal-bd">
@@ -366,6 +526,56 @@
     </div>
   </div>
 
+  <div class="modal-mask" id="chartZoomModal" style="display:none" aria-hidden="true">
+    <div class="modal-box chart-zoom-box" role="dialog" aria-labelledby="chartZoomTitle">
+      <div class="modal-hd">
+        <h3 id="chartZoomTitle">图表放大</h3>
+        <button type="button" class="modal-close" id="btnCloseChartZoom" aria-label="关闭">×</button>
+      </div>
+      <div class="chart-zoom-body">
+        <img id="chartZoomImg" alt="图表放大预览" />
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="chartExportModal" style="display:none" aria-hidden="true">
+    <div class="modal-box export-modal" role="dialog" aria-labelledby="chartExportTitle">
+      <div class="modal-hd">
+        <h3 id="chartExportTitle">导出</h3>
+        <button type="button" class="modal-close" id="btnCloseChartExport" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd" style="padding-bottom:8px">
+        <div class="export-form">
+          <div class="export-row">
+            <div class="export-label"><span class="req">*</span>导出名称</div>
+            <div class="export-field"><input class="ctrl" type="text" id="exportName" /></div>
+          </div>
+          <div class="export-row">
+            <div class="export-label"><span class="req">*</span>文件格式</div>
+            <div class="export-field">
+              <div class="export-radios">
+                <label><input type="radio" name="exportFormat" value="excel" /> EXCEL</label>
+                <label><input type="radio" name="exportFormat" value="image" checked /> 图片</label>
+              </div>
+            </div>
+          </div>
+          <div class="export-row">
+            <div class="export-label"><span class="req">*</span>导出渠道</div>
+            <div class="export-field">
+              <div class="export-radios">
+                <label><input type="radio" name="exportChannel" value="local" checked /> 本地</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="btnCancelChartExport">取消</button>
+        <button type="button" class="btn pri" id="btnConfirmChartExport">确定</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="./dashboard_payload_v1_2.js"></script>
   <script>
@@ -381,24 +591,198 @@
   const COMPLIANCE_CAT3 = DATA.compliance_cat3 || { items: [], quadrants: [] };
   const DIM_LABEL = { sku: 'SKU', cat3: '三级类目', listing: 'Listing' };
 
-  const DETAIL_PAGE = /总览|决策/.test(decodeURIComponent(location.pathname))
-    ? '合规SKU数据看板-明细页.html' : './detail.html';
+  // 亚马逊站点主数据（筛选下拉）；语种仅作备注，不展示在筛选项
+  const SITE_CATALOG = [
+    { code: 'US', name: '美国', lang: 'EN' },
+    { code: 'AE', name: '阿联酋', lang: 'EN' },
+    { code: 'AU', name: '澳大利亚', lang: 'EN' },
+    { code: 'BR', name: '巴西', lang: 'PT' },
+    { code: 'CA', name: '加拿大', lang: 'EN' },
+    { code: 'DE', name: '德国', lang: 'DEU' },
+    { code: 'ES', name: '西班牙', lang: 'ESN' },
+    { code: 'FR', name: '法国', lang: 'FRA' },
+    { code: 'GB', name: '英国', lang: 'EN' },
+    { code: 'IN', name: '印度', lang: 'EN' },
+    { code: 'IT', name: '意大利', lang: 'ITA' },
+    { code: 'JP', name: '日本', lang: 'JPN' },
+    { code: 'MX', name: '墨西哥', lang: 'ESN' },
+    { code: 'NL', name: '荷兰', lang: 'NLD' },
+    { code: 'PL', name: '波兰', lang: 'PL' },
+    { code: 'SA', name: '沙特阿拉伯', lang: 'EN' },
+    { code: 'SE', name: '瑞典', lang: 'SE' },
+    { code: 'SG', name: '新加坡', lang: 'EN' },
+    { code: 'TR', name: '土耳其', lang: 'TR' },
+    { code: 'BE', name: '比利时', lang: 'FRA' },
+    { code: 'EG', name: '埃及', lang: 'EN' },
+    { code: 'IE', name: '爱尔兰', lang: 'EN' },
+    { code: 'CL', name: '智利', lang: 'ESN' },
+    { code: 'CO', name: '哥伦比亚', lang: 'ESN' },
+    { code: 'TH', name: '泰国', lang: 'THA' },
+    { code: 'VN', name: '越南', lang: 'VI' },
+    { code: 'DK', name: '丹麦', lang: '' },
+    { code: 'HU', name: '匈牙利', lang: '' },
+    { code: 'NO', name: '挪威', lang: '' },
+    { code: 'RO', name: '罗马尼亚', lang: '' },
+    { code: 'CH', name: '瑞士', lang: '' },
+    { code: 'AT', name: '奥地利', lang: '' },
+    { code: 'CZ', name: '捷克', lang: '' },
+    { code: 'FI', name: '芬兰', lang: '' },
+    { code: 'GR', name: '希腊', lang: '' },
+    { code: 'PT', name: '葡萄牙', lang: '' },
+    { code: 'SK', name: '斯洛伐克', lang: '' },
+    { code: 'PH', name: '菲律宾', lang: '' },
+    { code: 'MY', name: '马来西亚', lang: '' },
+  ];
+  const SITE_NAME = Object.fromEntries(SITE_CATALOG.map(s => [s.code, s.name]));
+  // 分站点图默认十大站点（固定顺序）
+  const TOP10_SITES = ['JP', 'AU', 'ES', 'IT', 'GB', 'CA', 'MX', 'US', 'FR', 'DE'];
+  const TOP10_SET = new Set(TOP10_SITES);
+  /** 站点多选列表：十大固定序置顶，其余按主数据顺序跟在后面 */
+  function sitesForPicker() {
+    const byCode = Object.fromEntries(SITE_CATALOG.map(s => [s.code, s]));
+    const top = TOP10_SITES.map(code => byCode[code]).filter(Boolean);
+    const rest = SITE_CATALOG.filter(s => !TOP10_SET.has(s.code));
+    return top.concat(rest);
+  }
+  function siteLabel(code) {
+    if (!code) return '-';
+    const name = SITE_NAME[code];
+    return name ? `${code} ${name}` : code;
+  }
+  function sameSiteList(a, b) {
+    if (!a || !b || a.length !== b.length) return false;
+    const sa = [...a].sort();
+    const sb = [...b].sort();
+    return sa.every((v, i) => v === sb[i]);
+  }
+  function isTop10Sites(list) {
+    return sameSiteList(list || [], TOP10_SITES);
+  }
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  /** 词条右上角问号；悬停展示白话解释 */
+  function helpTip(text, down) {
+    const cls = down ? 'help help-down' : 'help';
+    return `<span class="${cls}" tabindex="0" aria-label="说明"><span class="help-pop">${escHtml(text)}</span>?</span>`;
+  }
+  function withHelp(label, tip, down) {
+    return `${escHtml(label)}${helpTip(tip, down)}`;
+  }
+  function placeHelpPop(helpEl) {
+    const pop = helpEl && helpEl.querySelector('.help-pop');
+    if (!pop) return;
+    // 先按绝对定位贴在问号旁；再改 fixed 做视口避让，避免被 overflow 裁切
+    pop.classList.remove('is-fixed');
+    pop.style.left = '';
+    pop.style.top = '';
+    pop.style.visibility = 'hidden';
+    pop.style.display = 'block';
+    const pad = 8;
+    const rect = helpEl.getBoundingClientRect();
+    const pw = Math.max(pop.offsetWidth || 0, 120);
+    const ph = Math.max(pop.offsetHeight || 0, 36);
+    const preferDown = helpEl.classList.contains('help-down') || rect.top < ph + 56;
+    let top = preferDown ? rect.bottom + 8 : rect.top - ph - 8;
+    let left = rect.left + rect.width / 2 - pw / 2;
+    if (top < pad) top = rect.bottom + 8;
+    if (top + ph > window.innerHeight - pad) top = Math.max(pad, rect.top - ph - 8);
+    if (left < pad) left = pad;
+    if (left + pw > window.innerWidth - pad) left = window.innerWidth - pw - pad;
+    pop.classList.add('is-fixed');
+    pop.style.left = `${Math.round(left)}px`;
+    pop.style.top = `${Math.round(top)}px`;
+    pop.style.visibility = '';
+    pop.style.display = '';
+  }
+  function resetHelpPop(helpEl) {
+    const pop = helpEl && helpEl.querySelector('.help-pop');
+    if (!pop) return;
+    pop.classList.remove('is-fixed');
+    pop.style.left = '';
+    pop.style.top = '';
+    pop.style.visibility = '';
+    pop.style.display = '';
+  }
+  function bindHelpTips(root) {
+    // 兼容旧调用；实际靠下方事件委托，动态节点也能定位
+    const scope = root || document;
+    scope.querySelectorAll('.help').forEach(el => {
+      if (el.dataset.helpBound) return;
+      el.dataset.helpBound = '1';
+    });
+  }
+  document.addEventListener('mouseover', e => {
+    const help = e.target.closest && e.target.closest('.help');
+    if (!help) return;
+    const from = e.relatedTarget;
+    if (from && help.contains(from)) return;
+    placeHelpPop(help);
+  });
+  document.addEventListener('mouseout', e => {
+    const help = e.target.closest && e.target.closest('.help');
+    if (!help) return;
+    const to = e.relatedTarget;
+    if (to && help.contains(to)) return;
+    resetHelpPop(help);
+  });
+  document.addEventListener('focusin', e => {
+    const help = e.target.closest && e.target.closest('.help');
+    if (help) placeHelpPop(help);
+  });
+  document.addEventListener('focusout', e => {
+    const help = e.target.closest && e.target.closest('.help');
+    if (help) resetHelpPop(help);
+  });
+  document.addEventListener('scroll', () => {
+    document.querySelectorAll('.help .help-pop.is-fixed').forEach(pop => {
+      const help = pop.closest('.help');
+      if (help) placeHelpPop(help);
+    });
+  }, true);
+
+  const DETAIL_DISABLED = true;
+  const POOL = (DATA.samples && DATA.samples.pool) || [];
+  const CAT3_QUAD_MAP = (() => {
+    const m = {};
+    (COMPLIANCE_CAT3.items || []).forEach(it => {
+      if (it.cat3) m[it.cat3] = it;
+    });
+    return m;
+  })();
+  function formatComplianceRule(rule) {
+    const s = String(rule || '').trim();
+    return s ? s.replace(/^\d+-/, '') : '';
+  }
+  function complianceQuadLabelOf(r) {
+    const hit = CAT3_QUAD_MAP[String(r.cat3 || '').trim()];
+    if (!hit) return '未分类';
+    const leg = COMPLIANCE_LEGEND[hit.quadrant] || {};
+    return formatComplianceRule(hit.rule) || leg.desc || hit.quadrant || '未分类';
+  }
 
   const PLATFORMS_READY = ['亚马逊'];
   const state = {
     platform: '亚马逊',
-    site: '',
+    sites: [], // 空=全部站点；多选为站点 code 列表
     dept: '',
     listFrom: '',
     listTo: '',
     chartListFrom: '',
     chartListTo: '',
-    chartTimeAxis: 'list', // list | mail
+    chartTimeAxis: 'list', // 固定按刊登时间
     chartDept: '',
-    dim: 'sku', // sku | listing
-    action: 'certify',
+    chartSites: TOP10_SITES.slice(),
+    dim: 'sku', // 概览/四象限：sku | cat3 | listing
+    actionDim: 'sku', // 清单区独立：sku | cat3（不再提供 listing）
+    action: 'keep',
+    actionPreviewN: 30, // 清单预览条数：20 | 30 | 50 | 100
     trendGrain: 'month', // day | week | month
-    actionSortKey: 'amount', // amount | orders | mail
+    actionSortKey: 'amount', // 单列排序
     actionSortDir: 'desc', // asc | desc
   };
 
@@ -501,6 +885,7 @@
       overview: {},
       quadrant_listing: {}, quadrant_sku: {}, quadrant_cat3: {},
       quadrant_compliance_listing: {}, quadrant_compliance_sku: {}, quadrant_compliance_cat3: {},
+      quadrant_x_compliance_listing: {}, quadrant_x_compliance_sku: {}, quadrant_x_compliance_cat3: {},
       actions: {}, actions_total: {},
       actions_cat3: {}, actions_cat3_total: {},
       actions_listing: {}, actions_listing_total: {},
@@ -537,6 +922,17 @@
       out[qk] = {};
       slices.forEach(s => {
         Object.entries(s[qk] || {}).forEach(([k, v]) => { out[qk][k] = (out[qk][k] || 0) + (v || 0); });
+      });
+    });
+    ['quadrant_x_compliance_listing','quadrant_x_compliance_sku','quadrant_x_compliance_cat3'].forEach(xk => {
+      out[xk] = {};
+      slices.forEach(s => {
+        Object.entries(s[xk] || {}).forEach(([rk, cmap]) => {
+          if (!out[xk][rk]) out[xk][rk] = {};
+          Object.entries(cmap || {}).forEach(([ck, v]) => {
+            out[xk][rk][ck] = (out[xk][rk][ck] || 0) + (v || 0);
+          });
+        });
       });
     });
 
@@ -625,7 +1021,7 @@
       kpi: 'mail',
     },
     keep: {
-      title: '可继续放',
+      title: '继续放',
       quadrant: 'order_low_mail',
       tab: 'order',
       kpi: 'order',
@@ -639,17 +1035,41 @@
   };
 
   const QUAD_UI = [
-    { key: 'order_low_mail', cls: 'keep', axis: '有出单 × 无邮件' },
-    { key: 'order_high_mail', cls: 'cert', axis: '有出单 × 有邮件' },
-    { key: 'no_order_low_mail', cls: 'obs', axis: '无出单 × 无邮件' },
-    { key: 'no_order_high_mail', cls: 'tight', axis: '无出单 × 有邮件' },
+    {
+      key: 'order_low_mail', cls: 'keep', axis: '有出单 & 无邮件',
+      tip: '有订单、没收到合规邮件：收益在、风险信号弱，一般可继续刊登。',
+    },
+    {
+      key: 'order_high_mail', cls: 'cert', axis: '有出单 & 有邮件',
+      tip: '有订单、也收到合规邮件：生意在做但有合规压力，建议优先做 CPC 认证。',
+    },
+    {
+      key: 'no_order_low_mail', cls: 'obs', axis: '无出单 & 无邮件',
+      tip: '没订单、也没邮件：效果还看不清，适合小范围试放并观察。',
+    },
+    {
+      key: 'no_order_high_mail', cls: 'tight', axis: '无出单 & 有邮件',
+      tip: '没订单却收到合规邮件：收益低、风险高，建议收紧或停放。',
+    },
   ];
 
   const COMPLIANCE_QUAD_UI = [
-    { key: 'biz_high_mail_low', cls: 'keep', axis: '业绩高 × 邮件占比低' },
-    { key: 'biz_high_mail_high', cls: 'cert', axis: '业绩高 × 邮件占比高' },
-    { key: 'biz_low_mail_low', cls: 'obs', axis: '业绩低 × 邮件占比低' },
-    { key: 'biz_low_mail_high', cls: 'tight', axis: '业绩低 × 邮件占比高' },
+    {
+      key: 'biz_high_mail_low', cls: 'keep', axis: '业绩高 & 邮件低',
+      tip: '业绩好且邮件占比低：健康度较好，可继续放。',
+    },
+    {
+      key: 'biz_high_mail_high', cls: 'cert', axis: '业绩高 & 邮件高',
+      tip: '业绩好但邮件占比也高：值得优先关注并推动认证。',
+    },
+    {
+      key: 'biz_low_mail_low', cls: 'obs', axis: '业绩低 & 邮件低',
+      tip: '业绩一般、邮件也不多：可观察试放，不必急着大规模投入。',
+    },
+    {
+      key: 'biz_low_mail_high', cls: 'tight', axis: '业绩低 & 邮件高',
+      tip: '业绩一般且邮件占比高：性价比差，建议收紧。',
+    },
   ];
   const COMPLIANCE_MODAL_CLS = {
     biz_high_mail_low: 'keep',
@@ -659,19 +1079,17 @@
   };
 
   function complianceQuadrantLabel(key) {
-    const leg = COMPLIANCE_LEGEND[key] || {};
     const ui = COMPLIANCE_QUAD_UI.find(x => x.key === key);
-    return leg.title || ui?.axis || key;
+    return ui?.axis || key;
   }
 
   function renderComplianceCat3Modal() {
     const quads = COMPLIANCE_CAT3.quadrants || [];
     document.getElementById('complianceRuleGrid').innerHTML = COMPLIANCE_QUAD_UI.map(item => {
       const meta = quads.find(q => q.key === item.key) || {};
-      const leg = COMPLIANCE_LEGEND[item.key] || {};
       return `<div class="modal-qcard ${item.cls}">
-        <div class="mq-tag">${leg.title || meta.title || item.key}</div>
-        <div>${item.axis}</div>
+        <div class="mq-tag">${item.axis}</div>
+        <div style="color:var(--sub)">${escHtml(item.tip || '')}</div>
         <div style="margin-top:6px;color:var(--muted)">类目数 ${fmt(meta.count || 0)}</div>
       </div>`;
     }).join('');
@@ -702,7 +1120,7 @@
       </tr>
     `).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">无匹配类目</td></tr>`;
     const total = (COMPLIANCE_CAT3.items || []).length;
-    const foot = `数据源：${COMPLIANCE_CAT3.source || '三级类目汇总表'} · 共 ${fmt(total)} 个三级类目`;
+    const foot = `数据源：${COMPLIANCE_CAT3.source || '原始四象限划分表（三级类目）'} · 共 ${fmt(total)} 个三级类目`;
     document.getElementById('complianceCat3Foot').textContent =
       rows.length > 500 ? `${foot} · 当前展示前 500 条，请搜索缩小范围` : foot;
   }
@@ -748,46 +1166,439 @@
   }
 
   function detailUrl(extra) {
-    const p = new URLSearchParams();
-    if (state.platform) p.set('platform', state.platform);
-    if (state.site) p.set('site', state.site);
-    if (state.dept) p.set('dept', state.dept);
-    if (state.listFrom) p.set('listFrom', state.listFrom);
-    if (state.listTo) p.set('listTo', state.listTo);
-    Object.entries(extra || {}).forEach(([k, v]) => { if (v != null && v !== '') p.set(k, v); });
-    const q = p.toString();
-    return DETAIL_PAGE + (q ? '?' + q : '');
+    return '#';
   }
-  function gotoDetail(extra) {
-    location.href = detailUrl(extra);
+  function gotoDetail() {
+    toast('明细列表已关闭，请使用图表右上角「导出」或清单「导出本批」');
+  }
+
+  function exportStamp() {
+    const d = new Date();
+    return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+  }
+  function sanitizeExportName(name) {
+    return String(name || '导出').replace(/[\\/:*?"<>|]/g, '_').trim() || '导出';
+  }
+
+  let chartExportKind = 'trend-day'; // trend-day | trend-week | trend-month | site | cat1
+
+  function chartExportMeta(kind) {
+    const trendTitles = { day: '日度趋势', week: '周度趋势', month: '月度趋势' };
+    if (kind === 'site') {
+      return {
+        title: '分站点对比',
+        chart: () => siteChart,
+        excelRows: () => filteredChartSiteRows().map(r => ({
+          dim: siteLabel(r.site),
+          sku: r.sku || 0,
+          mail: r.mail || 0,
+          cpc: r.cpc || 0,
+          order: r.order || 0,
+          order_rate: r.sku ? Math.round(10000 * (r.order || 0) / r.sku) / 100 : 0,
+          mail_rate: r.sku ? Math.round(10000 * (r.mail || 0) / r.sku) / 100 : 0,
+        })),
+        dimName: '站点',
+        cols: [
+          { key: 'dim', name: '站点' },
+          { key: 'sku', name: 'SKU数量' },
+          { key: 'mail', name: '收到邮件数' },
+          { key: 'cpc', name: '有CPC认证数量' },
+          { key: 'order', name: '有出单数' },
+          { key: 'order_rate', name: '出单率%' },
+          { key: 'mail_rate', name: '邮件率%' },
+        ],
+      };
+    }
+    if (kind === 'cat1') {
+      return {
+        title: '分一级类目对比',
+        chart: () => cat1Chart,
+        excelRows: () => filteredChartCat1Rows().slice().sort((a, b) => (b.sku || 0) - (a.sku || 0)).map(r => ({
+          dim: r.cat1 || r.label || '-',
+          sku: r.sku || 0,
+          mail: r.mail || 0,
+          cpc: r.cpc || 0,
+          order: r.order || 0,
+          order_rate: r.sku ? Math.round(10000 * (r.order || 0) / r.sku) / 100 : 0,
+          mail_rate: r.sku ? Math.round(10000 * (r.mail || 0) / r.sku) / 100 : 0,
+        })),
+        dimName: '一级类目',
+        cols: [
+          { key: 'dim', name: '一级类目' },
+          { key: 'sku', name: 'SKU数量' },
+          { key: 'mail', name: '收到邮件数' },
+          { key: 'cpc', name: '有CPC认证数量' },
+          { key: 'order', name: '有出单数' },
+          { key: 'order_rate', name: '出单率%' },
+          { key: 'mail_rate', name: '邮件率%' },
+        ],
+      };
+    }
+    const grain = (kind || '').replace(/^trend-/, '') || 'day';
+    const grainKey = ['day', 'week', 'month'].includes(grain) ? grain : 'day';
+    const isDemo = grainKey === 'week' || grainKey === 'month';
+    return {
+      title: (trendTitles[grainKey] || '趋势') + (isDemo ? '_编造仅展示' : ''),
+      chart: () => trendCharts[grainKey],
+      excelRows: () => trendRowsForGrain(grainKey).map(r => ({
+        dim: r.label,
+        sku: r.sku || 0,
+        mail_sku: r.mail_sku || 0,
+        cpc: r.cpc || 0,
+        order_sku: r.order_sku || 0,
+        order_rate: r.order_rate || 0,
+        mail_rate: r.mail_rate || 0,
+        note: isDemo ? '编造·仅展示' : '',
+      })),
+      dimName: '时间',
+      cols: [
+        { key: 'dim', name: '时间' },
+        { key: 'sku', name: 'SKU数量' },
+        { key: 'mail_sku', name: '邮件SKU数' },
+        { key: 'cpc', name: '有CPC认证数量' },
+        { key: 'order_sku', name: '出单SKU数' },
+        { key: 'order_rate', name: '出单率%' },
+        { key: 'mail_rate', name: '邮件率%' },
+        ...(isDemo ? [{ key: 'note', name: '说明' }] : []),
+      ],
+    };
+  }
+
+  function openChartZoom(kind) {
+    const meta = chartExportMeta(kind || 'trend-day');
+    const chart = meta.chart && meta.chart();
+    if (!chart || typeof chart.toBase64Image !== 'function') {
+      toast('暂无图表可放大');
+      return;
+    }
+    document.getElementById('chartZoomTitle').textContent = meta.title || '图表放大';
+    const img = document.getElementById('chartZoomImg');
+    img.src = chart.toBase64Image('image/png', 1);
+    const modal = document.getElementById('chartZoomModal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeChartZoom() {
+    const modal = document.getElementById('chartZoomModal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.getElementById('chartZoomImg').removeAttribute('src');
+  }
+
+  function openChartExport(kind) {
+    chartExportKind = kind || 'trend';
+    const meta = chartExportMeta(chartExportKind);
+    if (meta.chart() == null && !(meta.excelRows() || []).length) {
+      toast('暂无图表可导出');
+      return;
+    }
+    document.getElementById('exportName').value = `合规sku刊登数据_${meta.title}_${exportStamp()}`;
+    const imgRadio = document.querySelector('input[name=exportFormat][value=image]');
+    const excelRadio = document.querySelector('input[name=exportFormat][value=excel]');
+    if (meta.chart()) imgRadio.checked = true;
+    else excelRadio.checked = true;
+    document.getElementById('chartExportModal').style.display = 'flex';
+    document.getElementById('chartExportModal').setAttribute('aria-hidden', 'false');
+  }
+  function closeChartExport() {
+    document.getElementById('chartExportModal').style.display = 'none';
+    document.getElementById('chartExportModal').setAttribute('aria-hidden', 'true');
+  }
+  function downloadChartPng(chart, filename) {
+    if (!chart || typeof chart.toBase64Image !== 'function') {
+      toast('暂无图片可导出');
+      return false;
+    }
+    const a = document.createElement('a');
+    a.href = chart.toBase64Image('image/png', 1);
+    a.download = filename.endsWith('.png') ? filename : `${filename}.png`;
+    a.click();
+    return true;
+  }
+  function exportChartExcel(meta, filename) {
+    const rows = meta.excelRows() || [];
+    if (!rows.length) {
+      toast('暂无数据可导出');
+      return false;
+    }
+    const cols = meta.cols || [
+      { key: 'dim', name: meta.dimName },
+      { key: 'sku', name: 'SKU数量' },
+      { key: 'mail', name: '收到邮件数' },
+      { key: 'cpc', name: '有CPC认证数量' },
+    ];
+    downloadCsv(`${sanitizeExportName(filename)}.csv`, cols, rows, (r, c) => r[c.key]);
+    return true;
+  }
+  function confirmChartExport() {
+    const name = sanitizeExportName(document.getElementById('exportName').value);
+    const format = (document.querySelector('input[name=exportFormat]:checked') || {}).value || 'image';
+    const meta = chartExportMeta(chartExportKind);
+    let ok = false;
+    if (format === 'excel') ok = exportChartExcel(meta, name);
+    else ok = downloadChartPng(meta.chart(), name);
+    if (ok) {
+      closeChartExport();
+      toast(format === 'excel' ? '已导出 Excel（CSV）' : '已导出图片');
+    }
+  }
+
+  function matchFilterSite(code) {
+    if (!state.sites || !state.sites.length) return true;
+    return state.sites.includes(code);
+  }
+  function matchFilterSitesAny(list, single) {
+    if (!state.sites || !state.sites.length) return true;
+    const arr = (list && list.length) ? list : (single ? [single] : []);
+    return arr.some(s => state.sites.includes(s));
+  }
+  function filterSitesHint() {
+    const list = state.sites || [];
+    if (!list.length) return '全部站点';
+    if (list.length === 1) return siteLabel(list[0]);
+    return `已选 ${list.length} 站`;
+  }
+
+  function poolMatchRow(r) {
+    if (!platformReady()) return false;
+    const rowPlat = r.platform || '亚马逊';
+    if (state.platform && rowPlat !== state.platform) return false;
+    if (!matchFilterSite(r.site)) return false;
+    if (state.dept && r.dept !== state.dept) return false;
+    if (state.listFrom || state.listTo) {
+      const day = String(r.list_time || '').replace(/\//g, '-').slice(0, 10);
+      if (day.length < 10) return false;
+      if (state.listFrom && day < state.listFrom) return false;
+      if (state.listTo && day > state.listTo) return false;
+    }
+    return true;
+  }
+
+  function downloadCsv(filename, cols, rows, valueFn) {
+    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [cols.map(c => esc(c.name)).join(',')].concat(
+      rows.map(r => cols.map(c => esc(valueFn(r, c))).join(','))
+    ).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function exportFilteredPool() {
+    readFilters();
+    const rows = POOL.filter(poolMatchRow);
+    if (!rows.length) {
+      toast('当前筛选下无可导出数据');
+      return;
+    }
+    const cols = [
+      { key: 'platform', name: '平台' },
+      { key: 'site', name: '站点' },
+      { key: 'dept', name: '刊登部门' },
+      { key: 'msku', name: 'MSKU' },
+      { key: 'sku', name: 'SKU' },
+      { key: 'asin', name: 'ASIN' },
+      { key: 'shop', name: '店铺名称' },
+      { key: 'list_time', name: '刊登时间' },
+      { key: 'dev_time', name: '开发时间' },
+      { key: 'label', name: '是否有合规性标签' },
+      { key: 'compliance_quad', name: '四象限分类' },
+      { key: 'cpc', name: '是否做CPC认证' },
+      { key: 'mail_time', name: '邮件时间' },
+      { key: 'mail_status', name: '邮件处理状态' },
+      { key: 'orders', name: '刊登后出单量' },
+      { key: 'amount', name: '刊登后销量金额' },
+      { key: 'remark', name: '备注' },
+      { key: 'cat3', name: '三级类目' },
+    ];
+    downloadCsv('合规看板筛选导出.csv', cols, rows, (r, c) => {
+      if (c.key === 'platform') return r.platform || '亚马逊';
+      if (c.key === 'compliance_quad') return complianceQuadLabelOf(r);
+      if (c.key === 'mail_time') {
+        const v = r.mail_time;
+        if (v == null || v === '' || v === '1' || v === '无' || v === 'None') return '';
+        return v;
+      }
+      return r[c.key];
+    });
+    toast(`已导出 ${rows.length} 条（不展示明细）`);
+  }
+
+  function exportActionBatch() {
+    readFilters();
+    const src = currentActionSource();
+    const previewLimit = [20, 30, 50, 100].includes(Number(state.actionPreviewN))
+      ? Number(state.actionPreviewN)
+      : 30;
+    const rows = sortActionRows(filteredActions(src[state.action])).slice(0, previewLimit);
+    if (!rows.length) {
+      toast('当前批次无可导出数据');
+      return;
+    }
+    const byCat3 = state.actionDim === 'cat3';
+    const byListing = state.actionDim === 'listing';
+    const meta = ACTION_META[state.action];
+    let cols; let valueFn;
+    if (byCat3) {
+      cols = [
+        { key: 'cat3', name: '三级类目' },
+        { key: 'sku_cnt', name: 'SKU数' },
+        { key: 'listing_cnt', name: 'Listing数' },
+        { key: 'dept', name: '部门' },
+        { key: 'sites', name: '站点' },
+        { key: 'amount', name: '销量金额' },
+        { key: 'orders', name: '出单量' },
+        { key: 'mail_cnt', name: '合规邮件' },
+        { key: 'cpc', name: 'CPC认证' },
+      ];
+      valueFn = (r, c) => {
+        if (c.key === 'sites') return (r.sites || []).join('/');
+        if (c.key === 'cpc') return r.cpc ? '是' : '否';
+        return r[c.key];
+      };
+    } else if (byListing) {
+      cols = [
+        { key: 'msku', name: 'MSKU' },
+        { key: 'site', name: '站点' },
+        { key: 'sku', name: 'SKU' },
+        { key: 'title', name: '标题' },
+        { key: 'cat3', name: '三级类目' },
+        { key: 'amount', name: '销量金额' },
+        { key: 'orders', name: '出单量' },
+        { key: 'mail_cnt', name: '合规邮件' },
+        { key: 'cpc', name: 'CPC认证' },
+      ];
+      valueFn = (r, c) => (c.key === 'cpc' ? (r.cpc ? '是' : '否') : r[c.key]);
+    } else {
+      cols = [
+        { key: 'sku', name: 'SKU' },
+        { key: 'title', name: '标题' },
+        { key: 'cat3', name: '三级类目' },
+        { key: 'sites', name: '站点' },
+        { key: 'listing_cnt', name: 'Listing数量' },
+        { key: 'amount', name: '销量金额' },
+        { key: 'orders', name: '出单量' },
+        { key: 'mail_cnt', name: '合规邮件' },
+        { key: 'cpc', name: 'CPC认证' },
+      ];
+      valueFn = (r, c) => {
+        if (c.key === 'sites') return (r.sites || []).join('/');
+        if (c.key === 'cpc') return r.cpc ? '是' : '否';
+        return r[c.key];
+      };
+    }
+    const name = `合规看板_${meta.title || state.action}_预览导出.csv`;
+    downloadCsv(name, cols, rows, valueFn);
+    toast(`已导出本批预览 ${rows.length} 条`);
   }
 
   function fillSiteDeptOptions() {
-    // 部门选项始终用全量，避免选中后下拉只剩当前部门
+    // 站点多选由 fillFilterSiteOptions 渲染；部门仍按当前数据动态生成
     const allSlice = (DEC.by_label && DEC.by_label['']) || DEC;
-    const slice = currentSlice();
-    const siteSel = document.getElementById('fSite');
     const deptSel = document.getElementById('fDept');
-    const keepSite = state.site;
     const keepDept = state.dept;
-    siteSel.innerHTML = '<option value="">全部站点</option>';
-    (slice.site_decision || []).forEach(s => {
-      const o = document.createElement('option');
-      o.value = s.site;
-      o.textContent = `${s.site}（邮件率 ${pct(s.mail_rate)}）`;
-      siteSel.appendChild(o);
-    });
+    fillFilterSiteOptions();
     deptSel.innerHTML = '<option value="">全部</option>';
     (allSlice.dept_decision || []).forEach(d => {
       const o = document.createElement('option');
       o.value = d.dept;
-      o.textContent = `${d.dept}（Listing ${fmt(d.listing)}）`;
+      o.textContent = d.dept;
       deptSel.appendChild(o);
     });
-    if (keepSite && [...siteSel.options].some(o => o.value === keepSite)) siteSel.value = keepSite;
-    else { state.site = ''; siteSel.value = ''; }
     if (keepDept && [...deptSel.options].some(o => o.value === keepDept)) deptSel.value = keepDept;
     else { state.dept = ''; deptSel.value = ''; }
+  }
+
+  function fillFilterSiteOptions() {
+    const panel = document.getElementById('panelFilterSites');
+    if (!panel) return;
+    const selected = new Set(state.sites || []);
+    const dataSites = new Set((((DEC.by_label && DEC.by_label['']) || DEC).site_decision || []).map(s => s.site).filter(Boolean));
+    let html = `<div class="chart-site-actions">
+      <button type="button" data-act="all">全选</button>
+      <button type="button" data-act="clear">全部站点</button>
+    </div>`;
+    sitesForPicker().forEach(s => {
+      const checked = selected.has(s.code) ? 'checked' : '';
+      const tip = dataSites.has(s.code) ? '' : ' title="当前样本数据暂无该站点"';
+      const topCls = TOP10_SET.has(s.code) ? ' top10' : '';
+      html += `<label class="chart-site-item${topCls}"${tip}><input type="checkbox" value="${s.code}" ${checked} />${siteLabel(s.code)}</label>`;
+    });
+    [...dataSites].sort().forEach(code => {
+      if (SITE_NAME[code]) return;
+      const checked = selected.has(code) ? 'checked' : '';
+      html += `<label class="chart-site-item"><input type="checkbox" value="${code}" ${checked} />${code}</label>`;
+    });
+    panel.innerHTML = html;
+    updateFilterSiteTrigger();
+  }
+
+  function readFilterSitesFromPanel() {
+    const panel = document.getElementById('panelFilterSites');
+    if (!panel) return;
+    state.sites = [...panel.querySelectorAll('input[type=checkbox]:checked')].map(el => el.value);
+  }
+
+  function updateFilterSiteTrigger() {
+    const btn = document.getElementById('btnFilterSites');
+    if (!btn) return;
+    const list = state.sites || [];
+    btn.textContent = filterSitesHint();
+    btn.classList.toggle('on', list.length > 0);
+  }
+
+  function fillChartSiteOptions() {
+    const panel = document.getElementById('panelChartSites');
+    if (!panel) return;
+    const selected = new Set(state.chartSites || []);
+    let html = `<div class="chart-site-actions">
+      <button type="button" data-act="top10">默认十大</button>
+      <button type="button" data-act="all">全选</button>
+      <button type="button" data-act="clear">清空</button>
+    </div>`;
+    sitesForPicker().forEach(s => {
+      const checked = selected.has(s.code) ? 'checked' : '';
+      const topCls = TOP10_SET.has(s.code) ? ' top10' : '';
+      html += `<label class="chart-site-item${topCls}"><input type="checkbox" value="${s.code}" ${checked} />${siteLabel(s.code)}</label>`;
+    });
+    panel.innerHTML = html;
+    updateChartSiteTrigger();
+  }
+
+  function readChartSitesFromPanel() {
+    const panel = document.getElementById('panelChartSites');
+    if (!panel) return;
+    state.chartSites = [...panel.querySelectorAll('input[type=checkbox]:checked')].map(el => el.value);
+  }
+
+  function updateChartSiteTrigger() {
+    const btn = document.getElementById('btnChartSites');
+    if (!btn) return;
+    const list = state.chartSites || [];
+    if (!list.length) {
+      btn.textContent = '请选择站点';
+      btn.classList.add('on');
+    } else if (isTop10Sites(list)) {
+      btn.textContent = '十大站点';
+      btn.classList.remove('on');
+    } else if (list.length === 1) {
+      btn.textContent = siteLabel(list[0]);
+      btn.classList.add('on');
+    } else {
+      btn.textContent = `已选 ${list.length} 站`;
+      btn.classList.add('on');
+    }
+  }
+
+  function chartSitesHint() {
+    const list = state.chartSites || [];
+    if (!list.length) return '未选站点';
+    if (isTop10Sites(list)) return '默认十大站点';
+    if (list.length === 1) return siteLabel(list[0]);
+    return `已选 ${list.length} 站`;
   }
 
   function fillChartDeptOptions() {
@@ -799,7 +1610,7 @@
     (allSlice.dept_decision || []).forEach(d => {
       const o = document.createElement('option');
       o.value = d.dept;
-      o.textContent = `${d.dept}（Listing ${fmt(d.listing)}）`;
+      o.textContent = d.dept;
       sel.appendChild(o);
     });
     if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
@@ -807,16 +1618,16 @@
   }
 
   function syncChartFiltersToUI() {
-    const axisSel = document.getElementById('fChartTimeAxis');
-    if (axisSel) axisSel.value = state.chartTimeAxis || 'list';
+    state.chartTimeAxis = 'list';
     const deptSel = document.getElementById('fChartDept');
     if (deptSel) deptSel.value = state.chartDept || '';
+    updateChartSiteTrigger();
     document.getElementById('fChartFrom').value = state.chartListFrom;
     document.getElementById('fChartTo').value = state.chartListTo;
-    const axis = chartAxisName();
     const deptHint = state.chartDept ? ` · ${state.chartDept}` : '';
+    const siteHint = ` · ${chartSitesHint()}`;
     document.getElementById('chartFilterHint').textContent = state.chartListFrom && state.chartListTo
-      ? `当前：${axis} ${state.chartListFrom} ~ ${state.chartListTo}${deptHint}` : '';
+      ? `当前：刊登时间 ${state.chartListFrom} ~ ${state.chartListTo}${deptHint}${siteHint}` : '';
   }
 
   function bindChartDateLimits() {
@@ -836,16 +1647,18 @@
     const def = defaultChartMonthRange();
     if (!state.chartListFrom) state.chartListFrom = def.from;
     if (!state.chartListTo) state.chartListTo = def.to;
+    if (!state.chartSites || !state.chartSites.length) state.chartSites = TOP10_SITES.slice();
     fillChartDeptOptions();
+    fillChartSiteOptions();
     bindChartDateLimits();
     syncChartFiltersToUI();
   }
 
   function readChartFilters() {
-    const axisSel = document.getElementById('fChartTimeAxis');
-    state.chartTimeAxis = (axisSel && axisSel.value) || 'list';
+    state.chartTimeAxis = 'list';
     const deptSel = document.getElementById('fChartDept');
     state.chartDept = (deptSel && deptSel.value) || '';
+    readChartSitesFromPanel();
     state.chartListFrom = document.getElementById('fChartFrom').value;
     state.chartListTo = document.getElementById('fChartTo').value;
     const clamped = clampChartRange(state.chartListFrom, state.chartListTo);
@@ -854,17 +1667,6 @@
     document.getElementById('fChartFrom').value = state.chartListFrom;
     document.getElementById('fChartTo').value = state.chartListTo;
     syncChartFiltersToUI();
-  }
-
-  function onChartTimeAxisChange() {
-    state.chartTimeAxis = document.getElementById('fChartTimeAxis').value || 'list';
-    const def = defaultChartMonthRange();
-    state.chartListFrom = def.from;
-    state.chartListTo = def.to;
-    bindChartDateLimits();
-    syncChartFiltersToUI();
-    renderSiteDept();
-    toast(`已切换为按${chartAxisName()}统计`);
   }
 
   function onChartDeptChange() {
@@ -879,8 +1681,10 @@
     state.chartListFrom = def.from;
     state.chartListTo = def.to;
     state.chartDept = '';
+    state.chartSites = TOP10_SITES.slice();
     state.trendGrain = 'month';
     fillChartDeptOptions();
+    fillChartSiteOptions();
     bindChartDateLimits();
     syncChartFiltersToUI();
   }
@@ -903,12 +1707,25 @@
 
   function filteredSiteRows() {
     let rows = (currentSlice().site_decision || []).slice();
-    if (state.site) rows = rows.filter(r => r.site === state.site);
+    if (state.sites && state.sites.length) rows = rows.filter(r => matchFilterSite(r.site));
     return rows;
   }
   function filteredChartSiteRows() {
     let rows = (chartSlice().site_decision || []).slice();
-    if (state.site) rows = rows.filter(r => r.site === state.site);
+    const order = (state.chartSites && state.chartSites.length) ? state.chartSites : TOP10_SITES;
+    const chartSet = new Set(order);
+    rows = rows.filter(r => chartSet.has(r.site));
+    // 顶部全局站点多选可进一步收窄
+    if (state.sites && state.sites.length) rows = rows.filter(r => matchFilterSite(r.site));
+    const rank = Object.fromEntries(order.map((c, i) => [c, i]));
+    rows.sort((a, b) => {
+      const ra = rank[a.site];
+      const rb = rank[b.site];
+      if (ra != null && rb != null) return ra - rb;
+      if (ra != null) return -1;
+      if (rb != null) return 1;
+      return (b.listing || 0) - (a.listing || 0);
+    });
     return rows;
   }
   function filteredDeptRows() {
@@ -918,19 +1735,21 @@
   }
   function filteredActions(list) {
     let rows = (list || []).slice();
-    if (state.site) rows = rows.filter(r => (r.sites || []).includes(state.site) || r.site === state.site);
+    if (state.sites && state.sites.length) {
+      rows = rows.filter(r => matchFilterSitesAny(r.sites, r.site));
+    }
     if (state.dept) rows = rows.filter(r => r.dept === state.dept);
     return rows;
   }
   function currentActionSource() {
     const slice = currentSlice();
-    if (state.dim === 'cat3') return slice.actions_cat3 || {};
-    if (state.dim === 'listing') return slice.actions_listing || {};
+    if (state.actionDim === 'cat3') return slice.actions_cat3 || {};
+    if (state.actionDim === 'listing') return slice.actions_listing || {};
     return slice.actions || {};
   }
   function currentActionTotals() {
     const slice = currentSlice();
-    if (state.dim === 'cat3') {
+    if (state.actionDim === 'cat3') {
       return slice.actions_cat3_total || {
         certify: (slice.quadrant_cat3 || {}).order_high_mail || 0,
         tighten: (slice.quadrant_cat3 || {}).no_order_high_mail || 0,
@@ -938,7 +1757,7 @@
         observe: (slice.quadrant_cat3 || {}).no_order_low_mail || 0,
       };
     }
-    if (state.dim === 'listing') {
+    if (state.actionDim === 'listing') {
       return slice.actions_listing_total || {
         certify: (slice.quadrant_listing || {}).order_high_mail || 0,
         tighten: (slice.quadrant_listing || {}).no_order_high_mail || 0,
@@ -957,7 +1776,7 @@
   function renderOverview() {
     document.querySelectorAll('#dimSeg button').forEach(b => b.classList.toggle('on', b.dataset.dim === state.dim));
     if (!platformReady()) {
-      document.getElementById('kpiOverview').innerHTML = '<div class="kpi"><div class="k-label">放开池</div><div class="k-val">0</div></div>';
+      document.getElementById('kpiOverview').innerHTML = '<div class="kpi"><div class="k-label">刊登数量</div><div class="k-val">0</div></div>';
       return;
     }
     const OV = currentSlice().overview || {};
@@ -982,53 +1801,61 @@
       cat3: '含「出单且认证」SKU 的类目数',
     };
     document.getElementById('kpiOverview').innerHTML = `
-      <div class="kpi"><div class="k-label">放开规模</div><div class="k-val">${fmt(scale)}</div><div class="k-sub">${DIM_LABEL[dim]} · ${poolHint}</div></div>
-      <div class="kpi ok"><div class="k-label">有出单对象</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
-      <div class="kpi warn"><div class="k-label">收到合规邮件</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
-      <div class="kpi"><div class="k-label">已做CPC认证</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim]} 覆盖率 ${pct(cpcCover)}</div></div>
-      <div class="kpi"><div class="k-label">出单对象已认证</div><div class="k-val">${fmt(cpcOrderN)}</div><div class="k-sub">${cpcOrderSub[dim] || cpcOrderSub.sku}</div></div>
+      <div class="kpi"><div class="k-label">${withHelp('刊登数量', '当前筛选下，合规标签商品的刊登数量（随「按 SKU / 三级类目 / Listing」切换口径）。', true)}</div><div class="k-val">${fmt(scale)}</div><div class="k-sub">${DIM_LABEL[dim]} · ${poolHint}</div></div>
+      <div class="kpi ok"><div class="k-label">${withHelp('有出单', '刊登后产生过订单的数量。出单率 = 有出单 ÷ 刊登数量。', true)}</div><div class="k-val">${fmt(orderN)}</div><div class="k-sub">出单率 ${pct(orderRate)}</div></div>
+      <div class="kpi warn"><div class="k-label">${withHelp('收到合规邮件', '刊登后收到过平台/相关方合规类邮件的数量。邮件率 = 收到邮件 ÷ 刊登数量。', true)}</div><div class="k-val">${fmt(mailN)}</div><div class="k-sub">邮件率 ${pct(mailRate)}</div></div>
+      <div class="kpi"><div class="k-label">${withHelp('已做CPC认证', 'CPC 是儿童产品相关合规认证。已完成认证的数量；覆盖率 = 已认证 ÷ 刊登数量。', true)}</div><div class="k-val">${fmt(cpcN)}</div><div class="k-sub">${DIM_LABEL[dim]} 覆盖率 ${pct(cpcCover)}</div></div>
+      <div class="kpi"><div class="k-label">${withHelp('出单且已认证', '既出过单、又已完成 CPC 认证的数量，表示「有生意且合规动作到位」。', true)}</div><div class="k-val">${fmt(cpcOrderN)}</div><div class="k-sub">${cpcOrderSub[dim] || cpcOrderSub.sku}</div></div>
     `;
+    bindHelpTips(document.getElementById('kpiOverview'));
   }
 
   function renderQuad() {
     if (!platformReady()) {
       document.getElementById('quadGrid').innerHTML = '<div class="empty">待接入</div>';
-      document.getElementById('complianceQuadGrid').innerHTML = '<div class="empty">待接入</div>';
       return;
     }
     const slice = currentSlice();
+    const unit = DIM_LABEL[state.dim];
     const qMap = {
       sku: slice.quadrant_sku,
       cat3: slice.quadrant_cat3,
       listing: slice.quadrant_listing,
     };
     const q = qMap[state.dim] || slice.quadrant_sku || {};
-    const unit = DIM_LABEL[state.dim];
+    const xMap = {
+      sku: slice.quadrant_x_compliance_sku,
+      cat3: slice.quadrant_x_compliance_cat3,
+      listing: slice.quadrant_x_compliance_listing,
+    };
+    const x = xMap[state.dim] || slice.quadrant_x_compliance_sku || {};
+    const qTotal = QUAD_UI.reduce((s, item) => s + (Number(q[item.key]) || 0), 0);
     document.getElementById('quadGrid').innerHTML = QUAD_UI.map(item => {
       const leg = LEGEND[item.key] || {};
       const n = q[item.key] || 0;
+      const share = qTotal ? Math.round(10000 * n / qTotal) / 100 : 0;
+      const cross = x[item.key] || {};
+      const crossRows = COMPLIANCE_QUAD_UI.map(ci => {
+        const cn = Number(cross[ci.key]) || 0;
+        const cshare = n ? Math.round(10000 * cn / n) / 100 : 0;
+        return `<div class="q-cross-row">
+          <span class="dot ${ci.cls}"></span>
+          <span class="name" title="${escHtml(ci.tip || ci.axis)}">${escHtml(ci.axis)}</span>
+          <span class="val">${fmt(cn)}</span>
+          <span class="pct">${pct(cshare)}</span>
+        </div>`;
+      }).join('');
       return `<div class="qcard ${item.cls}" data-quadrant="${item.key}">
-        <span class="q-tag">${leg.title || item.key}</span>
-        <div class="q-title">${item.axis}</div>
-        <div class="q-nums"><div><b>${fmt(n)}</b><span>${unit}</span></div></div>
+        <span class="q-tag">${escHtml(leg.title || item.key)}</span>
+        <div class="q-title">${withHelp(item.axis, item.tip)}</div>
+        <div class="q-nums"><div><b>${fmt(n)}</b><span>${unit} · 占比 ${pct(share)}</span></div></div>
+        <div class="q-cross">
+          <div class="q-cross-hd">以上刊登数据在原始划分表中的比例</div>
+          ${crossRows}
+        </div>
       </div>`;
     }).join('');
-
-    const cqMap = {
-      sku: slice.quadrant_compliance_sku,
-      cat3: slice.quadrant_compliance_cat3,
-      listing: slice.quadrant_compliance_listing,
-    };
-    const cq = cqMap[state.dim] || slice.quadrant_compliance_sku || {};
-    document.getElementById('complianceQuadGrid').innerHTML = COMPLIANCE_QUAD_UI.map(item => {
-      const leg = COMPLIANCE_LEGEND[item.key] || {};
-      const n = cq[item.key] || 0;
-      return `<div class="qcard ${item.cls}" data-compliance-quadrant="${item.key}">
-        <span class="q-tag">${leg.title || item.key}</span>
-        <div class="q-title">${item.axis}</div>
-        <div class="q-nums"><div><b>${fmt(n)}</b><span>${unit}</span></div></div>
-      </div>`;
-    }).join('');
+    bindHelpTips(document.getElementById('quadGrid'));
   }
 
   function filteredChartCat1Rows() {
@@ -1041,13 +1868,9 @@
     return label;
   }
 
-  const CHART_SERIES = [
-    { key: 'listing', name: 'Listing数量', color: '#4C8DFF' },
-    { key: 'sku', name: 'SKU数量', color: '#3DB8A0' },
-    { key: 'cpc', name: '有CPC认证数量', color: '#E8A05C' },
-  ];
+  // 对比图与趋势图同口径：柱=SKU/邮件/CPC，线=出单率/邮件率
 
-  let trendChart = null;
+  let trendCharts = { day: null, week: null, month: null };
   let siteChart = null;
   let cat1Chart = null;
 
@@ -1085,12 +1908,13 @@
           const ov = (sl && sl.overview) || {};
           return {
             day,
-            listing: ov.listing || 0,
             sku: ov.sku || 0,
-            cpc: ov.cpc_listing != null ? ov.cpc_listing : (ov.cpc || 0),
+            cpc: ov.cpc_sku != null ? ov.cpc_sku : (ov.cpc_listing != null ? ov.cpc_listing : (ov.cpc || 0)),
+            mail_sku: ov.mail_sku || 0,
+            order_sku: ov.order_sku || 0,
           };
         })
-        .filter(r => r.listing || r.sku || r.cpc);
+        .filter(r => r.sku || r.cpc || r.mail_sku || r.order_sku);
     }
     const T = DATA.trend || {};
     const axisKey = state.chartTimeAxis === 'mail' ? 'mail' : 'list';
@@ -1110,6 +1934,8 @@
     const viewport = scroll.clientWidth || 640;
     const minW = Math.max(viewport, barCount * barWidth);
     inner.style.width = minW + 'px';
+    const sm = inner.closest('.chart-box-sm');
+    inner.style.height = sm ? '260px' : '300px';
   }
 
   function barLabel(v) {
@@ -1132,6 +1958,7 @@
       data.datasets.forEach((_ds, datasetIndex) => {
         const meta = chart.getDatasetMeta(datasetIndex);
         if (!meta.visible || meta.hidden) return;
+        if (meta.type === 'line' || _ds.type === 'line') return;
         meta.data.forEach((bar, index) => {
           const text = barLabel(_ds.data[index]);
           if (!text) return;
@@ -1154,7 +1981,7 @@
       plugins: {
         legend: {
           position: 'top',
-          labels: { boxWidth: 12, boxHeight: 12, font: { size: 12 } },
+          labels: { boxWidth: 12, boxHeight: 12, font: { size: 11 } },
         },
         tooltip: {
           callbacks: {
@@ -1169,7 +1996,7 @@
             maxRotation: 0,
             autoSkip: !scrollable,
             maxTicksLimit: scrollable ? rows.length : 12,
-            font: { size: 11 },
+            font: { size: 10 },
           },
         },
         y: {
@@ -1177,34 +2004,123 @@
           grid: { color: '#eef1f5', borderDash: [4, 4] },
           ticks: {
             callback: v => shortNum(v),
-            font: { size: 11 },
+            font: { size: 10 },
           },
         },
       },
     };
   }
 
+  function comboTrendOptions(rows) {
+    const scrollable = rows.length > 10;
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      layout: { padding: { top: 12 } },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 }, padding: 8 },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (ctx.dataset.yAxisID === 'y1') return `${ctx.dataset.label}: ${fmt(v)}%`;
+              return `${ctx.dataset.label}: ${fmt(v)}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { maxRotation: scrollable ? 45 : 0, autoSkip: !scrollable, font: { size: 10 } },
+          grid: { display: false },
+        },
+        y: {
+          type: 'linear',
+          position: 'left',
+          beginAtZero: true,
+          title: { display: true, text: '数量', font: { size: 10 }, color: '#8a93a3' },
+          ticks: { callback: v => shortNum(v), font: { size: 10 } },
+          grid: { color: 'rgba(0,0,0,.06)' },
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          beginAtZero: true,
+          title: { display: true, text: '比率%', font: { size: 10 }, color: '#8a93a3' },
+          ticks: { callback: v => v + '%', font: { size: 10 } },
+          grid: { drawOnChartArea: false },
+        },
+      },
+    };
+  }
+
   function aggregateTrend(grain, rows) {
+    const ratePct = (num, den) => (den ? Math.round(10000 * num / den) / 100 : 0);
     if (grain === 'day') {
-      return rows.map(r => ({
-        key: r.day,
-        label: r.day.slice(5).replace(/-/g, '/'),
-        listing: r.listing,
-        sku: r.sku,
-        cpc: r.cpc != null ? r.cpc : r.cpc_listing,
-      }));
+      return rows.map(r => {
+        const sku = r.sku || 0;
+        const mail_sku = r.mail_sku || 0;
+        const order_sku = r.order_sku || 0;
+        const cpc = r.cpc != null ? r.cpc : (r.cpc_listing || 0);
+        return {
+          key: r.day,
+          label: r.day.slice(5).replace(/-/g, '/'),
+          sku,
+          mail_sku,
+          order_sku,
+          cpc,
+          order_rate: ratePct(order_sku, sku),
+          mail_rate: ratePct(mail_sku, sku),
+        };
+      });
     }
     const map = new Map();
     rows.forEach(r => {
       const key = grain === 'month' ? r.day.slice(0, 7) : isoWeekKey(r.day);
       const label = grain === 'month' ? key : key.replace(/-/g, '');
-      const prev = map.get(key) || { key, label, listing: 0, sku: 0, cpc: 0 };
-      prev.listing += r.listing || 0;
+      const prev = map.get(key) || { key, label, sku: 0, mail_sku: 0, order_sku: 0, cpc: 0 };
       prev.sku += r.sku || 0;
+      prev.mail_sku += r.mail_sku || 0;
+      prev.order_sku += r.order_sku || 0;
       prev.cpc += (r.cpc != null ? r.cpc : r.cpc_listing) || 0;
       map.set(key, prev);
     });
-    return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
+    return [...map.values()].sort((a, b) => a.key.localeCompare(b.key)).map(r => ({
+      ...r,
+      order_rate: ratePct(r.order_sku, r.sku),
+      mail_rate: ratePct(r.mail_sku, r.sku),
+    }));
+  }
+
+  // 周/月样本跨度不足，以下为编造示意数据（仅展示，非真实统计）
+  const DEMO_TREND_WEEK = [
+    { key: '2026-W18', label: '2026W18', sku: 3820, mail_sku: 96, cpc: 28, order_rate: 1.15, mail_rate: 2.52 },
+    { key: '2026-W19', label: '2026W19', sku: 4160, mail_sku: 118, cpc: 31, order_rate: 1.32, mail_rate: 2.84 },
+    { key: '2026-W20', label: '2026W20', sku: 3980, mail_sku: 142, cpc: 35, order_rate: 0.98, mail_rate: 3.56 },
+    { key: '2026-W21', label: '2026W21', sku: 4510, mail_sku: 125, cpc: 40, order_rate: 1.48, mail_rate: 2.77 },
+    { key: '2026-W22', label: '2026W22', sku: 4290, mail_sku: 158, cpc: 38, order_rate: 1.21, mail_rate: 3.68 },
+    { key: '2026-W23', label: '2026W23', sku: 4720, mail_sku: 134, cpc: 44, order_rate: 1.55, mail_rate: 2.84 },
+    { key: '2026-W24', label: '2026W24', sku: 4450, mail_sku: 171, cpc: 42, order_rate: 1.08, mail_rate: 3.84 },
+    { key: '2026-W25', label: '2026W25', sku: 3910, mail_sku: 102, cpc: 36, order_rate: 1.41, mail_rate: 2.61 },
+  ].map(r => ({ ...r, order_sku: Math.round(r.sku * r.order_rate / 100), demo: true }));
+
+  const DEMO_TREND_MONTH = [
+    { key: '2026-01', label: '2026-01', sku: 6120, mail_sku: 148, cpc: 41, order_rate: 1.22, mail_rate: 2.42 },
+    { key: '2026-02', label: '2026-02', sku: 5480, mail_sku: 165, cpc: 38, order_rate: 1.05, mail_rate: 3.01 },
+    { key: '2026-03', label: '2026-03', sku: 6860, mail_sku: 182, cpc: 49, order_rate: 1.38, mail_rate: 2.65 },
+    { key: '2026-04', label: '2026-04', sku: 7240, mail_sku: 206, cpc: 52, order_rate: 1.18, mail_rate: 2.84 },
+    { key: '2026-05', label: '2026-05', sku: 6980, mail_sku: 224, cpc: 55, order_rate: 1.45, mail_rate: 3.21 },
+    { key: '2026-06', label: '2026-06', sku: 7650, mail_sku: 198, cpc: 58, order_rate: 1.28, mail_rate: 2.59 },
+  ].map(r => ({ ...r, order_sku: Math.round(r.sku * r.order_rate / 100), demo: true }));
+
+  function trendRowsForGrain(grain) {
+    if (grain === 'week') return DEMO_TREND_WEEK.map(r => ({ ...r }));
+    if (grain === 'month') return DEMO_TREND_MONTH.map(r => ({ ...r }));
+    return aggregateTrend(grain, trendDayRows());
   }
 
   function chartScopeHint() {
@@ -1215,144 +2131,268 @@
     return parts.join(' · ');
   }
 
-  function renderTrend() {
-    document.querySelectorAll('#trendGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.trendGrain));
-    const titles = { day: '日度放开趋势', week: '周度放开趋势', month: '月度放开趋势' };
+  function renderOneTrend(grain) {
+    const cap = grain.charAt(0).toUpperCase() + grain.slice(1);
+    const hintEl = document.getElementById('trendHint' + cap);
+    const empty = document.getElementById('trendEmpty' + cap);
+    const canvas = document.getElementById('trendChart' + cap);
     const axisTip = {
       day: `${chartAxisName()}(天)`,
       week: `${chartAxisName()}(周)`,
       month: `${chartAxisName()}(月)`,
     };
-    document.getElementById('trendTitle').textContent = titles[state.trendGrain] || '放开趋势';
-    const rows = aggregateTrend(state.trendGrain, trendDayRows());
-    const empty = document.getElementById('trendEmpty');
-    const canvas = document.getElementById('trendChart');
+    const isDemo = grain === 'week' || grain === 'month';
+    const rows = trendRowsForGrain(grain);
+    const barW = grain === 'day' ? 48 : (grain === 'week' ? 56 : 64);
+
     if (!platformReady() || !rows.length || typeof Chart === 'undefined') {
-      if (trendChart) { trendChart.destroy(); trendChart = null; }
-      canvas.style.display = 'none';
-      empty.style.display = 'block';
-      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前统计时间下暂无趋势数据');
-      document.getElementById('trendHint').textContent = '';
+      if (trendCharts[grain]) { trendCharts[grain].destroy(); trendCharts[grain] = null; }
+      if (canvas) canvas.style.display = 'none';
+      if (empty) {
+        empty.style.display = 'block';
+        empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前刊登时间下暂无趋势数据');
+      }
+      if (hintEl) hintEl.textContent = '';
       return;
     }
     canvas.style.display = 'block';
     empty.style.display = 'none';
-    document.getElementById('trendHint').textContent =
-      `${chartScopeHint()} · ${axisTip[state.trendGrain] || ''}` +
-      (rows.length > 12 ? ' · 可左右拖动查看' : '');
+    if (isDemo) {
+      hintEl.innerHTML =
+        `<span class="demo-mark">※ 编造数据·仅做展示</span> · 示意 ${grain === 'week' ? '近 8 周' : '近 6 月'} · ${axisTip[grain] || ''}`;
+    } else {
+      hintEl.textContent =
+        `${chartScopeHint()} · ${axisTip[grain] || ''}` +
+        (rows.length > 10 ? ' · 可左右拖动' : '');
+    }
 
-    const seriesMeta = (DATA.trend && DATA.trend.series) || CHART_SERIES;
-    const datasets = seriesMeta.map(s => ({
-      label: s.name,
-      data: rows.map(r => r[s.key] != null ? r[s.key] : 0),
-      backgroundColor: s.color,
-      borderRadius: 3,
-      maxBarThickness: 28,
-    }));
+    const datasets = [
+      {
+        type: 'bar',
+        label: 'SKU数量',
+        data: rows.map(r => r.sku || 0),
+        backgroundColor: '#2BB8A7',
+        borderRadius: 2,
+        maxBarThickness: 18,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'bar',
+        label: '邮件SKU',
+        data: rows.map(r => r.mail_sku || 0),
+        backgroundColor: '#7B61FF',
+        borderRadius: 2,
+        maxBarThickness: 18,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'bar',
+        label: 'CPC认证',
+        data: rows.map(r => r.cpc || 0),
+        backgroundColor: '#F5A623',
+        borderRadius: 2,
+        maxBarThickness: 18,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: '出单率',
+        data: rows.map(r => r.order_rate || 0),
+        borderColor: '#3D7EFF',
+        backgroundColor: '#3D7EFF',
+        pointRadius: 2,
+        pointHoverRadius: 4,
+        borderWidth: 2,
+        tension: 0.25,
+        yAxisID: 'y1',
+        order: 1,
+      },
+      {
+        type: 'line',
+        label: '邮件率',
+        data: rows.map(r => r.mail_rate || 0),
+        borderColor: '#E85D75',
+        backgroundColor: '#E85D75',
+        pointRadius: 2,
+        pointHoverRadius: 4,
+        borderWidth: 2,
+        tension: 0.25,
+        yAxisID: 'y1',
+        order: 1,
+      },
+    ];
 
-    if (trendChart) trendChart.destroy();
-    applyChartScroll('trendChartScroll', 'trendChartInner', rows.length, 56);
-    trendChart = new Chart(canvas.getContext('2d'), {
+    if (trendCharts[grain]) trendCharts[grain].destroy();
+    applyChartScroll('trendChartScroll' + cap, 'trendChartInner' + cap, rows.length, barW);
+    trendCharts[grain] = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: { labels: rows.map(r => r.label), datasets },
-      options: barChartOptions(rows, 56),
+      options: comboTrendOptions(rows),
     });
   }
 
+  function renderTrend() {
+    ['day', 'week', 'month'].forEach(renderOneTrend);
+  }
+
+  function enrichCompareRows(rows) {
+    return (rows || []).map(r => {
+      const sku = r.sku || 0;
+      return {
+        ...r,
+        order_rate: sku ? Math.round(10000 * (r.order || 0) / sku) / 100 : 0,
+        mail_rate: sku ? Math.round(10000 * (r.mail || 0) / sku) / 100 : 0,
+      };
+    });
+  }
+
+  function compareComboDatasets(rows, maxBarThickness) {
+    const thick = maxBarThickness || 18;
+    return [
+      {
+        type: 'bar',
+        label: 'SKU数量',
+        data: rows.map(r => r.sku || 0),
+        backgroundColor: '#2BB8A7',
+        borderRadius: 2,
+        maxBarThickness: thick,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'bar',
+        label: '收到邮件数',
+        data: rows.map(r => r.mail || 0),
+        backgroundColor: '#7B61FF',
+        borderRadius: 2,
+        maxBarThickness: thick,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'bar',
+        label: 'CPC认证',
+        data: rows.map(r => r.cpc || 0),
+        backgroundColor: '#F5A623',
+        borderRadius: 2,
+        maxBarThickness: thick,
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: '出单率',
+        data: rows.map(r => r.order_rate || 0),
+        borderColor: '#3D7EFF',
+        backgroundColor: '#3D7EFF',
+        pointRadius: 2,
+        pointHoverRadius: 4,
+        borderWidth: 2,
+        tension: 0.25,
+        yAxisID: 'y1',
+        order: 1,
+      },
+      {
+        type: 'line',
+        label: '邮件率',
+        data: rows.map(r => r.mail_rate || 0),
+        borderColor: '#E85D75',
+        backgroundColor: '#E85D75',
+        pointRadius: 2,
+        pointHoverRadius: 4,
+        borderWidth: 2,
+        tension: 0.25,
+        yAxisID: 'y1',
+        order: 1,
+      },
+    ];
+  }
+
   function renderSiteChart() {
-    const rows = filteredChartSiteRows().slice().sort((a, b) => (b.listing || 0) - (a.listing || 0));
+    const rows = enrichCompareRows(filteredChartSiteRows());
     const empty = document.getElementById('siteChartEmpty');
     const canvas = document.getElementById('siteChart');
-    document.getElementById('siteChartTitle').textContent = state.site
-      ? `站点 ${state.site} · Listing / SKU / CPC认证`
-      : '分站点 Listing / SKU / CPC认证';
+    const siteScope = isTop10Sites(state.chartSites) ? '十大站点' : chartSitesHint();
+    const filterHint = (state.sites && state.sites.length) ? ` · 顶部${filterSitesHint()}` : '';
+    document.getElementById('siteChartTitle').textContent = (state.sites && state.sites.length === 1)
+      ? `分站点 · ${siteLabel(state.sites[0])}`
+      : '分站点对比';
     if (!platformReady() || !rows.length || typeof Chart === 'undefined') {
       if (siteChart) { siteChart.destroy(); siteChart = null; }
       canvas.style.display = 'none';
       empty.style.display = 'block';
-      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前筛选下暂无站点数据');
+      empty.textContent = !platformReady()
+        ? '待接入'
+        : (typeof Chart === 'undefined'
+          ? '图表库未加载'
+          : (!(state.chartSites && state.chartSites.length) ? '请先选择站点' : '当前筛选下暂无站点数据'));
       document.getElementById('siteChartHint').textContent = '';
       return;
     }
     canvas.style.display = 'block';
     empty.style.display = 'none';
     document.getElementById('siteChartHint').textContent =
-      `${chartScopeHint()} · 合规标签 SKU` +
+      `${chartScopeHint()} · ${siteScope}${filterHint}` +
       (rows.length > 12 ? ' · 可左右拖动查看' : '');
 
-    const datasets = CHART_SERIES.map(s => ({
-      label: s.name,
-      data: rows.map(r => r[s.key] || 0),
-      backgroundColor: s.color,
-      borderRadius: 3,
-      maxBarThickness: rows.length > 10 ? 22 : 28,
-    }));
-
     if (siteChart) siteChart.destroy();
-    applyChartScroll('siteChartScroll', 'siteChartInner', rows.length, 52);
-    const siteOpts = barChartOptions(rows, 52);
-    siteOpts.plugins.tooltip.callbacks.afterBody = items => {
-      const i = items[0]?.dataIndex;
-      if (i == null || !rows[i]) return [];
-      const r = rows[i];
-      return [`SKU ${fmt(r.sku)}`, `CPC认证 ${fmt(r.cpc)}`];
-    };
+    applyChartScroll('siteChartScroll', 'siteChartInner', rows.length, 56);
+    const siteOpts = comboTrendOptions(rows);
     siteOpts.onClick = (_evt, elements) => {
       if (!elements.length || !platformReady()) return;
       const idx = elements[0].index;
       const site = rows[idx]?.site;
       if (!site) return;
-      state.site = state.site === site ? '' : site;
-      document.getElementById('fSite').value = state.site;
+      const set = new Set(state.sites || []);
+      if (set.has(site)) set.delete(site);
+      else set.add(site);
+      state.sites = [...set];
+      fillFilterSiteOptions();
       renderAll();
-      toast(state.site ? `已筛选站点：${state.site}` : '已取消站点筛选');
+      toast(state.sites.length ? `已筛选站点：${filterSitesHint()}` : '已恢复全部站点');
     };
     siteChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
-      data: { labels: rows.map(r => r.site), datasets },
+      data: {
+        labels: rows.map(r => siteLabel(r.site)),
+        datasets: compareComboDatasets(rows, rows.length > 10 ? 16 : 20),
+      },
       options: siteOpts,
     });
   }
 
   function renderCat1Chart() {
-    const rows = filteredChartCat1Rows().slice().sort((a, b) => (b.listing || 0) - (a.listing || 0));
+    const rows = enrichCompareRows(
+      filteredChartCat1Rows().slice().sort((a, b) => (b.sku || 0) - (a.sku || 0))
+    );
     const empty = document.getElementById('cat1ChartEmpty');
     const canvas = document.getElementById('cat1Chart');
     if (!platformReady() || !rows.length || typeof Chart === 'undefined') {
       if (cat1Chart) { cat1Chart.destroy(); cat1Chart = null; }
       canvas.style.display = 'none';
       empty.style.display = 'block';
-      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前统计时间下暂无一级类目数据');
+      empty.textContent = !platformReady() ? '待接入' : (typeof Chart === 'undefined' ? '图表库未加载' : '当前刊登时间下暂无一级类目数据');
       document.getElementById('cat1ChartHint').textContent = '';
       return;
     }
     canvas.style.display = 'block';
     empty.style.display = 'none';
     document.getElementById('cat1ChartHint').textContent =
-      `${chartScopeHint()} · sku类目一级 · 合规标签 SKU` +
+      `${chartScopeHint()} · 一级类目` +
       (rows.length > 8 ? ' · 可左右拖动查看' : '');
-
-    const datasets = CHART_SERIES.map(s => ({
-      label: s.name,
-      data: rows.map(r => r[s.key] || 0),
-      backgroundColor: s.color,
-      borderRadius: 3,
-      maxBarThickness: rows.length > 8 ? 22 : 28,
-    }));
 
     if (cat1Chart) cat1Chart.destroy();
     applyChartScroll('cat1ChartScroll', 'cat1ChartInner', rows.length, 72);
-    const cat1Opts = barChartOptions(rows, 72);
-    cat1Opts.plugins.tooltip.callbacks.afterBody = items => {
-      const i = items[0]?.dataIndex;
-      if (i == null || !rows[i]) return [];
-      const r = rows[i];
-      return [r.cat1 || r.label || '', `SKU ${fmt(r.sku)}`, `CPC认证 ${fmt(r.cpc)}`];
-    };
     cat1Chart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
-      data: { labels: rows.map(r => cat1ChartLabel(r)), datasets },
-      options: cat1Opts,
+      data: {
+        labels: rows.map(r => cat1ChartLabel(r)),
+        datasets: compareComboDatasets(rows, rows.length > 8 ? 16 : 20),
+      },
+      options: comboTrendOptions(rows),
     });
   }
 
@@ -1362,69 +2402,100 @@
     renderCat1Chart();
   }
 
+  // 单列排序
+  const ACTION_SORT_KEYS = ['sku', 'listing', 'amount', 'orders', 'mail'];
+
   function actionSortValue(r, key) {
     if (key === 'amount') return Number(r.amount) || 0;
     if (key === 'orders') return Number(r.orders) || 0;
     if (key === 'mail') return Number(r.mail_cnt) || 0;
+    if (key === 'listing') return Number(r.listing_cnt) || 0;
+    if (key === 'sku') return Number(r.sku_cnt != null ? r.sku_cnt : 0) || 0;
     return 0;
   }
   function sortActionRows(rows) {
-    const key = state.actionSortKey;
-    const dir = state.actionSortDir === 'asc' ? 1 : -1;
-    return rows.slice().sort((a, b) => (actionSortValue(a, key) - actionSortValue(b, key)) * dir);
+    const key = ACTION_SORT_KEYS.includes(state.actionSortKey) ? state.actionSortKey : 'amount';
+    const dir = state.actionSortDir === 'asc' ? 'asc' : 'desc';
+    state.actionSortKey = key;
+    state.actionSortDir = dir;
+    const mul = dir === 'asc' ? 1 : -1;
+    return rows.slice().sort((a, b) => (actionSortValue(a, key) - actionSortValue(b, key)) * mul);
+  }
+  function toggleActionSort(key) {
+    if (!ACTION_SORT_KEYS.includes(key)) return;
+    if (state.actionSortKey === key) {
+      state.actionSortDir = state.actionSortDir === 'desc' ? 'asc' : 'desc';
+    } else {
+      state.actionSortKey = key;
+      state.actionSortDir = 'desc';
+    }
   }
   function actionSortBtn(key, label) {
     const on = state.actionSortKey === key;
     const arrow = on ? `<span class="arr">${state.actionSortDir === 'asc' ? '↑' : '↓'}</span>` : '';
-    return `<button type="button" class="sort-th${on ? ' on' : ''}" data-sort="${key}">${label}${arrow}</button>`;
+    return `<span class="sort-th${on ? ' on' : ''}">${label}${arrow}</span>`;
+  }
+  function actionMetricHead(key, label, tip) {
+    return `<div class="m" data-sort="${key}" title="点击按该列排序（升/降切换）">${actionSortBtn(key, label)}${helpTip(tip)}</div>`;
   }
   function actionHeadHtml(byCat3, byListing) {
-    const metrics = `<div class="m">${actionSortBtn('amount', '销量金额')}</div><div class="m">${actionSortBtn('orders', '出单量')}</div><div class="m">${actionSortBtn('mail', '合规邮件')}</div><div class="m">CPC认证</div>`;
-    if (byCat3) return `<div>三级类目</div><div>站点 / 部门</div>${metrics}`;
-    if (byListing) return `<div>msku</div><div>标题 / 站点</div>${metrics}`;
-    return `<div>SKU</div><div>标题 / 类目</div>${metrics}`;
+    const metrics = `${actionMetricHead('listing', 'Listing数量', '该 SKU / 类目下的 Listing 条数。点击表头按本列排序。')}${actionMetricHead('amount', '销量金额', '刊登后累计销售额（金额）。点击表头按本列排序。')}${actionMetricHead('orders', '出单量', '刊登后产生的订单件数。点击表头按本列排序。')}${actionMetricHead('mail', '合规邮件', '是否收到过合规相关邮件，或邮件次数（按数据字段）。点击表头按本列排序。')}<div class="m">${withHelp('CPC认证', '是否已完成 CPC 合规认证。')}</div>`;
+    if (byCat3) {
+      return `<div>${withHelp('三级类目', '商品类目第 3 级名称。')}</div>${actionMetricHead('sku', 'SKU数量', '该类目下的 SKU 数。点击表头按本列排序。')}${metrics}`;
+    }
+    if (byListing) return `<div>${withHelp('msku', '店铺侧商品编码 / Listing 标识。')}</div><div>标题 / 类目</div>${metrics}`;
+    return `<div>${withHelp('SKU', '公司内部商品编码。')}</div><div>标题 / 类目</div>${metrics}`;
   }
 
   function renderActions() {
+    if (state.actionDim === 'listing') state.actionDim = 'sku';
+    const previewLimit = [20, 30, 50, 100].includes(Number(state.actionPreviewN))
+      ? Number(state.actionPreviewN)
+      : 30;
+    state.actionPreviewN = previewLimit;
+    const previewSel = document.getElementById('fActionPreviewN');
+    if (previewSel && previewSel.value !== String(previewLimit)) previewSel.value = String(previewLimit);
+
     document.querySelectorAll('#actionTabs .atab').forEach(t => t.classList.toggle('on', t.dataset.action === state.action));
+    document.querySelectorAll('#actionDimSeg button').forEach(b => b.classList.toggle('on', b.dataset.actionDim === state.actionDim));
     const meta = ACTION_META[state.action];
     const src = currentActionSource();
     const totals = currentActionTotals();
-    const byCat3 = state.dim === 'cat3';
-    const byListing = state.dim === 'listing';
+    const byCat3 = state.actionDim === 'cat3';
+    const byListing = state.actionDim === 'listing';
     const unit = byCat3 ? '三级类目' : (byListing ? 'Listing' : 'SKU');
     const totalN = totals[state.action] || 0;
-    const previewRows = sortActionRows(filteredActions(src[state.action]));
-    const previewN = (currentSlice().actions_preview_n) || previewRows.length;
+    const allRows = sortActionRows(filteredActions(src[state.action]));
+    const availableN = allRows.length;
+    const showN = Math.min(previewLimit, availableN);
+    const previewRows = allRows.slice(0, showN);
     const dimHint = byCat3 ? '（三级类目）' : (byListing ? '（Listing / msku）' : '');
-    document.getElementById('actionTitle').textContent =
-      `${meta.title} · 对应「${(LEGEND[meta.quadrant] || {}).title || meta.quadrant}」象限` +
-      dimHint +
-      ` · 预览 ${previewRows.length}/${fmt(totalN)} ${unit} · 点击行可下钻明细`;
+    document.getElementById('actionTitleMain').textContent =
+      `${meta.title} · 对应「${(LEGEND[meta.quadrant] || {}).title || meta.quadrant}」象限` + dimHint;
+    document.getElementById('actionPreviewTail').textContent = `/ ${fmt(totalN)} ${unit}`;
     document.getElementById('nCert').textContent = fmt(totals.certify || 0);
     document.getElementById('nTight').textContent = fmt(totals.tighten || 0);
     document.getElementById('nKeep').textContent = fmt(totals.keep || 0);
     document.getElementById('nObs').textContent = fmt(totals.observe || 0);
+    document.getElementById('actionHead').classList.toggle('arow-cat3', byCat3);
     document.getElementById('actionHead').innerHTML = actionHeadHtml(byCat3, byListing);
     if (!platformReady()) {
       document.getElementById('actionList').innerHTML = '<div class="empty">待接入</div>';
       return;
     }
     if (!previewRows.length) {
-      document.getElementById('actionList').innerHTML = '<div class="empty">当前筛选下该象限无对象</div>';
+      document.getElementById('actionList').innerHTML = '<div class="empty">当前筛选下该象限暂无数据</div>';
       return;
     }
     const moreHint = totalN > previewRows.length
-      ? `<div class="empty" style="padding:10px 12px">仅展示 Top ${previewN}；完整 ${fmt(totalN)} 个请点「整批下钻」</div>`
+      ? `<div class="empty" style="padding:10px 12px">当前预览 Top ${showN}${availableN < previewLimit && previewLimit > availableN ? `（样本仅 ${availableN} 条）` : ''}；完整 ${fmt(totalN)} 个请点「导出本批」</div>`
       : '';
     if (byCat3) {
       document.getElementById('actionList').innerHTML = previewRows.map(r => `
-        <div class="arow" data-cat3="${encodeURIComponent(r.cat3)}">
-          <div class="sku" title="${r.cat3}">${(r.cat3 || '-').slice(0, 12)}${(r.cat3 || '').length > 12 ? '…' : ''}</div>
-          <div>
-            <div class="meta">SKU ${fmt(r.sku_cnt)} · Listing ${fmt(r.listing_cnt)}</div>
-            <div class="sub">${(r.sites || []).slice(0, 3).join('/')} · ${r.dept || '-'}</div>
-          </div>
+        <div class="arow arow-cat3" data-cat3="${encodeURIComponent(r.cat3)}">
+          <div class="sku" title="${escHtml(r.cat3 || '')}">${escHtml((r.cat3 || '-').slice(0, 18))}${(r.cat3 || '').length > 18 ? '…' : ''}</div>
+          <div class="m">${fmt(r.sku_cnt)}</div>
+          <div class="m">${fmt(r.listing_cnt)}</div>
           <div class="m">${money(r.amount)}</div>
           <div class="m">${fmt(r.orders)}</div>
           <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
@@ -1438,8 +2509,9 @@
           <div class="sku" title="${r.msku || ''}">${r.msku || '-'}</div>
           <div>
             <div class="meta" title="${r.title || ''}">${(r.title || '-').slice(0, 28)}${(r.title || '').length > 28 ? '…' : ''}</div>
-            <div class="sub">${r.site || '-'} · SKU ${r.sku || '-'} · ${r.cat3 || '-'}</div>
+            <div class="sub">SKU ${r.sku || '-'} · ${r.cat3 || '-'}</div>
           </div>
+          <div class="m">1</div>
           <div class="m">${money(r.amount)}</div>
           <div class="m">${fmt(r.orders)}</div>
           <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
@@ -1452,8 +2524,9 @@
         <div class="sku">${r.sku}</div>
         <div>
           <div class="meta" title="${r.title || ''}">${(r.title || '-').slice(0, 28)}${(r.title || '').length > 28 ? '…' : ''}</div>
-          <div class="sub">${r.cat3 || '-'} · ${(r.sites || []).slice(0, 3).join('/')}</div>
+          <div class="sub">${r.cat3 || '-'}</div>
         </div>
+        <div class="m">${fmt(r.listing_cnt)}</div>
         <div class="m">${money(r.amount)}</div>
         <div class="m">${fmt(r.orders)}</div>
         <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
@@ -1466,11 +2539,12 @@
     renderQuad();
     renderSiteDept();
     renderActions();
+    bindHelpTips();
   }
 
   function readFilters() {
     state.platform = document.getElementById('fPlatform').value || '亚马逊';
-    state.site = document.getElementById('fSite').value;
+    readFilterSitesFromPanel();
     state.dept = document.getElementById('fDept').value;
     state.listFrom = document.getElementById('fListFrom').value;
     state.listTo = document.getElementById('fListTo').value;
@@ -1486,25 +2560,26 @@
     document.getElementById('fListFrom').value = state.listFrom;
     document.getElementById('fListTo').value = state.listTo;
     fillSiteDeptOptions();
-    document.getElementById('fSite').value = state.site;
     document.getElementById('fDept').value = state.dept;
   }
 
-  document.getElementById('navDetail').onclick = () => { readFilters(); gotoDetail(); };
-  document.getElementById('btnGoDetail').onclick = () => { readFilters(); gotoDetail(); };
   document.getElementById('btnQuery').onclick = () => {
     readFilters(); renderAll();
     toast(platformReady() ? '已刷新' : `${state.platform} 暂未接入`);
   };
   document.getElementById('btnReset').onclick = () => {
-    state.platform = '亚马逊'; state.site = ''; state.dept = '';
+    state.platform = '亚马逊'; state.sites = []; state.dept = '';
     state.listFrom = ALL_DAYS[0] || ''; state.listTo = ALL_DAYS[ALL_DAYS.length - 1] || '';
-    state.dim = 'sku'; state.action = 'certify';
-    state.actionSortKey = 'amount'; state.actionSortDir = 'desc';
+    state.dim = 'sku'; state.actionDim = 'sku'; state.action = 'keep';
+    state.actionPreviewN = 30;
+    state.actionSortKey = 'amount';
+    state.actionSortDir = 'desc';
+    const previewSel = document.getElementById('fActionPreviewN');
+    if (previewSel) previewSel.value = '30';
     syncFiltersToUI(); renderAll(); toast('已重置');
   };
   document.getElementById('fPlatform').onchange = () => {
-    readFilters(); state.site = ''; document.getElementById('fSite').value = '';
+    readFilters(); state.sites = []; fillFilterSiteOptions();
     renderAll();
     toast(platformReady() ? `当前平台：${state.platform}` : `${state.platform} 待接入`);
   };
@@ -1513,34 +2588,115 @@
     renderAll();
     toast(state.dept ? `已筛选部门：${state.dept}` : '已取消部门筛选');
   };
-  document.getElementById('fSite').onchange = () => {
-    readFilters();
-    renderAll();
+  document.getElementById('btnFilterSites').onclick = e => {
+    e.stopPropagation();
+    document.getElementById('panelChartSites')?.classList.remove('show');
+    document.getElementById('panelFilterSites').classList.toggle('show');
   };
-  document.getElementById('trendGrain').addEventListener('click', e => {
-    const b = e.target.closest('[data-grain]'); if (!b) return;
-    state.trendGrain = b.dataset.grain;
-    renderTrend();
+  document.getElementById('panelFilterSites').addEventListener('click', e => {
+    e.stopPropagation();
+    const act = e.target.closest('[data-act]');
+    if (act) {
+      const panel = document.getElementById('panelFilterSites');
+      const boxes = [...panel.querySelectorAll('input[type=checkbox]')];
+      if (act.dataset.act === 'all') boxes.forEach(el => { el.checked = true; });
+      else if (act.dataset.act === 'clear') boxes.forEach(el => { el.checked = false; });
+      readFilterSitesFromPanel();
+      updateFilterSiteTrigger();
+      renderAll();
+      toast(state.sites.length ? `已筛选站点：${filterSitesHint()}` : '已恢复全部站点');
+      return;
+    }
+    if (e.target.matches('input[type=checkbox]')) {
+      readFilterSitesFromPanel();
+      updateFilterSiteTrigger();
+      renderAll();
+    }
   });
-  document.getElementById('fChartTimeAxis').onchange = () => onChartTimeAxisChange();
   document.getElementById('fChartDept').onchange = () => onChartDeptChange();
+  document.getElementById('btnChartSites').onclick = e => {
+    e.stopPropagation();
+    document.getElementById('panelFilterSites')?.classList.remove('show');
+    const panel = document.getElementById('panelChartSites');
+    panel.classList.toggle('show');
+  };
+  document.getElementById('panelChartSites').addEventListener('click', e => {
+    e.stopPropagation();
+    const act = e.target.closest('[data-act]');
+    if (act) {
+      const panel = document.getElementById('panelChartSites');
+      const boxes = [...panel.querySelectorAll('input[type=checkbox]')];
+      if (act.dataset.act === 'top10') {
+        const top = new Set(TOP10_SITES);
+        boxes.forEach(el => { el.checked = top.has(el.value); });
+      } else if (act.dataset.act === 'all') {
+        boxes.forEach(el => { el.checked = true; });
+      } else if (act.dataset.act === 'clear') {
+        boxes.forEach(el => { el.checked = false; });
+      }
+      readChartSitesFromPanel();
+      updateChartSiteTrigger();
+      syncChartFiltersToUI();
+      renderSiteChart();
+      toast(isTop10Sites(state.chartSites) ? '已恢复默认十大站点' : (state.chartSites.length ? `已选 ${state.chartSites.length} 站` : '已清空站点'));
+      return;
+    }
+    if (e.target.matches('input[type=checkbox]')) {
+      readChartSitesFromPanel();
+      updateChartSiteTrigger();
+      syncChartFiltersToUI();
+      renderSiteChart();
+    }
+  });
+  document.addEventListener('click', () => {
+    document.getElementById('panelChartSites')?.classList.remove('show');
+    document.getElementById('panelFilterSites')?.classList.remove('show');
+  });
   document.getElementById('btnChartApply').onclick = () => {
     readChartFilters();
     renderSiteDept();
-    toast('图表筛选已更新');
+    toast('图表已按当前筛选刷新');
   };
   document.getElementById('btnChartReset').onclick = () => {
     resetChartFilters();
-    document.querySelectorAll('#trendGrain button').forEach(b => b.classList.toggle('on', b.dataset.grain === state.trendGrain));
     renderSiteDept();
     toast('图表筛选已重置');
   };
+  document.getElementById('btnExportTrendDay').onclick = () => openChartExport('trend-day');
+  document.getElementById('btnExportTrendWeek').onclick = () => openChartExport('trend-week');
+  document.getElementById('btnExportTrendMonth').onclick = () => openChartExport('trend-month');
+  document.getElementById('btnExportSite').onclick = () => openChartExport('site');
+  document.getElementById('btnExportCat1').onclick = () => openChartExport('cat1');
+  document.querySelectorAll('.btn.chart-zoom[data-zoom]').forEach(btn => {
+    btn.onclick = () => openChartZoom(btn.dataset.zoom);
+  });
+  document.getElementById('btnCloseChartZoom').onclick = closeChartZoom;
+  document.getElementById('chartZoomModal').addEventListener('click', e => {
+    if (e.target.id === 'chartZoomModal') closeChartZoom();
+  });
+  document.getElementById('btnCloseChartExport').onclick = closeChartExport;
+  document.getElementById('btnCancelChartExport').onclick = closeChartExport;
+  document.getElementById('btnConfirmChartExport').onclick = confirmChartExport;
+  document.getElementById('chartExportModal').addEventListener('click', e => {
+    if (e.target.id === 'chartExportModal') closeChartExport();
+  });
   document.getElementById('dimSeg').addEventListener('click', e => {
+    if (e.target.closest('.help')) return;
     const b = e.target.closest('[data-dim]'); if (!b) return;
     state.dim = b.dataset.dim; renderAll();
   });
+  document.getElementById('actionDimSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-action-dim]'); if (!b) return;
+    const next = b.dataset.actionDim;
+    if (next !== 'sku' && next !== 'cat3') return;
+    state.actionDim = next;
+    renderActions();
+    toast(`清单口径：${DIM_LABEL[state.actionDim] || state.actionDim}`);
+  });
   document.getElementById('quadGrid').addEventListener('click', e => {
-    const card = e.target.closest('[data-quadrant]'); if (!card || !platformReady()) return;
+    if (e.target.closest('.help')) return;
+    const card = e.target.closest('[data-quadrant]');
+    if (!card || !platformReady()) return;
     readFilters();
     const q = card.dataset.quadrant;
     const actionKey = Object.keys(ACTION_META).find(k => ACTION_META[k].quadrant === q);
@@ -1552,61 +2708,32 @@
     }
   });
   document.getElementById('actionTabs').addEventListener('click', e => {
+    if (e.target.closest('.help')) return;
     const t = e.target.closest('[data-action]'); if (!t) return;
     state.action = t.dataset.action; renderActions();
   });
   document.getElementById('actionHead').addEventListener('click', e => {
-    const btn = e.target.closest('[data-sort]'); if (!btn) return;
+    if (e.target.closest('.help')) return;
+    const cell = e.target.closest('[data-sort]');
+    if (!cell || !document.getElementById('actionHead').contains(cell)) return;
+    e.preventDefault();
     e.stopPropagation();
-    const key = btn.dataset.sort;
-    if (state.actionSortKey === key) {
-      state.actionSortDir = state.actionSortDir === 'desc' ? 'asc' : 'desc';
-    } else {
-      state.actionSortKey = key;
-      state.actionSortDir = 'desc';
-    }
+    const key = cell.dataset.sort;
+    toggleActionSort(key);
     renderActions();
+    const nameMap = { sku: 'SKU数量', listing: 'Listing数量', amount: '销量金额', orders: '出单量', mail: '合规邮件' };
+    toast(`按「${nameMap[key] || key}」${state.actionSortDir === 'asc' ? '升序' : '降序'}`);
   });
-  document.getElementById('btnActionDetail').onclick = () => {
-    readFilters();
-    const meta = ACTION_META[state.action];
-    gotoDetail({
-      quadrant: meta.quadrant,
-      tab: meta.tab,
-      kpi: meta.kpi || '',
-      action: state.action,
-      dim: state.dim,
-    });
+  document.getElementById('fActionPreviewN').onchange = () => {
+    const n = Number(document.getElementById('fActionPreviewN').value);
+    state.actionPreviewN = [20, 30, 50, 100].includes(n) ? n : 30;
+    renderActions();
+    toast(`预览条数：${state.actionPreviewN}`);
   };
-  document.getElementById('actionList').addEventListener('click', e => {
-    const rowSku = e.target.closest('[data-sku]');
-    const rowCat3 = e.target.closest('[data-cat3]');
-    const rowMsku = e.target.closest('[data-msku]');
-    if (!platformReady()) return;
-    readFilters();
-    // 点具体对象下钻：只带实体条件，避免 hasOrder/邮件状态把演示池筛空
-    if (rowCat3) {
-      gotoDetail({
-        dim: 'cat3',
-        cat3: decodeURIComponent(rowCat3.dataset.cat3),
-      });
-      return;
-    }
-    if (rowMsku && state.dim === 'listing') {
-      const msku = decodeURIComponent(rowMsku.dataset.msku || '');
-      const site = decodeURIComponent(rowMsku.dataset.site || '');
-      gotoDetail({
-        dim: 'listing',
-        msku,
-        site: site || state.site || undefined,
-      });
-      return;
-    }
-    if (!rowSku || !rowSku.dataset.sku) return;
-    gotoDetail({
-      dim: state.dim,
-      sku: rowSku.dataset.sku,
-    });
+  document.getElementById('btnActionExport').onclick = () => exportActionBatch();
+  // 明细列表已关闭：候选行不再下钻
+  document.getElementById('actionList').addEventListener('click', () => {
+    if (DETAIL_DISABLED) return;
   });
 
   document.getElementById('btnComplianceCat3Rule').onclick = openComplianceCat3Modal;
@@ -1617,11 +2744,14 @@
   document.getElementById('complianceCat3Search').addEventListener('input', renderComplianceCat3Modal);
   document.getElementById('complianceCat3QuadFilter').addEventListener('change', renderComplianceCat3Modal);
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeComplianceCat3Modal();
+    if (e.key !== 'Escape') return;
+    closeChartExport();
+    closeComplianceCat3Modal();
   });
 
   initFilters();
   renderAll();
+  bindHelpTips();
   </script>
 </body>
 </html>
