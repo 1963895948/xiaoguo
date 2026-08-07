@@ -143,6 +143,8 @@
     .chart-box .chart-tools{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
     .chart-sort{display:inline-flex;align-items:center;gap:4px;margin-right:4px;font-size:11px;color:var(--sub)}
     .chart-sort select{height:28px;border:1px solid var(--line);border-radius:4px;padding:0 6px;font-size:11px;color:var(--text);background:#fff;max-width:128px}
+    .metric-line-toggle{display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;user-select:none}
+    .metric-line-toggle input{accent-color:var(--pri);cursor:pointer}
     .chart-box .btn.chart-export{height:28px;padding:0 12px;font-size:12px;border-radius:4px;color:var(--sub)}
     .chart-box .btn.chart-export:hover{color:var(--pri)}
     .chart-box .btn.chart-zoom{height:28px;width:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:var(--sub);flex:none}
@@ -401,8 +403,11 @@
           <div class="bi-sec-hd">
             <div class="bi-title">3. 刊登趋势与对比
               <span class="help" tabindex="0"><span class="help-pop">主看「刊登了多少 Listing/SKU、其中多少收到合规邮件」。图表同时展示 Listing 与 SKU，不受上方「按 SKU / Listing」切换影响。下方另有 CPC 认证小量级图表，避免被大盘淹没。</span>?</span>
+              <label class="metric-line-toggle" title="用同色折线连接各横轴点上的同一指标">
+                <input type="checkbox" id="chkMetricLines" checked> 指标连线
+              </label>
             </div>
-            <div class="bi-desc">跟随顶部筛选（平台 / 站点 / 部门 / 是否放开 / 刊登时间）。点数过多可左右拖动；CPC 认证在下方单独展示。口径不受上方「按 SKU / Listing」影响。</div>
+            <div class="bi-desc">跟随顶部筛选（平台 / 站点 / 部门 / 是否放开 / 刊登时间）。点数过多可左右拖动；CPC 认证在下方单独展示。口径不受上方「按 SKU / Listing」影响。可开关「指标连线」：同色柱顶点用折线相连，便于看趋势。</div>
           </div>
           <div class="chart-stack">
             <div class="chart-box">
@@ -434,7 +439,7 @@
                 <div class="chart-title">
                   <span id="listingSalesChartTitle">日度 · 刊登与销量</span>
                   <span class="demo-badge" id="listingSalesDemoBadge" style="display:none" title="当前样本跨度不足，以下为编造数据，仅供布局展示">编造·仅展示</span>
-                  <span class="help" tabindex="0"><span class="help-pop" id="listingSalesHelpPop">看刊登量与出单、销量的关系。<br>· 刊登 Listing/SKU：当段新刊登数<br>· 有销量 Listing/SKU：当段有出单的 Listing/SKU<br>· 销售量：当段销量（左轴）<br>· 销售额：当段金额（右轴折线）</span>?</span>
+                  <span class="help" tabindex="0"><span class="help-pop" id="listingSalesHelpPop">看刊登量与出单、销量的关系。<br>· 刊登 Listing/SKU：当段新刊登数<br>· 有销量 Listing/SKU：当段有出单的 Listing/SKU<br>· 销售量：当段销量（左轴）<br>· 销售额：当段金额（右轴柱）</span>?</span>
                 </div>
                 <div class="seg" id="listingSalesGrainSeg" style="margin-left:8px">
                   <button type="button" class="on" data-sales-grain="day">日</button>
@@ -455,7 +460,7 @@
             </div>
             <div class="chart-box">
                 <div class="chart-hd">
-                  <div class="chart-title"><span id="siteChartTitle">分站点对比</span><span class="help" tabindex="0"><span class="help-pop" id="siteHelpPop">按站点看刊登 Listing/SKU、邮件 Listing/SKU，以及销售量（左轴）与销售额（右轴折线）。站点暂无独立邮件SKU时按总览比例估算。默认十大站，点击柱可联动顶部站点筛选。</span>?</span></div>
+                  <div class="chart-title"><span id="siteChartTitle">分站点对比</span><span class="help" tabindex="0"><span class="help-pop" id="siteHelpPop">按站点看刊登 Listing/SKU、邮件 Listing/SKU，以及销售量（左轴）与销售额（右轴柱）。站点暂无独立邮件SKU时按总览比例估算。默认十大站，点击柱可联动顶部站点筛选。</span>?</span></div>
                   <div class="chart-sub" id="siteChartHint"></div>
                   <span class="spacer"></span>
                   <div class="chart-tools">
@@ -482,7 +487,7 @@
             </div>
             <div class="chart-box">
                 <div class="chart-hd">
-                  <div class="chart-title"><span id="cat1ChartTitle">分一级类目对比</span><span class="help" tabindex="0"><span class="help-pop" id="cat1HelpPop">按一级类目看刊登 Listing/SKU、邮件 Listing/SKU，以及销售量（左轴）与销售额（右轴折线）。类目暂无独立邮件SKU时按总览比例估算。</span>?</span></div>
+                  <div class="chart-title"><span id="cat1ChartTitle">分一级类目对比</span><span class="help" tabindex="0"><span class="help-pop" id="cat1HelpPop">按一级类目看刊登 Listing/SKU、邮件 Listing/SKU，以及销售量（左轴）与销售额（右轴柱）。类目暂无独立邮件SKU时按总览比例估算。</span>?</span></div>
                   <div class="chart-sub" id="cat1ChartHint"></div>
                   <span class="spacer"></span>
                   <div class="chart-tools">
@@ -512,6 +517,9 @@
           <div class="bi-sec-hd" style="margin-top:18px">
             <div class="bi-title">已做cpc认证数据
               <span class="help" tabindex="0"><span class="help-pop">只看「已做 CPC 认证」的 Listing/SKU，统计方式与上方「刊登与邮件 / 销量」一致：刊登量、收到邮件、销售量与销售额。认证量远小于大盘，故单独成图。</span>?</span>
+              <label class="metric-line-toggle" title="与上方图表共用开关">
+                <input type="checkbox" id="chkMetricLinesCpc" checked> 指标连线
+              </label>
             </div>
             <div class="bi-desc">口径：CPC=是。Listing/SKU/有销量为汇总字段；邮件与销售额在正式环境按 CPC 子集汇总，本原型按站点「CPC÷刊登」占比估算，仅供示意。</div>
           </div>
@@ -521,7 +529,7 @@
                 <div class="chart-title">
                   <span id="cpcTrendChartTitle">日度 · CPC刊登与销量</span>
                   <span class="demo-badge" id="cpcTrendDemoBadge" style="display:none" title="当前样本跨度不足，以下为编造数据，仅供布局展示">编造·仅展示</span>
-                  <span class="help" tabindex="0"><span class="help-pop" id="cpcTrendHelpPop">已认证子集：刊登 Listing/SKU、邮件、销售量（左轴）与销售额（右轴）。</span>?</span>
+                  <span class="help" tabindex="0"><span class="help-pop" id="cpcTrendHelpPop">已认证子集：刊登 Listing/SKU、邮件、销售量（左轴）与销售额（右轴柱）。</span>?</span>
                 </div>
                 <div class="seg" id="cpcTrendGrainSeg" style="margin-left:8px">
                   <button type="button" class="on" data-cpc-trend-grain="day">日</button>
@@ -1422,6 +1430,7 @@
     siteSortKey: 'listing',
     cat1SortKey: 'listing',
     cpcSiteSortKey: 'cpc_listing',
+    showMetricLines: true,
     actionSortKey: 'amount', // 单列排序
     actionSortDir: 'desc', // asc | desc
     quadFocus: '', // 主饼选中的结果象限 key
@@ -3074,6 +3083,60 @@
     };
   }
 
+  function withMetricConnectLines(datasets) {
+    const list = datasets || [];
+    if (!state.showMetricLines) return list;
+    const out = [];
+    list.forEach(ds => {
+      out.push(ds);
+      if (ds.isConnectLine) return;
+      if (ds.type === 'line') return;
+      const color = ds.backgroundColor || ds.borderColor || '#5b6577';
+      out.push({
+        type: 'line',
+        label: ds.label,
+        data: (ds.data || []).slice(),
+        borderColor: color,
+        backgroundColor: color,
+        pointBackgroundColor: color,
+        pointBorderColor: '#fff',
+        pointRadius: 2.5,
+        pointHoverRadius: 4,
+        borderWidth: 2,
+        tension: 0.25,
+        yAxisID: ds.yAxisID || 'y',
+        order: 0,
+        isConnectLine: true,
+      });
+    });
+    return out;
+  }
+
+  function legendOptionsShared() {
+    return {
+      position: 'top',
+      labels: {
+        boxWidth: 10,
+        boxHeight: 10,
+        font: { size: 10 },
+        padding: 8,
+        filter: (item, chart) => {
+          const ds = chart.datasets[item.datasetIndex];
+          return !ds || !ds.isConnectLine;
+        },
+      },
+      onClick(e, legendItem, legend) {
+        const chart = legend.chart;
+        const label = legendItem.text;
+        const visible = chart.isDatasetVisible(legendItem.datasetIndex);
+        chart.data.datasets.forEach((ds, i) => {
+          if (ds.label === label) chart.setDatasetVisibility(i, !visible);
+        });
+        chart.update();
+      },
+    };
+  }
+
   function comboTrendOptions(rows) {
     const scrollable = rows.length > 10;
     return {
@@ -3082,13 +3145,12 @@
       interaction: { mode: 'index', intersect: false },
       layout: { padding: { top: 12 } },
       plugins: {
-        legend: {
-          position: 'top',
-          labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 }, padding: 8 },
-        },
+        legend: legendOptionsShared(),
         tooltip: {
+          filter: item => !item.dataset?.isConnectLine,
           callbacks: {
             label: ctx => {
+              if (ctx.dataset.isConnectLine) return null;
               const v = ctx.parsed.y;
               if (ctx.dataset.yAxisID === 'y1') return `${ctx.dataset.label}: ${fmt(v)}%`;
               return `${ctx.dataset.label}: ${fmt(v)}`;
@@ -3129,15 +3191,14 @@
       interaction: { mode: 'index', intersect: false },
       layout: { padding: { top: 12 } },
       plugins: {
-        legend: {
-          position: 'top',
-          labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 }, padding: 8 },
-        },
+        legend: legendOptionsShared(),
         tooltip: {
+          filter: item => !item.dataset?.isConnectLine,
           callbacks: {
             label: ctx => {
+              if (ctx.dataset.isConnectLine) return null;
               const v = ctx.parsed.y;
-              if (ctx.dataset.yAxisID === 'y1') return `${ctx.dataset.label}: ${money(v)}`;
+              if (ctx.dataset.label === '销售额') return `${ctx.dataset.label}: ${money(v)}`;
               return `${ctx.dataset.label}: ${fmt(v)}`;
             },
           },
@@ -3176,7 +3237,7 @@
       { type: 'bar', label: '刊登SKU', data: rows.map(r => r.sku || 0), backgroundColor: '#3D7EFF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '有销量SKU', data: rows.map(r => r.order_sku || 0), backgroundColor: '#E85D75', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '销售量', data: rows.map(r => r.orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
-      { type: 'line', label: '销售额', data: rows.map(r => r.amount_sum || 0), borderColor: '#16A34A', backgroundColor: '#16A34A', pointRadius: 2, pointHoverRadius: 4, borderWidth: 2, tension: 0.25, yAxisID: 'y1', order: 1 },
+      { type: 'bar', label: '销售额', data: rows.map(r => r.amount_sum || 0), backgroundColor: '#16A34A', borderRadius: 2, maxBarThickness: t, yAxisID: 'y1', order: 2 },
     ];
   }
 
@@ -3317,7 +3378,7 @@
       { type: 'bar', label: 'CPC SKU', data: rows.map(r => r.cpc_sku || 0), backgroundColor: '#3D7EFF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '邮件SKU', data: rows.map(r => r.cpc_mail_sku || 0), backgroundColor: '#E85D75', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '销售量', data: rows.map(r => r.cpc_orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
-      { type: 'line', label: '销售额', data: rows.map(r => r.cpc_amount_sum || 0), borderColor: '#16A34A', backgroundColor: '#16A34A', pointRadius: 2, pointHoverRadius: 4, borderWidth: 2, tension: 0.25, yAxisID: 'y1', order: 1 },
+      { type: 'bar', label: '销售额', data: rows.map(r => r.cpc_amount_sum || 0), backgroundColor: '#16A34A', borderRadius: 2, maxBarThickness: t, yAxisID: 'y1', order: 2 },
     ];
   }
 
@@ -3413,7 +3474,7 @@
       { type: 'bar', label: 'SKU数量', data: rows.map(r => r.sku || 0), backgroundColor: '#3D7EFF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '邮件SKU', data: rows.map(r => r.mail_sku || 0), backgroundColor: '#E85D75', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '销售量', data: rows.map(r => r.orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
-      { type: 'line', label: '销售额', data: rows.map(r => r.amount_sum || 0), borderColor: '#16A34A', backgroundColor: '#16A34A', pointRadius: 2, pointHoverRadius: 4, borderWidth: 2, tension: 0.25, yAxisID: 'y1', order: 1 },
+      { type: 'bar', label: '销售额', data: rows.map(r => r.amount_sum || 0), backgroundColor: '#16A34A', borderRadius: 2, maxBarThickness: t, yAxisID: 'y1', order: 2 },
     ];
   }
 
@@ -3468,7 +3529,7 @@
     if (salesHelp) {
       const unit = grain === 'day' ? '日' : (grain === 'week' ? '周' : '月');
       const demo = (grain === 'week' || grain === 'month') ? '【编造·仅展示】' : '';
-      salesHelp.innerHTML = `${demo}看刊登与出单、销量的关系。<br>· 刊登 Listing/SKU：当${unit}新刊登数<br>· 有销量 Listing/SKU：当${unit}有出单的 Listing/SKU<br>· 销售量 / 销售额：当${unit}销量与金额（右轴）`;
+      salesHelp.innerHTML = `${demo}看刊登与出单、销量的关系。<br>· 刊登 Listing/SKU：当${unit}新刊登数<br>· 有销量 Listing/SKU：当${unit}有出单的 Listing/SKU<br>· 销售量：当${unit}销量（左轴）<br>· 销售额：当${unit}金额（右轴柱）`;
     }
   }
 
@@ -3537,7 +3598,7 @@
     applyChartScroll('listingSalesChartScroll', 'listingSalesChartInner', rows.length, barW);
     listingSalesChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
-      data: { labels: rows.map(r => r.label), datasets: salesTrendDatasets(rows, 12) },
+      data: { labels: rows.map(r => r.label), datasets: withMetricConnectLines(salesTrendDatasets(rows, 12)) },
       options: comboSalesOptions(rows),
     });
   }
@@ -3585,7 +3646,7 @@
     applyChartScroll('trendChartScroll', 'trendChartInner', rows.length, barW);
     trendChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
-      data: { labels: rows.map(r => r.label), datasets: volumeTrendDatasets(rows, 14) },
+      data: { labels: rows.map(r => r.label), datasets: withMetricConnectLines(volumeTrendDatasets(rows, 14)) },
       options: comboTrendOptions(rows),
     });
     renderListingSalesChart();
@@ -3639,7 +3700,7 @@
       type: 'bar',
       data: {
         labels: rows.map(r => r.site || '-'),
-        datasets: volumeCompareDatasets(rows, rows.length > 10 ? 14 : 18),
+        datasets: withMetricConnectLines(volumeCompareDatasets(rows, rows.length > 10 ? 14 : 18)),
       },
       options: siteOpts,
     });
@@ -3672,7 +3733,7 @@
       type: 'bar',
       data: {
         labels: rows.map(r => cat1ChartLabel(r)),
-        datasets: volumeCompareDatasets(rows, rows.length > 8 ? 14 : 18),
+        datasets: withMetricConnectLines(volumeCompareDatasets(rows, rows.length > 8 ? 14 : 18)),
       },
       options: comboSalesOptions(rows),
     });
@@ -3718,7 +3779,7 @@
     applyChartScroll('cpcTrendChartScroll', 'cpcTrendChartInner', rows.length, barW);
     cpcTrendChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
-      data: { labels: rows.map(r => r.label), datasets: cpcTrendDatasets(rows, 14) },
+      data: { labels: rows.map(r => r.label), datasets: withMetricConnectLines(cpcTrendDatasets(rows, 14)) },
       options: comboSalesOptions(rows),
     });
   }
@@ -3780,7 +3841,7 @@
       type: 'bar',
       data: {
         labels: rows.map(r => r.site || '-'),
-        datasets: cpcCompareDatasets(rows, rows.length > 10 ? 14 : 18),
+        datasets: withMetricConnectLines(cpcCompareDatasets(rows, rows.length > 10 ? 14 : 18)),
       },
       options: siteOpts,
     });
@@ -4023,6 +4084,21 @@
   document.getElementById('btnExportCat1').onclick = () => openChartExport('cat1');
   document.getElementById('btnExportCpcTrend').onclick = () => openChartExport('cpcTrend');
   document.getElementById('btnExportCpcSite').onclick = () => openChartExport('cpcSite');
+  function syncMetricLineToggles() {
+    const a = document.getElementById('chkMetricLines');
+    const b = document.getElementById('chkMetricLinesCpc');
+    if (a) a.checked = !!state.showMetricLines;
+    if (b) b.checked = !!state.showMetricLines;
+  }
+  function onMetricLineToggle(checked) {
+    state.showMetricLines = !!checked;
+    syncMetricLineToggles();
+    renderSiteDept();
+    toast(state.showMetricLines ? '已显示指标连线' : '已隐藏指标连线');
+  }
+  document.getElementById('chkMetricLines')?.addEventListener('change', e => onMetricLineToggle(e.target.checked));
+  document.getElementById('chkMetricLinesCpc')?.addEventListener('change', e => onMetricLineToggle(e.target.checked));
+  syncMetricLineToggles();
   document.getElementById('siteSortKey')?.addEventListener('change', e => {
     const v = e.target.value;
     if (!COMPARE_SORT_KEYS.includes(v) || v === state.siteSortKey) return;
