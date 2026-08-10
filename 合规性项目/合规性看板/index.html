@@ -14,25 +14,34 @@
       --header-h:48px; --side-w:210px;
     }
     *{box-sizing:border-box}
-    body{margin:0;font:13px/1.5 "Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text)}
-    .header{height:var(--header-h);background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;position:sticky;top:0;z-index:30}
+    html,body{height:100%}
+    body{margin:0;font:13px/1.5 "Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+    .header{height:var(--header-h);background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;flex:none;position:relative;z-index:30}
     .brand{width:var(--side-w);flex:none;padding:0 16px;font-weight:700;font-size:15px;border-right:1px solid var(--line);height:100%;display:flex;align-items:center}
     .page-tabs{flex:1;display:flex;align-items:flex-end;padding:0 12px;height:100%}
     .ptab{padding:0 14px;height:36px;margin-top:11px;border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;background:var(--bg);color:var(--pri);font-weight:600;display:flex;align-items:center}
     .user{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);padding:0 16px;border-left:1px solid var(--line)}
     .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6ea8ff,#2f6bff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
-    .body{display:flex;min-height:calc(100vh - var(--header-h))}
-    .sidenav{width:var(--side-w);flex:none;background:#fff;border-right:1px solid var(--line);padding:8px 0}
+    .body{display:flex;height:calc(100vh - var(--header-h));min-height:0}
+    .sidenav{width:var(--side-w);flex:none;background:#fff;border-right:1px solid var(--line);padding:8px 0;overflow:auto}
     .nav-group{padding:8px 14px 4px;font-size:11px;color:var(--muted);font-weight:600}
     .nav-item{padding:9px 14px 9px 18px;color:var(--sub);cursor:pointer}
     .nav-item:hover{color:var(--pri)}
     .nav-item.active{background:var(--pri-bg);color:var(--pri);font-weight:600;border-right:3px solid var(--pri)}
-    .content{flex:1;padding:12px;overflow:auto}
-    .page{background:var(--panel);min-height:calc(100vh - var(--header-h) - 24px);border-radius:4px}
+    .content{flex:1;min-width:0;min-height:0;padding:12px;overflow:auto}
+    .page{background:var(--panel);min-height:100%;border-radius:4px}
     .page-hd{padding:16px 20px 12px;border-bottom:1px solid var(--line)}
     .page-title{font-size:16px;font-weight:700;margin:0}
     .page-desc{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.6;max-width:920px}
-    .filters{padding:12px 20px;border-bottom:1px solid var(--line)}
+    .filters{
+      padding:12px 20px;
+      border-bottom:1px solid var(--line);
+      position:sticky;
+      top:0;
+      z-index:25;
+      background:#fff;
+      box-shadow:0 2px 8px rgba(31,39,51,.08);
+    }
     .filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;width:100%}
     .field{display:flex;align-items:stretch;height:32px}
     .field .lbl{background:#f6f8fb;border:1px solid var(--line);border-right:none;border-radius:4px 0 0 4px;padding:0 10px;display:flex;align-items:center;color:var(--sub);white-space:nowrap;font-size:12px}
@@ -143,7 +152,7 @@
     .chart-box .chart-tools{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
     .chart-sort{display:inline-flex;align-items:center;gap:4px;margin-right:4px;font-size:11px;color:var(--sub)}
     .chart-sort select{height:28px;border:1px solid var(--line);border-radius:4px;padding:0 6px;font-size:11px;color:var(--text);background:#fff;max-width:128px}
-    .metric-line-toggle{display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;user-select:none}
+    .metric-line-toggle{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--line);border-radius:4px;background:#fff;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;user-select:none;white-space:nowrap}
     .metric-line-toggle input{accent-color:var(--pri);cursor:pointer}
     .chart-box .btn.chart-export{height:28px;padding:0 12px;font-size:12px;border-radius:4px;color:var(--sub)}
     .chart-box .btn.chart-export:hover{color:var(--pri)}
@@ -364,6 +373,10 @@
                 <input class="ctrl" type="date" id="fListTo" style="min-width:132px" />
               </div>
             </div>
+            <label class="metric-line-toggle" title="用同色折线连接各横轴点上的同一指标柱顶点，便于看趋势">
+              <input type="checkbox" id="chkMetricLines" checked> 指标连线
+              <span class="help" tabindex="0"><span class="help-pop">开启后，趋势/对比图中同色柱的顶点用折线相连；关闭则只显示柱状。对刊登趋势与 CPC 图表同时生效。</span>?</span>
+            </label>
             <button type="button" class="btn pri" id="btnQuery">查询</button>
             <button type="button" class="btn" id="btnReset">重置</button>
           </div>
@@ -403,11 +416,8 @@
           <div class="bi-sec-hd">
             <div class="bi-title">3. 刊登趋势与对比
               <span class="help" tabindex="0"><span class="help-pop">主看「刊登了多少 Listing/SKU、其中多少收到合规邮件」。图表同时展示 Listing 与 SKU，不受上方「按 SKU / Listing」切换影响。下方另有 CPC 认证小量级图表，避免被大盘淹没。</span>?</span>
-              <label class="metric-line-toggle" title="用同色折线连接各横轴点上的同一指标">
-                <input type="checkbox" id="chkMetricLines" checked> 指标连线
-              </label>
             </div>
-            <div class="bi-desc">跟随顶部筛选（平台 / 站点 / 部门 / 是否放开 / 刊登时间）。点数过多可左右拖动；CPC 认证在下方单独展示。口径不受上方「按 SKU / Listing」影响。可开关「指标连线」：同色柱顶点用折线相连，便于看趋势。</div>
+            <div class="bi-desc">跟随顶部筛选（平台 / 站点 / 部门 / 是否放开 / 刊登时间 / 指标连线）。点数过多可左右拖动；CPC 认证在下方单独展示。口径不受上方「按 SKU / Listing」影响。</div>
           </div>
           <div class="chart-stack">
             <div class="chart-box">
@@ -517,9 +527,6 @@
           <div class="bi-sec-hd" style="margin-top:18px">
             <div class="bi-title">已做cpc认证数据
               <span class="help" tabindex="0"><span class="help-pop">只看「已做 CPC 认证」的 Listing/SKU，统计方式与上方「刊登与邮件 / 销量」一致：刊登量、收到邮件、销售量与销售额。认证量远小于大盘，故单独成图。</span>?</span>
-              <label class="metric-line-toggle" title="与上方图表共用开关">
-                <input type="checkbox" id="chkMetricLinesCpc" checked> 指标连线
-              </label>
             </div>
             <div class="bi-desc">口径：CPC=是。Listing/SKU/有销量为汇总字段；邮件与销售额在正式环境按 CPC 子集汇总，本原型按站点「CPC÷刊登」占比估算，仅供示意。</div>
           </div>
@@ -4085,10 +4092,8 @@
   document.getElementById('btnExportCpcTrend').onclick = () => openChartExport('cpcTrend');
   document.getElementById('btnExportCpcSite').onclick = () => openChartExport('cpcSite');
   function syncMetricLineToggles() {
-    const a = document.getElementById('chkMetricLines');
-    const b = document.getElementById('chkMetricLinesCpc');
-    if (a) a.checked = !!state.showMetricLines;
-    if (b) b.checked = !!state.showMetricLines;
+    const el = document.getElementById('chkMetricLines');
+    if (el) el.checked = !!state.showMetricLines;
   }
   function onMetricLineToggle(checked) {
     state.showMetricLines = !!checked;
@@ -4097,7 +4102,6 @@
     toast(state.showMetricLines ? '已显示指标连线' : '已隐藏指标连线');
   }
   document.getElementById('chkMetricLines')?.addEventListener('change', e => onMetricLineToggle(e.target.checked));
-  document.getElementById('chkMetricLinesCpc')?.addEventListener('change', e => onMetricLineToggle(e.target.checked));
   syncMetricLineToggles();
   document.getElementById('siteSortKey')?.addEventListener('change', e => {
     const v = e.target.value;
