@@ -681,6 +681,23 @@
     </div>
   </div>
 
+  <div class="modal-mask" id="cat3ConfigConfirmModal" style="display:none;z-index:350" aria-hidden="true">
+    <div class="modal-box export-modal" role="dialog" aria-labelledby="cat3ConfigConfirmTitle">
+      <div class="modal-hd">
+        <h3 id="cat3ConfigConfirmTitle">确认修改</h3>
+        <button type="button" class="modal-close" id="btnCloseCat3ConfigConfirm" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd" style="padding-bottom:8px">
+        <p id="cat3ConfigConfirmCat3" style="margin:0 0 10px;font-size:13px;font-weight:600"></p>
+        <p id="cat3ConfigConfirmDetail" style="margin:0;font-size:13px;line-height:1.6;color:var(--sub)"></p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="btnCancelCat3ConfigConfirm">取消</button>
+        <button type="button" class="btn pri" id="btnOkCat3ConfigConfirm">确认</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-mask" id="chartZoomModal" style="display:none" aria-hidden="true">
     <div class="modal-box chart-zoom-box" role="dialog" aria-labelledby="chartZoomTitle">
       <div class="modal-hd">
@@ -945,6 +962,64 @@
     const modal = document.getElementById('cat3ConfigLogModal');
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
+  }
+  let cat3ConfigConfirmPending = null;
+  function currentCat3Quadrant(cat3) {
+    const row = buildCat3ConfigRows().find(r => r.cat3 === cat3);
+    return row ? (row.quadrant || '') : '';
+  }
+  function cat3QuadrantDisplay(key) {
+    if (!key) return '未划分（空）';
+    const ui = COMPLIANCE_QUAD_UI.find(x => x.key === key);
+    return ui ? ui.axis : complianceQuadrantLabel(key);
+  }
+  function cat3AllowDisplay(yes) {
+    return yes ? '是' : '否';
+  }
+  function openCat3ConfigConfirmModal({ cat3, field, fromVal, toVal, selectEl }) {
+    cat3ConfigConfirmPending = { cat3, field, fromVal, toVal, selectEl };
+    const fieldLabel = field === 'allow' ? '是否放开' : '象限';
+    const fromText = field === 'allow' ? cat3AllowDisplay(fromVal) : cat3QuadrantDisplay(fromVal);
+    const toText = field === 'allow' ? cat3AllowDisplay(toVal) : cat3QuadrantDisplay(toVal);
+    document.getElementById('cat3ConfigConfirmCat3').textContent = `三级类目：${cat3}`;
+    document.getElementById('cat3ConfigConfirmDetail').innerHTML =
+      `${fieldLabel}：<strong>${escHtml(fromText)}</strong> → <strong>${escHtml(toText)}</strong>`;
+    const modal = document.getElementById('cat3ConfigConfirmModal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeCat3ConfigConfirmModal(revert) {
+    const pending = cat3ConfigConfirmPending;
+    if (revert && pending && pending.selectEl) {
+      const sel = pending.selectEl;
+      if (pending.field === 'allow') sel.value = pending.fromVal ? 'yes' : 'no';
+      else sel.value = pending.fromVal || '';
+    }
+    cat3ConfigConfirmPending = null;
+    const modal = document.getElementById('cat3ConfigConfirmModal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  function confirmCat3ConfigChange() {
+    const pending = cat3ConfigConfirmPending;
+    if (!pending) return;
+    const { cat3, field, toVal } = pending;
+    closeCat3ConfigConfirmModal(false);
+    if (field === 'allow') {
+      if (setCat3Allow(cat3, toVal)) {
+        toast(toVal ? `「${cat3}」已设为已放开` : `「${cat3}」已设为未放开`);
+        renderCat3ConfigModal();
+        if (state.allowRelease) renderAll();
+      }
+      return;
+    }
+    if (field === 'quadrant') {
+      if (setCat3ConfigQuadrant(cat3, toVal)) {
+        toast(toVal ? `已将「${cat3}」改为「${complianceQuadrantLabel(toVal)}」` : `已将「${cat3}」设为未划分`);
+        renderCat3ConfigModal();
+        renderQuad();
+      }
+    }
   }
   function defaultAllowOf(cat3) {
     return ALLOW_RELEASE_DEFAULT_SET.has(cat3);
@@ -4229,6 +4304,12 @@
   document.getElementById('cat3ConfigLogModal').addEventListener('click', e => {
     if (e.target.id === 'cat3ConfigLogModal') closeCat3ConfigLogModal();
   });
+  document.getElementById('btnCloseCat3ConfigConfirm').onclick = () => closeCat3ConfigConfirmModal(true);
+  document.getElementById('btnCancelCat3ConfigConfirm').onclick = () => closeCat3ConfigConfirmModal(true);
+  document.getElementById('btnOkCat3ConfigConfirm').onclick = confirmCat3ConfigChange;
+  document.getElementById('cat3ConfigConfirmModal').addEventListener('click', e => {
+    if (e.target.id === 'cat3ConfigConfirmModal') closeCat3ConfigConfirmModal(true);
+  });
   document.getElementById('cat3ConfigSearch').addEventListener('input', renderCat3ConfigModal);
   document.getElementById('cat3ConfigQuadFilter').addEventListener('change', renderCat3ConfigModal);
   document.getElementById('cat3ConfigAllowFilter').addEventListener('change', renderCat3ConfigModal);
@@ -4245,25 +4326,27 @@
     const cat3 = sel.dataset.cat3;
     const field = sel.dataset.field;
     if (field === 'allow') {
-      if (setCat3Allow(cat3, sel.value === 'yes')) {
-        toast(sel.value === 'yes' ? `「${cat3}」已设为已放开` : `「${cat3}」已设为未放开`);
-        renderCat3ConfigModal();
-        if (state.allowRelease) renderAll();
-      }
+      const prev = currentAllowOf(cat3);
+      const next = sel.value === 'yes';
+      if (prev === next) return;
+      openCat3ConfigConfirmModal({ cat3, field, fromVal: prev, toVal: next, selectEl: sel });
       return;
     }
     if (field === 'quadrant') {
-      const quadrant = sel.value;
-      if (setCat3ConfigQuadrant(cat3, quadrant)) {
-        toast(quadrant ? `已将「${cat3}」改为「${complianceQuadrantLabel(quadrant)}」` : `已将「${cat3}」设为未划分`);
-        renderCat3ConfigModal();
-        renderQuad();
-      }
+      const prev = currentCat3Quadrant(cat3);
+      const next = sel.value;
+      if (prev === next) return;
+      openCat3ConfigConfirmModal({ cat3, field, fromVal: prev, toVal: next, selectEl: sel });
     }
   });
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    const confirmModal = document.getElementById('cat3ConfigConfirmModal');
+    if (confirmModal && confirmModal.style.display === 'flex') {
+      closeCat3ConfigConfirmModal(true);
+      return;
+    }
     closeChartExport();
     closeCat3ConfigLogModal();
     closeCat3ConfigModal();
