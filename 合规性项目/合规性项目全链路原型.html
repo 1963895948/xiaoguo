@@ -2549,6 +2549,7 @@
     function statusTagHtml(status){
       if (status === '已通过') return '<span class="tag t-y">已通过</span>';
       if (status === '已生效') return '<span class="tag t-y">已生效</span>';
+      if (status === '已停用') return '<span class="tag t-d">已停用</span>';
       if (status === '待审核') return '<span class="tag t-w">待审核</span>';
       if (status === '学习中') return '<span class="tag t-w">学习中</span>';
       if (status === '部分通过') return '<span class="tag t-w">部分通过</span>';
@@ -2556,6 +2557,7 @@
     }
     function categoryStatus(rows){
       if (!rows.length) return '待审核';
+      if (rows.every(r => r.status === '已停用')) return '已停用';
       const bodyKeys = new Set(rows.map(r => bodyKeyByContent(r.content)));
       const bodies = [...bodyKeys].map(k => {
         const row = rows.find(r => bodyKeyByContent(r.content) === k);
@@ -2576,7 +2578,7 @@
           <span class="link-btn policy-view-btn" data-category="${cat}">详情</span>
         </div>`;
       }
-      if (g.status === '已通过') {
+      if (g.status === '已生效') {
         return `<div class="policy-ops">
           <span class="link-btn danger policy-disable-btn" data-category="${cat}">停用</span>
           <span class="link-btn policy-view-btn" data-category="${cat}">详情</span>
