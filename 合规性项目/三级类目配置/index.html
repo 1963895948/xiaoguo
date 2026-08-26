@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>三级类目配置</title>
+  <style>
+    :root {
+      --bg:#f0f2f5; --panel:#fff; --line:#e8ebf0; --text:#1f2733; --sub:#5b6577;
+      --muted:#97a0b0; --pri:#2f6bff; --pri-bg:#eaf0ff; --ok:#16b364; --ok-bg:#e8f8f0;
+      --warn:#fa8c16; --warn-bg:#fff7e6; --danger:#f5455c; --danger-bg:#fff1f0;
+      --keep:#0f766e; --keep-bg:#ecfdf5; --cert:#b45309; --cert-bg:#fffbeb;
+      --obs:#475569; --obs-bg:#f1f5f9; --tight:#be123c; --tight-bg:#fff1f2;
+      --header-h:48px; --side-w:210px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font:13px/1.5 "Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+    .header{height:var(--header-h);background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;flex:none;position:relative;z-index:30}
+    .brand{width:var(--side-w);flex:none;padding:0 16px;font-weight:700;font-size:15px;border-right:1px solid var(--line);height:100%;display:flex;align-items:center}
+    .page-tabs{flex:1;display:flex;align-items:flex-end;padding:0 12px;height:100%}
+    .ptab{padding:0 14px;height:36px;margin-top:11px;border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;background:var(--bg);color:var(--pri);font-weight:600;display:flex;align-items:center}
+    .user{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);padding:0 16px;border-left:1px solid var(--line)}
+    .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6ea8ff,#2f6bff);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+    .body{display:flex;height:calc(100vh - var(--header-h));min-height:0}
+    .sidenav{width:var(--side-w);flex:none;background:#fff;border-right:1px solid var(--line);padding:8px 0;overflow:auto}
+    .nav-group{padding:8px 14px 4px;font-size:11px;color:var(--muted);font-weight:600}
+    .nav-item{padding:9px 14px 9px 18px;color:var(--sub);cursor:pointer;display:block;text-decoration:none}
+    .nav-item:hover{color:var(--pri)}
+    .nav-item.active{background:var(--pri-bg);color:var(--pri);font-weight:600;border-right:3px solid var(--pri)}
+    .content{flex:1;min-width:0;min-height:0;padding:12px;overflow:auto}
+    .page{background:var(--panel);min-height:100%;border-radius:4px;display:flex;flex-direction:column}
+    .page-hd{padding:16px 20px 12px;border-bottom:1px solid var(--line);flex:none}
+    .page-title{font-size:16px;font-weight:700;margin:0}
+    .page-desc{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.6;max-width:920px}
+    .btn{height:32px;border:1px solid var(--line);background:#fff;border-radius:4px;padding:0 14px;cursor:pointer;font-size:12px}
+    .btn:hover{border-color:var(--pri);color:var(--pri)}
+    .btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+    .btn.pri:hover{background:#1a52d4;color:#fff}
+    .ctrl{height:32px;border:1px solid var(--line);border-radius:4px;background:#fff;padding:0 10px;color:var(--text);font-size:12px;outline:none;min-width:110px}
+    select.ctrl{appearance:none;cursor:pointer;padding-right:26px;background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%2397a0b0' fill='none' stroke-width='1.4'/></svg>") no-repeat right 9px center}
+    .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#1f2733;color:#fff;padding:10px 18px;border-radius:8px;z-index:400;opacity:0;transition:.25s;pointer-events:none}
+    .toast.show{opacity:1;top:34px}
+
+    .allow-list-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 20px 0;align-items:stretch}
+    @media (max-width:960px){.allow-list-summary{grid-template-columns:1fr 1fr}}
+    @media (max-width:700px){.allow-list-summary{grid-template-columns:1fr}}
+    .allow-list-card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fafbfd}
+    .allow-list-card .t{font-weight:700;font-size:12px;margin-bottom:4px}
+    .allow-list-card .s{font-size:11px;color:var(--sub);line-height:1.45}
+    .allow-list-card .c{margin-top:6px;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+    .allow-list-card.pie-card{display:flex;flex-direction:column;min-height:148px}
+    .allow-list-card.pie-card .pie-hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px}
+    .allow-list-card.pie-card .pie-hd .t{margin-bottom:0}
+    .allow-list-card.pie-card .pie-hd .c{margin-top:0;font-size:16px}
+    .allow-list-card .pie-wrap{flex:1;min-height:112px;position:relative}
+
+    .page-hd{padding:12px 20px 10px}
+    .allow-list-summary{margin:12px 20px 0}
+    .allow-list-card.pie-card{min-height:120px}
+    .allow-list-card .pie-wrap{min-height:88px}
+    .page-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 20px 8px;align-items:center}
+    .cat3-search-ta{flex:1 1 240px;min-width:180px;height:32px;min-height:32px;line-height:30px;padding:0 10px;font-family:inherit}
+    .page-toolbar .ctrl{flex:none}
+    .page-toolbar .cat3-search-ta{flex:1 1 240px}
+    .page-edit-hint{font-size:11px;color:var(--muted);margin:0 20px 8px}
+    .batch-bar{display:flex;align-items:center;gap:10px;margin:0 20px 8px;font-size:12px;color:var(--sub);min-height:24px}
+    .batch-bar .n{color:var(--pri);font-weight:700}
+    .page-table-wrap{flex:1;margin:0 20px;overflow:auto;border:1px solid var(--line);border-radius:6px;min-height:280px}
+    .td-chk,.th-chk{width:36px;text-align:center;vertical-align:middle}
+    .chk{width:15px;height:15px;accent-color:var(--pri);cursor:pointer}
+    .batch-form{display:flex;flex-direction:column;gap:12px;padding:4px 0 2px}
+    .batch-form .row{display:flex;align-items:center;gap:10px}
+    .batch-form .lbl{width:88px;flex:none;font-size:13px;color:var(--text);text-align:right}
+    .batch-form .ctrl{flex:1;min-width:0}
+    table.modal-table{width:100%;border-collapse:collapse;font-size:12px}
+    table.modal-table th,table.modal-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+    table.modal-table thead th{position:sticky;top:0;background:#fafbfd;z-index:1;font-weight:600;color:var(--sub)}
+    table.modal-table tbody tr:hover{background:#f6f8fb}
+    table.modal-table select.quad-edit{
+      width:100%;max-width:220px;height:30px;padding:0 8px;border:1px solid var(--line);border-radius:4px;
+      background:#fff;font-size:12px;color:var(--text);cursor:pointer;
+    }
+    table.modal-table select.quad-edit:hover,table.modal-table select.quad-edit:focus{border-color:var(--pri);outline:none}
+    table.modal-table select.quad-edit.keep{border-color:#99f6e4;background:var(--keep-bg);color:var(--keep);font-weight:600}
+    table.modal-table select.quad-edit.cert{border-color:#fcd34d;background:var(--cert-bg);color:var(--cert);font-weight:600}
+    table.modal-table select.quad-edit.obs{border-color:#cbd5e1;background:var(--obs-bg);color:var(--obs);font-weight:600}
+    table.modal-table select.quad-edit.tight{border-color:#fecdd3;background:var(--tight-bg);color:var(--tight);font-weight:600}
+    .allow-row-log{border:none;background:none;color:var(--pri);cursor:pointer;font-size:12px;padding:0 4px}
+    .allow-row-log:hover{text-decoration:underline}
+    .allow-edited{color:var(--pri);font-size:10px;margin-left:4px}
+    .page-foot{font-size:11px;color:var(--muted);margin:10px 20px 16px}
+
+    .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal-box{background:#fff;border-radius:10px;width:min(640px,96vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(15,23,42,.18)}
+    .export-modal{width:min(480px,96vw)}
+    .modal-hd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .modal-hd h3{margin:0;font-size:15px;font-weight:700}
+    .modal-close{border:none;background:#f0f2f5;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:18px;line-height:1;color:var(--sub)}
+    .modal-close:hover{background:#e8ebf0;color:var(--text)}
+    .modal-bd{padding:14px 18px 18px;overflow:auto}
+    .modal-edit-hint{font-size:11px;color:var(--muted);margin:0 0 8px}
+    .modal-foot{font-size:11px;color:var(--muted);margin-top:10px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px;padding:12px 18px;border-top:1px solid var(--line)}
+    .modal-actions .btn.pri{min-width:72px}
+    .cat3-log-list{max-height:48vh;overflow:auto;border:1px solid var(--line);border-radius:6px}
+    .cat3-log-item{padding:10px 12px;border-bottom:1px solid var(--line);font-size:12px}
+    .cat3-log-item:last-child{border-bottom:none}
+    .cat3-log-item .meta{color:var(--muted);font-size:11px;margin-bottom:4px}
+    .cat3-log-item .chg{color:var(--text);line-height:1.5}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">风控系统</div>
+    <div class="page-tabs"><div class="ptab">三级类目配置</div></div>
+    <div class="user">
+      <span>决策台</span>
+      <div class="avatar">产</div>
+      <span>产品同学</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <aside class="sidenav">
+      <div class="nav-group">合规性项目</div>
+      <a class="nav-item" href="../合规性看板/index.html">合规sku刊登数据</a>
+      <a class="nav-item active" href="./index.html">三级类目配置</a>
+    </aside>
+    <main class="content">
+      <div class="page">
+        <div class="page-hd">
+          <h1 class="page-title">三级类目配置</h1>
+          <div class="page-desc">维护三级类目的象限划分与是否放开。修改后看板「是否放开刊登类目」筛选按此处配置生效。象限可空表示未划分。</div>
+        </div>
+        <div class="allow-list-summary" id="cat3ConfigSummary"></div>
+        <div class="page-toolbar">
+          <input class="ctrl cat3-search-ta" id="cat3ConfigSearch" placeholder="搜索类目，多个用逗号或回车分隔" />
+          <select class="ctrl" id="cat3ConfigQuadFilter" style="min-width:140px">
+            <option value="">全部象限</option>
+            <option value="__empty__">未划分（空）</option>
+          </select>
+          <select class="ctrl" id="cat3ConfigAllowFilter" style="min-width:120px">
+            <option value="">是否放开：全部</option>
+            <option value="yes">仅已放开</option>
+            <option value="no">仅未放开</option>
+          </select>
+          <button type="button" class="btn pri" id="btnBatchCat3Config">批量修改</button>
+          <button type="button" class="btn" id="btnExportCat3Config">导出</button>
+        </div>
+        <div class="batch-bar" id="cat3BatchBar">已选 <span class="n" id="cat3SelectedN">0</span> 个类目</div>
+        <div class="page-table-wrap">
+          <table class="modal-table">
+            <thead>
+              <tr>
+                <th class="th-chk"><input type="checkbox" class="chk" id="chkCat3All" title="全选当前列表" /></th>
+                <th style="width:42%">三级类目</th>
+                <th style="width:26%">象限</th>
+                <th style="width:14%">是否放开</th>
+                <th style="width:12%">操作</th>
+              </tr>
+            </thead>
+            <tbody id="cat3ConfigBody"></tbody>
+          </table>
+        </div>
+        <div class="page-foot" id="cat3ConfigFoot"></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-mask" id="cat3ConfigLogModal" style="display:none" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-labelledby="cat3ConfigLogTitle">
+      <div class="modal-hd">
+        <h3 id="cat3ConfigLogTitle">修改日志</h3>
+        <button type="button" class="modal-close" id="btnCloseCat3ConfigLog" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd">
+        <p class="modal-edit-hint" id="cat3ConfigLogSub">记录该三级类目的象限 / 是否放开变更及操作人。</p>
+        <div class="cat3-log-list" id="cat3ConfigLogList"></div>
+        <div class="modal-foot" id="cat3ConfigLogFoot"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="cat3ConfigConfirmModal" style="display:none;z-index:350" aria-hidden="true">
+    <div class="modal-box export-modal" role="dialog" aria-labelledby="cat3ConfigConfirmTitle">
+      <div class="modal-hd">
+        <h3 id="cat3ConfigConfirmTitle">确认修改</h3>
+        <button type="button" class="modal-close" id="btnCloseCat3ConfigConfirm" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd" style="padding-bottom:8px">
+        <p id="cat3ConfigConfirmCat3" style="margin:0 0 10px;font-size:13px;font-weight:600"></p>
+        <p id="cat3ConfigConfirmDetail" style="margin:0;font-size:13px;line-height:1.6;color:var(--sub)"></p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="btnCancelCat3ConfigConfirm">取消</button>
+        <button type="button" class="btn pri" id="btnOkCat3ConfigConfirm">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="cat3ConfigBatchModal" style="display:none;z-index:350" aria-hidden="true">
+    <div class="modal-box export-modal" role="dialog" aria-labelledby="cat3ConfigBatchTitle">
+      <div class="modal-hd">
+        <h3 id="cat3ConfigBatchTitle">批量修改</h3>
+        <button type="button" class="modal-close" id="btnCloseCat3ConfigBatch" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd">
+        <p id="cat3ConfigBatchTip" style="margin:0 0 12px;font-size:13px;color:var(--sub)"></p>
+        <div class="batch-form">
+          <div class="row">
+            <span class="lbl">象限</span>
+            <select class="ctrl" id="cat3BatchQuad">
+              <option value="__keep__">不修改</option>
+              <option value="">未划分（空）</option>
+            </select>
+          </div>
+          <div class="row">
+            <span class="lbl">是否放开</span>
+            <select class="ctrl" id="cat3BatchAllow">
+              <option value="__keep__">不修改</option>
+              <option value="yes">是</option>
+              <option value="no">否</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="btnCancelCat3ConfigBatch">取消</button>
+        <button type="button" class="btn pri" id="btnOkCat3ConfigBatch">确认修改</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="cat3ConfigBatchAskModal" style="display:none;z-index:360" aria-hidden="true">
+    <div class="modal-box export-modal" role="dialog" aria-labelledby="cat3ConfigBatchAskTitle">
+      <div class="modal-hd">
+        <h3 id="cat3ConfigBatchAskTitle">确认批量修改</h3>
+        <button type="button" class="modal-close" id="btnCloseCat3ConfigBatchAsk" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-bd" style="padding-bottom:8px">
+        <p id="cat3ConfigBatchAskDetail" style="margin:0;font-size:13px;line-height:1.7;color:var(--text)"></p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="btnCancelCat3ConfigBatchAsk">取消</button>
+        <button type="button" class="btn pri" id="btnOkCat3ConfigBatchAsk">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="./compliance_cat3_data.js"></script>
+  <script src="./allow_release_cat3.js"></script>
+  <script>
+  const COMPLIANCE_CAT3 = window.COMPLIANCE_CAT3_DATA || { items: [], quadrants: [] };
+  const COMPLIANCE_CAT3_DEFAULT_QUAD = {};
+  (COMPLIANCE_CAT3.items || []).forEach(it => {
+    if (it.cat3) COMPLIANCE_CAT3_DEFAULT_QUAD[it.cat3] = it.quadrant;
+  });
+  const COMPLIANCE_QUAD_FIELD = {
+    biz_high_mail_low: { perf_lv: '高', mail_lv: '低', rule: '1-业绩高+邮件SKU占比低' },
+    biz_high_mail_high: { perf_lv: '高', mail_lv: '高', rule: '1-业绩高+邮件SKU占比高' },
+    biz_low_mail_low: { perf_lv: '低', mail_lv: '低', rule: '1-业绩低+邮件SKU占比低' },
+    biz_low_mail_high: { perf_lv: '低', mail_lv: '高', rule: '1-业绩低+邮件SKU占比高' },
+  };
+  const COMPLIANCE_QUAD_UI = [
+    { key: 'biz_high_mail_low', cls: 'keep', axis: '业绩高 & 邮件低' },
+    { key: 'biz_high_mail_high', cls: 'cert', axis: '业绩高 & 邮件高' },
+    { key: 'biz_low_mail_low', cls: 'obs', axis: '业绩低 & 邮件低' },
+    { key: 'biz_low_mail_high', cls: 'tight', axis: '业绩低 & 邮件高' },
+  ];
+  const COMPLIANCE_MODAL_CLS = {
+    biz_high_mail_low: 'keep',
+    biz_high_mail_high: 'cert',
+    biz_low_mail_low: 'obs',
+    biz_low_mail_high: 'tight',
+  };
+  const COMPLIANCE_QUAD_STORAGE_KEY = 'compliance_cat3_quad_overrides_v1';
+  const CAT3_CONFIG_STORAGE_KEY = 'cat3_config_unified_v1';
+  const CAT3_LOG_STORAGE_KEY = 'cat3_config_logs_v1';
+  const CAT3_OPERATOR_KEY = 'cat3_config_operator_v1';
+
+  function fmt(n) {
+    if (n == null || n === '') return '—';
+    return Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+  }
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+  function complianceQuadrantLabel(key) {
+    const ui = COMPLIANCE_QUAD_UI.find(x => x.key === key);
+    return ui ? ui.axis : key;
+  }
+  function applyCat3QuadrantFields(it, quadrant) {
+    if (!quadrant) {
+      it.quadrant = '';
+      it.perf_lv = '';
+      it.mail_lv = '';
+      it.rule = '';
+      return;
+    }
+    const meta = COMPLIANCE_QUAD_FIELD[quadrant];
+    if (!meta) return;
+    it.quadrant = quadrant;
+    it.perf_lv = meta.perf_lv;
+    it.mail_lv = meta.mail_lv;
+    it.rule = meta.rule;
+  }
+  function loadComplianceCat3Overrides() {
+    try {
+      const raw = localStorage.getItem(COMPLIANCE_QUAD_STORAGE_KEY);
+      if (!raw) return;
+      const map = JSON.parse(raw);
+      if (!map || typeof map !== 'object') return;
+      (COMPLIANCE_CAT3.items || []).forEach(it => {
+        if (!Object.prototype.hasOwnProperty.call(map, it.cat3)) return;
+        const q = map[it.cat3];
+        if (q === '' || (q && COMPLIANCE_QUAD_FIELD[q])) applyCat3QuadrantFields(it, q);
+      });
+    } catch (_) {}
+  }
+  function saveComplianceCat3Overrides() {
+    const map = {};
+    (COMPLIANCE_CAT3.items || []).forEach(it => {
+      if (!it.cat3) return;
+      const def = COMPLIANCE_CAT3_DEFAULT_QUAD[it.cat3] || '';
+      const cur = it.quadrant || '';
+      if (cur !== def) map[it.cat3] = cur;
+    });
+    try {
+      if (Object.keys(map).length) localStorage.setItem(COMPLIANCE_QUAD_STORAGE_KEY, JSON.stringify(map));
+      else localStorage.removeItem(COMPLIANCE_QUAD_STORAGE_KEY);
+    } catch (_) {}
+  }
+  function recountComplianceCat3Quadrants() {
+    const keys = Object.keys(COMPLIANCE_QUAD_FIELD);
+    const counts = Object.fromEntries(keys.map(k => [k, 0]));
+    (COMPLIANCE_CAT3.items || []).forEach(it => {
+      if (counts[it.quadrant] != null) counts[it.quadrant] += 1;
+    });
+    const quads = COMPLIANCE_CAT3.quadrants || (COMPLIANCE_CAT3.quadrants = []);
+    keys.forEach(key => {
+      let row = quads.find(q => q.key === key);
+      if (!row) {
+        row = { key, title: key, axis: key };
+        quads.push(row);
+      }
+      row.count = counts[key] || 0;
+    });
+  }
+  loadComplianceCat3Overrides();
+  recountComplianceCat3Quadrants();
+
+  const ALLOW_RELEASE_SRC = window.ALLOW_RELEASE_CAT3 || { source: '', lists: {} };
+  const ALLOW_RELEASE_DEFAULT_SET = new Set([
+    ...((ALLOW_RELEASE_SRC.lists && ALLOW_RELEASE_SRC.lists.v1 && ALLOW_RELEASE_SRC.lists.v1.items) || []),
+    ...((ALLOW_RELEASE_SRC.lists && ALLOW_RELEASE_SRC.lists.v2 && ALLOW_RELEASE_SRC.lists.v2.items) || []),
+  ]);
+  const cat3ConfigState = {
+    allowOverrides: {},
+    extras: [],
+    logs: [],
+    operator: '当前用户',
+    logFocusCat3: '',
+    selected: new Set(),
+  };
+  let cat3VisibleNames = [];
+  let cat3ConfigPieChart = null;
+
+  function loadCat3ConfigOverrides() {
+    try {
+      const raw = localStorage.getItem(CAT3_CONFIG_STORAGE_KEY);
+      if (!raw) return;
+      const map = JSON.parse(raw);
+      if (map && typeof map.allowOverrides === 'object') cat3ConfigState.allowOverrides = map.allowOverrides || {};
+      if (Array.isArray(map.extras)) {
+        cat3ConfigState.extras = map.extras
+          .map(x => ({
+            cat3: String(x.cat3 || '').trim(),
+            quadrant: String(x.quadrant || '').trim(),
+            allow: !!x.allow,
+          }))
+          .filter(x => x.cat3 && (
+            ALLOW_RELEASE_DEFAULT_SET.has(x.cat3) ||
+            (COMPLIANCE_CAT3.items || []).some(it => it.cat3 === x.cat3)
+          ));
+      }
+    } catch (_) {}
+  }
+  function saveCat3ConfigOverrides() {
+    try {
+      const payload = {
+        allowOverrides: cat3ConfigState.allowOverrides || {},
+        extras: cat3ConfigState.extras || [],
+      };
+      const empty = !Object.keys(payload.allowOverrides).length && !(payload.extras || []).length;
+      if (empty) localStorage.removeItem(CAT3_CONFIG_STORAGE_KEY);
+      else localStorage.setItem(CAT3_CONFIG_STORAGE_KEY, JSON.stringify(payload));
+    } catch (_) {}
+  }
+  function loadCat3ConfigLogs() {
+    try {
+      const op = localStorage.getItem(CAT3_OPERATOR_KEY);
+      if (op) cat3ConfigState.operator = op;
+      const raw = localStorage.getItem(CAT3_LOG_STORAGE_KEY);
+      if (!raw) return;
+      const list = JSON.parse(raw);
+      if (Array.isArray(list)) cat3ConfigState.logs = list.slice(0, 2000);
+    } catch (_) {}
+  }
+  function saveCat3ConfigLogs() {
+    try {
+      localStorage.setItem(CAT3_LOG_STORAGE_KEY, JSON.stringify((cat3ConfigState.logs || []).slice(0, 2000)));
+    } catch (_) {}
+  }
+  function getCat3ConfigOperator() {
+    return cat3ConfigState.operator || '当前用户';
+  }
+  function formatCat3LogValue(field, v) {
+    if (field === 'allow') return v ? '是' : '否';
+    if (field === 'quadrant') return v ? complianceQuadrantLabel(v) : '未划分（空）';
+    return String(v ?? '');
+  }
+  function pushCat3ConfigLog({ cat3, field, from, to }) {
+    const name = String(cat3 || '').trim();
+    if (!name) return;
+    cat3ConfigState.logs.unshift({
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      cat3: name,
+      field,
+      from,
+      to,
+      by: getCat3ConfigOperator(),
+      at: new Date().toISOString(),
+    });
+    if (cat3ConfigState.logs.length > 2000) cat3ConfigState.logs.length = 2000;
+    saveCat3ConfigLogs();
+  }
+  function logsOfCat3(cat3) {
+    const name = String(cat3 || '').trim();
+    return (cat3ConfigState.logs || []).filter(x => x.cat3 === name);
+  }
+  function formatLogTime(iso) {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso || '-';
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  }
+  function renderCat3ConfigLogModal() {
+    const cat3 = cat3ConfigState.logFocusCat3;
+    const list = logsOfCat3(cat3);
+    document.getElementById('cat3ConfigLogTitle').textContent = `修改日志 · ${cat3 || ''}`;
+    document.getElementById('cat3ConfigLogSub').textContent = '记录该三级类目的象限 / 是否放开变更及操作人。';
+    document.getElementById('cat3ConfigLogList').innerHTML = list.length
+      ? list.map(x => {
+          const fieldLabel = x.field === 'allow' ? '是否放开' : '象限';
+          return `<div class="cat3-log-item">
+            <div class="meta">${escHtml(formatLogTime(x.at))} · 操作人 <b>${escHtml(x.by || '未知')}</b></div>
+            <div class="chg">${escHtml(fieldLabel)}：${escHtml(formatCat3LogValue(x.field, x.from))} → ${escHtml(formatCat3LogValue(x.field, x.to))}</div>
+          </div>`;
+        }).join('')
+      : `<div class="cat3-log-item" style="color:var(--muted);text-align:center;padding:28px">暂无修改记录</div>`;
+    document.getElementById('cat3ConfigLogFoot').textContent = `共 ${list.length} 条`;
+  }
+  function openCat3ConfigLogModal(cat3) {
+    cat3ConfigState.logFocusCat3 = String(cat3 || '').trim();
+    renderCat3ConfigLogModal();
+    const modal = document.getElementById('cat3ConfigLogModal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeCat3ConfigLogModal() {
+    const modal = document.getElementById('cat3ConfigLogModal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  let cat3ConfigConfirmPending = null;
+  function currentCat3Quadrant(cat3) {
+    const row = buildCat3ConfigRows().find(r => r.cat3 === cat3);
+    return row ? (row.quadrant || '') : '';
+  }
+  function cat3QuadrantDisplay(key) {
+    if (!key) return '未划分（空）';
+    const ui = COMPLIANCE_QUAD_UI.find(x => x.key === key);
+    return ui ? ui.axis : complianceQuadrantLabel(key);
+  }
+  function cat3AllowDisplay(yes) {
+    return yes ? '是' : '否';
+  }
+  function openCat3ConfigConfirmModal({ cat3, field, fromVal, toVal, selectEl }) {
+    cat3ConfigConfirmPending = { cat3, field, fromVal, toVal, selectEl };
+    const fieldLabel = field === 'allow' ? '是否放开' : '象限';
+    const fromText = field === 'allow' ? cat3AllowDisplay(fromVal) : cat3QuadrantDisplay(fromVal);
+    const toText = field === 'allow' ? cat3AllowDisplay(toVal) : cat3QuadrantDisplay(toVal);
+    document.getElementById('cat3ConfigConfirmCat3').textContent = `三级类目：${cat3}`;
+    document.getElementById('cat3ConfigConfirmDetail').innerHTML =
+      `${fieldLabel}：<strong>${escHtml(fromText)}</strong> → <strong>${escHtml(toText)}</strong>`;
+    const modal = document.getElementById('cat3ConfigConfirmModal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeCat3ConfigConfirmModal(revert) {
+    const pending = cat3ConfigConfirmPending;
+    if (revert && pending && pending.selectEl) {
+      const sel = pending.selectEl;
+      if (pending.field === 'allow') sel.value = pending.fromVal ? 'yes' : 'no';
+      else sel.value = pending.fromVal || '';
+    }
+    cat3ConfigConfirmPending = null;
+    const modal = document.getElementById('cat3ConfigConfirmModal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  function confirmCat3ConfigChange() {
+    const pending = cat3ConfigConfirmPending;
+    if (!pending) return;
+    const { cat3, field, toVal } = pending;
+    closeCat3ConfigConfirmModal(false);
+    if (field === 'allow') {
+      if (setCat3Allow(cat3, toVal)) {
+        toast(toVal ? `「${cat3}」已设为已放开` : `「${cat3}」已设为未放开`);
+        renderCat3ConfigPage();
+      }
+      return;
+    }
+    if (field === 'quadrant') {
+      if (setCat3ConfigQuadrant(cat3, toVal)) {
+        toast(toVal ? `已将「${cat3}」改为「${complianceQuadrantLabel(toVal)}」` : `已将「${cat3}」设为未划分`);
+        renderCat3ConfigPage();
+      }
+    }
+  }
+  function defaultAllowOf(cat3) {
+    return ALLOW_RELEASE_DEFAULT_SET.has(cat3);
+  }
+  function currentAllowOf(cat3) {
+    if (Object.prototype.hasOwnProperty.call(cat3ConfigState.allowOverrides, cat3)) {
+      return !!cat3ConfigState.allowOverrides[cat3];
+    }
+    return defaultAllowOf(cat3);
+  }
+  function setCat3Allow(cat3, allow) {
+    const next = !!allow;
+    const prev = currentAllowOf(cat3);
+    if (prev === next) return false;
+    const def = defaultAllowOf(cat3);
+    if (next === def) delete cat3ConfigState.allowOverrides[cat3];
+    else cat3ConfigState.allowOverrides[cat3] = next;
+    const extra = (cat3ConfigState.extras || []).find(x => x.cat3 === cat3);
+    if (extra) extra.allow = next;
+    saveCat3ConfigOverrides();
+    pushCat3ConfigLog({ cat3, field: 'allow', from: prev, to: next });
+    return true;
+  }
+  function setCat3ConfigQuadrant(cat3, quadrant) {
+    const name = String(cat3 || '').trim();
+    const next = String(quadrant || '').trim();
+    if (!name) return false;
+    if (next && !COMPLIANCE_QUAD_FIELD[next]) return false;
+    const it = (COMPLIANCE_CAT3.items || []).find(r => r.cat3 === name);
+    if (it) {
+      const prev = it.quadrant || '';
+      if (prev === next) return false;
+      applyCat3QuadrantFields(it, next);
+      recountComplianceCat3Quadrants();
+      saveComplianceCat3Overrides();
+      pushCat3ConfigLog({ cat3: name, field: 'quadrant', from: prev, to: next });
+      return true;
+    }
+    let extra = (cat3ConfigState.extras || []).find(x => x.cat3 === name);
+    if (!extra) {
+      extra = { cat3: name, quadrant: '', allow: currentAllowOf(name) };
+      cat3ConfigState.extras.push(extra);
+    }
+    const prev = extra.quadrant || '';
+    if (prev === next) return false;
+    extra.quadrant = next;
+    saveCat3ConfigOverrides();
+    pushCat3ConfigLog({ cat3: name, field: 'quadrant', from: prev, to: next });
+    return true;
+  }
+  function buildCat3ConfigRows() {
+    const map = new Map();
+    (COMPLIANCE_CAT3.items || []).forEach(it => {
+      const cat3 = String(it.cat3 || '').trim();
+      if (!cat3) return;
+      map.set(cat3, {
+        cat3,
+        quadrant: it.quadrant || '',
+        allow: currentAllowOf(cat3),
+        fromTable: true,
+      });
+    });
+    ALLOW_RELEASE_DEFAULT_SET.forEach(cat3 => {
+      if (map.has(cat3)) return;
+      map.set(cat3, {
+        cat3,
+        quadrant: '',
+        allow: currentAllowOf(cat3),
+        fromTable: false,
+      });
+    });
+    (cat3ConfigState.extras || []).forEach(ex => {
+      const existing = map.get(ex.cat3);
+      if (!existing) return;
+      if (!existing.fromTable) existing.quadrant = ex.quadrant || '';
+      existing.allow = currentAllowOf(ex.cat3);
+    });
+    return [...map.values()].sort((a, b) => a.cat3.localeCompare(b.cat3, 'zh'));
+  }
+  function parseCat3SearchTerms(raw) {
+    return String(raw || '')
+      .split(/[\n\r,，、;；]+/)
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean);
+  }
+  function syncCat3SelectedBar() {
+    const n = cat3ConfigState.selected.size;
+    const el = document.getElementById('cat3SelectedN');
+    if (el) el.textContent = n;
+    const all = document.getElementById('chkCat3All');
+    if (!all) return;
+    const vis = cat3VisibleNames;
+    const checkedN = vis.filter(x => cat3ConfigState.selected.has(x)).length;
+    all.checked = vis.length > 0 && checkedN === vis.length;
+    all.indeterminate = checkedN > 0 && checkedN < vis.length;
+  }
+  function openCat3ConfigBatchModal() {
+    const names = [...cat3ConfigState.selected];
+    if (!names.length) {
+      toast('请先勾选要修改的类目');
+      return;
+    }
+    const sel = document.getElementById('cat3BatchQuad');
+    if (sel && sel.options.length <= 2) {
+      COMPLIANCE_QUAD_UI.forEach(item => {
+        const o = document.createElement('option');
+        o.value = item.key;
+        o.textContent = item.axis;
+        sel.appendChild(o);
+      });
+    }
+    document.getElementById('cat3BatchQuad').value = '__keep__';
+    document.getElementById('cat3BatchAllow').value = '__keep__';
+    document.getElementById('cat3ConfigBatchTip').textContent = `将修改已选 ${names.length} 个三级类目。未改的项保持原值。`;
+    const modal = document.getElementById('cat3ConfigBatchModal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeCat3ConfigBatchModal() {
+    const modal = document.getElementById('cat3ConfigBatchModal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  function askCat3ConfigBatch() {
+    const names = [...cat3ConfigState.selected];
+    if (!names.length) {
+      toast('请先勾选要修改的类目');
+      return;
+    }
+    const q = document.getElementById('cat3BatchQuad').value;
+    const a = document.getElementById('cat3BatchAllow').value;
+    if (q === '__keep__' && a === '__keep__') {
+      toast('请至少选择一项要修改的内容');
+      return;
+    }
+    const parts = [`将修改已选 <strong>${names.length}</strong> 个三级类目。`];
+    if (q !== '__keep__') parts.push(`象限改为：<strong>${escHtml(cat3QuadrantDisplay(q))}</strong>`);
+    if (a !== '__keep__') parts.push(`是否放开改为：<strong>${escHtml(cat3AllowDisplay(a === 'yes'))}</strong>`);
+    parts.push('确认后立即生效，是否继续？');
+    document.getElementById('cat3ConfigBatchAskDetail').innerHTML = parts.join('<br>');
+    const modal = document.getElementById('cat3ConfigBatchAskModal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeCat3ConfigBatchAskModal() {
+    const modal = document.getElementById('cat3ConfigBatchAskModal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  function confirmCat3ConfigBatch() {
+    const names = [...cat3ConfigState.selected];
+    if (!names.length) {
+      toast('请先勾选要修改的类目');
+      return;
+    }
+    const q = document.getElementById('cat3BatchQuad').value;
+    const a = document.getElementById('cat3BatchAllow').value;
+    if (q === '__keep__' && a === '__keep__') {
+      toast('请至少选择一项要修改的内容');
+      return;
+    }
+    let qn = 0;
+    let an = 0;
+    names.forEach(name => {
+      if (q !== '__keep__' && setCat3ConfigQuadrant(name, q)) qn += 1;
+      if (a !== '__keep__' && setCat3Allow(name, a === 'yes')) an += 1;
+    });
+    closeCat3ConfigBatchAskModal();
+    closeCat3ConfigBatchModal();
+    renderCat3ConfigPage();
+    toast(`已处理 ${names.length} 个类目（象限 ${qn} / 是否放开 ${an}）`);
+  }
+  function matchCat3Search(cat3, terms) {
+    if (!terms.length) return true;
+    const name = String(cat3 || '').toLowerCase();
+    if (terms.length === 1) return name.includes(terms[0]);
+    return terms.some(t => name === t || name.includes(t));
+  }
+  function renderCat3ConfigAssignedPie(quadCounts, assignedN) {
+    const canvas = document.getElementById('cat3ConfigAssignedPie');
+    if (!canvas) return;
+    if (cat3ConfigPieChart) {
+      try { cat3ConfigPieChart.destroy(); } catch (_) {}
+      cat3ConfigPieChart = null;
+    }
+    if (typeof Chart === 'undefined') return;
+    const colorOf = { keep: '#0f766e', cert: '#b45309', obs: '#64748b', tight: '#be123c' };
+    const labels = COMPLIANCE_QUAD_UI.map(x => x.axis);
+    const data = COMPLIANCE_QUAD_UI.map(x => quadCounts[x.key] || 0);
+    const colors = COMPLIANCE_QUAD_UI.map(x => colorOf[x.cls] || '#94a3b8');
+    cat3ConfigPieChart = new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: colors, borderWidth: 1, borderColor: '#fff' }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              padding: 8,
+              font: { size: 10 },
+              generateLabels(chart) {
+                const ds = chart.data.datasets[0] || {};
+                return (chart.data.labels || []).map((label, i) => {
+                  const n = Number(ds.data[i] || 0);
+                  const pct = assignedN ? ((n / assignedN) * 100).toFixed(1) : '0.0';
+                  return {
+                    text: `${label} ${n} (${pct}%)`,
+                    fillStyle: (ds.backgroundColor || [])[i],
+                    strokeStyle: '#fff',
+                    lineWidth: 1,
+                    hidden: false,
+                    index: i,
+                  };
+                });
+              },
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label(ctx) {
+                const n = Number(ctx.raw || 0);
+                const pct = assignedN ? ((n / assignedN) * 100).toFixed(1) : '0.0';
+                return ` ${ctx.label}: ${fmt(n)}（${pct}%）`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+  function renderCat3ConfigPage() {
+    const all = buildCat3ConfigRows();
+    const terms = parseCat3SearchTerms(document.getElementById('cat3ConfigSearch').value);
+    const qk = document.getElementById('cat3ConfigQuadFilter').value;
+    const ak = document.getElementById('cat3ConfigAllowFilter').value;
+    const rows = all.filter(r => {
+      if (!matchCat3Search(r.cat3, terms)) return false;
+      if (qk === '__empty__' && r.quadrant) return false;
+      if (qk && qk !== '__empty__' && r.quadrant !== qk) return false;
+      if (ak === 'yes' && !r.allow) return false;
+      if (ak === 'no' && r.allow) return false;
+      return true;
+    });
+    const emptyN = all.filter(r => !r.quadrant).length;
+    const allowN = all.filter(r => r.allow).length;
+    const assignedN = all.length - emptyN;
+    const quadCounts = {};
+    COMPLIANCE_QUAD_UI.forEach(x => { quadCounts[x.key] = 0; });
+    all.forEach(r => { if (r.quadrant && quadCounts[r.quadrant] != null) quadCounts[r.quadrant] += 1; });
+    document.getElementById('cat3ConfigSummary').innerHTML = `
+      <div class="allow-list-card">
+        <div class="t">三级类目合计</div>
+        <div class="c">${fmt(all.length)}</div>
+      </div>
+      <div class="allow-list-card">
+        <div class="t">已放开</div>
+        <div class="s">是否放开 = 是</div>
+        <div class="c">${fmt(allowN)}</div>
+      </div>
+      <div class="allow-list-card">
+        <div class="t">未划分象限</div>
+        <div class="s">象限为空</div>
+        <div class="c">${fmt(emptyN)}</div>
+      </div>
+      <div class="allow-list-card pie-card">
+        <div class="pie-hd">
+          <div class="t">已划分</div>
+          <div class="c">${fmt(assignedN)}</div>
+        </div>
+        <div class="pie-wrap"><canvas id="cat3ConfigAssignedPie" aria-label="已划分象限分布"></canvas></div>
+      </div>`;
+    renderCat3ConfigAssignedPie(quadCounts, assignedN);
+    const filter = document.getElementById('cat3ConfigQuadFilter');
+    if (filter && filter.options.length <= 2) {
+      COMPLIANCE_QUAD_UI.forEach(item => {
+        const o = document.createElement('option');
+        o.value = item.key;
+        o.textContent = item.axis;
+        filter.appendChild(o);
+      });
+    }
+    cat3VisibleNames = rows.slice(0, 800).map(r => r.cat3);
+    document.getElementById('cat3ConfigBody').innerHTML = rows.slice(0, 800).map(r => {
+      const cls = r.quadrant ? (COMPLIANCE_MODAL_CLS[r.quadrant] || 'obs') : 'obs';
+      const hasDef = Object.prototype.hasOwnProperty.call(COMPLIANCE_CAT3_DEFAULT_QUAD, r.cat3);
+      const defQ = hasDef ? (COMPLIANCE_CAT3_DEFAULT_QUAD[r.cat3] || '') : '';
+      const quadEdited = hasDef ? defQ !== (r.quadrant || '') : !!r.quadrant;
+      const allowEdited = currentAllowOf(r.cat3) !== defaultAllowOf(r.cat3);
+      const mark = (quadEdited || allowEdited) ? '<span class="allow-edited">已改</span>' : '';
+      const logN = logsOfCat3(r.cat3).length;
+      const lastBy = logN ? (logsOfCat3(r.cat3)[0].by || '') : '';
+      const checked = cat3ConfigState.selected.has(r.cat3) ? ' checked' : '';
+      const rowOpts = `<option value=""${r.quadrant ? '' : ' selected'}>未划分（空）</option>` +
+        COMPLIANCE_QUAD_UI.map(item =>
+          `<option value="${item.key}"${item.key === r.quadrant ? ' selected' : ''}>${escHtml(item.axis)}</option>`
+        ).join('');
+      return `<tr data-cat3="${escHtml(r.cat3)}">
+        <td class="td-chk"><input type="checkbox" class="chk row-chk" data-cat3="${escHtml(r.cat3)}"${checked} /></td>
+        <td>${escHtml(r.cat3)}${mark}</td>
+        <td>
+          <select class="quad-edit ${cls}" data-field="quadrant" data-cat3="${escHtml(r.cat3)}" aria-label="象限">
+            ${rowOpts}
+          </select>
+        </td>
+        <td>
+          <select class="quad-edit ${r.allow ? 'keep' : 'obs'}" data-field="allow" data-cat3="${escHtml(r.cat3)}" aria-label="是否放开">
+            <option value="yes"${r.allow ? ' selected' : ''}>是</option>
+            <option value="no"${r.allow ? '' : ' selected'}>否</option>
+          </select>
+        </td>
+        <td>
+          <button type="button" class="allow-row-log" data-log-cat3="${escHtml(r.cat3)}" title="${logN ? escHtml(`最近：${lastBy}`) : '暂无记录'}">
+            日志${logN ? `(${logN})` : ''}
+          </button>
+        </td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">无匹配类目</td></tr>`;
+    syncCat3SelectedBar();
+    const batchTip = terms.length > 1 ? ` · 批量关键词 ${fmt(terms.length)} 个` : '';
+    document.getElementById('cat3ConfigFoot').textContent =
+      `数据源：产品表三级类目 · 展示 ${fmt(Math.min(rows.length, 800))} / 筛选 ${fmt(rows.length)} / 合计 ${fmt(all.length)}` +
+      batchTip +
+      (rows.length > 800 ? ' · 仅展示前 800 条，请搜索缩小范围' : '');
+  }
+  function downloadCsv(filename, cols, rows, getter) {
+    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [cols.map(c => esc(c.name)).join(',')];
+    rows.forEach(r => lines.push(cols.map(c => esc(getter(r, c))).join(',')));
+    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function exportCat3Config() {
+    const rows = buildCat3ConfigRows().map(r => ({
+      cat3: r.cat3,
+      quadrant: r.quadrant ? complianceQuadrantLabel(r.quadrant) : '',
+      allow: r.allow ? '是' : '否',
+    }));
+    downloadCsv('三级类目配置.csv', [
+      { key: 'cat3', name: '三级类目' },
+      { key: 'quadrant', name: '象限' },
+      { key: 'allow', name: '是否放开' },
+    ], rows, (r, c) => r[c.key]);
+    toast(`已导出 ${rows.length} 条`);
+  }
+
+  loadCat3ConfigOverrides();
+  loadCat3ConfigLogs();
+  renderCat3ConfigPage();
+
+  document.getElementById('btnCloseCat3ConfigLog').onclick = closeCat3ConfigLogModal;
+  document.getElementById('cat3ConfigLogModal').addEventListener('click', e => {
+    if (e.target.id === 'cat3ConfigLogModal') closeCat3ConfigLogModal();
+  });
+  document.getElementById('btnCloseCat3ConfigConfirm').onclick = () => closeCat3ConfigConfirmModal(true);
+  document.getElementById('btnCancelCat3ConfigConfirm').onclick = () => closeCat3ConfigConfirmModal(true);
+  document.getElementById('btnOkCat3ConfigConfirm').onclick = confirmCat3ConfigChange;
+  document.getElementById('cat3ConfigConfirmModal').addEventListener('click', e => {
+    if (e.target.id === 'cat3ConfigConfirmModal') closeCat3ConfigConfirmModal(true);
+  });
+  document.getElementById('cat3ConfigSearch').addEventListener('input', renderCat3ConfigPage);
+  document.getElementById('cat3ConfigQuadFilter').addEventListener('change', renderCat3ConfigPage);
+  document.getElementById('cat3ConfigAllowFilter').addEventListener('change', renderCat3ConfigPage);
+  document.getElementById('btnExportCat3Config').onclick = exportCat3Config;
+  document.getElementById('btnBatchCat3Config').onclick = openCat3ConfigBatchModal;
+  document.getElementById('btnCloseCat3ConfigBatch').onclick = closeCat3ConfigBatchModal;
+  document.getElementById('btnCancelCat3ConfigBatch').onclick = closeCat3ConfigBatchModal;
+  document.getElementById('btnOkCat3ConfigBatch').onclick = askCat3ConfigBatch;
+  document.getElementById('btnCloseCat3ConfigBatchAsk').onclick = closeCat3ConfigBatchAskModal;
+  document.getElementById('btnCancelCat3ConfigBatchAsk').onclick = closeCat3ConfigBatchAskModal;
+  document.getElementById('btnOkCat3ConfigBatchAsk').onclick = confirmCat3ConfigBatch;
+  document.getElementById('cat3ConfigBatchAskModal').addEventListener('click', e => {
+    if (e.target.id === 'cat3ConfigBatchAskModal') closeCat3ConfigBatchAskModal();
+  });
+  document.getElementById('cat3ConfigBatchModal').addEventListener('click', e => {
+    if (e.target.id === 'cat3ConfigBatchModal') closeCat3ConfigBatchModal();
+  });
+  document.getElementById('chkCat3All').addEventListener('change', e => {
+    const on = e.target.checked;
+    cat3VisibleNames.forEach(name => {
+      if (on) cat3ConfigState.selected.add(name);
+      else cat3ConfigState.selected.delete(name);
+    });
+    document.querySelectorAll('#cat3ConfigBody .row-chk').forEach(box => { box.checked = on; });
+    syncCat3SelectedBar();
+  });
+  document.getElementById('cat3ConfigBody').addEventListener('click', e => {
+    const btn = e.target.closest('[data-log-cat3]');
+    if (!btn) return;
+    openCat3ConfigLogModal(btn.dataset.logCat3);
+  });
+  document.getElementById('cat3ConfigBody').addEventListener('change', e => {
+    const box = e.target.closest('.row-chk');
+    if (!box) return;
+    const name = box.dataset.cat3;
+    if (box.checked) cat3ConfigState.selected.add(name);
+    else cat3ConfigState.selected.delete(name);
+    syncCat3SelectedBar();
+  });
+  document.getElementById('cat3ConfigBody').addEventListener('change', e => {
+    const sel = e.target.closest('select.quad-edit');
+    if (!sel) return;
+    const cat3 = sel.dataset.cat3;
+    const field = sel.dataset.field;
+    if (field === 'allow') {
+      const prev = currentAllowOf(cat3);
+      const next = sel.value === 'yes';
+      if (prev === next) return;
+      openCat3ConfigConfirmModal({ cat3, field, fromVal: prev, toVal: next, selectEl: sel });
+      return;
+    }
+    if (field === 'quadrant') {
+      const prev = currentCat3Quadrant(cat3);
+      const next = sel.value;
+      if (prev === next) return;
+      openCat3ConfigConfirmModal({ cat3, field, fromVal: prev, toVal: next, selectEl: sel });
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const confirmModal = document.getElementById('cat3ConfigConfirmModal');
+    if (confirmModal && confirmModal.style.display === 'flex') {
+      closeCat3ConfigConfirmModal(true);
+      return;
+    }
+    const batchAskModal = document.getElementById('cat3ConfigBatchAskModal');
+    if (batchAskModal && batchAskModal.style.display === 'flex') {
+      closeCat3ConfigBatchAskModal();
+      return;
+    }
+    const batchModal = document.getElementById('cat3ConfigBatchModal');
+    if (batchModal && batchModal.style.display === 'flex') {
+      closeCat3ConfigBatchModal();
+      return;
+    }
+    closeCat3ConfigLogModal();
+  });
+  </script>
+</body>
+</html>
