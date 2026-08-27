@@ -614,7 +614,7 @@
                   <span id="actionPreviewTail">/ 0 SKU</span>
                 </span>
               </div>
-              <button type="button" class="btn" id="btnActionExport" style="height:28px">导出本批</button>
+              <button type="button" class="btn" id="btnActionExport" style="height:28px" title="按顶部筛选条件导出三级类目汇总，不含 SKU 明细">导出</button>
             </div>
             <div class="arow" style="background:#fafbfd;font-weight:600;color:var(--sub);cursor:default" id="actionHead">
               <div>SKU</div><div>标题 / 类目</div><div class="m">Listing数量</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>
@@ -1692,7 +1692,7 @@
       map.forEach((m, ak) => {
         const arr = [...m.values()];
         arr.sort((a, b) => (b.amount || 0) - (a.amount || 0) || (b.mail_cnt || 0) - (a.mail_cnt || 0));
-        out[key][ak] = arr.slice(0, 50);
+        out[key][ak] = key === 'actions_cat3' ? arr : arr.slice(0, 50);
         out[totalKey][ak] = slices.reduce((a, s) => a + (Number(s[totalKey]?.[ak]) || 0), 0);
       });
     }
@@ -1870,7 +1870,7 @@
     return '#';
   }
   function gotoDetail() {
-    toast('明细列表已关闭，请使用图表右上角「导出」或清单「导出本批」');
+    toast('明细列表已关闭，请使用图表右上角「导出」或清单「导出」');
   }
 
   function exportStamp() {
@@ -2310,72 +2310,34 @@
 
   function exportActionBatch() {
     readFilters();
-    const src = currentActionSource();
-    const previewLimit = [20, 30, 50, 100].includes(Number(state.actionPreviewN))
-      ? Number(state.actionPreviewN)
-      : 30;
-    const byCat3 = state.actionDim === 'cat3';
-    const byListing = state.actionDim === 'listing';
-    const allRows = sortActionRows(filteredActions(src[state.action]));
-    // 按三级类目时导出该类目全量，不带 SKU/Listing 明细，也不截成预览条数
-    const rows = byCat3 ? allRows : allRows.slice(0, previewLimit);
+    if (!platformReady()) {
+      toast(`${state.platform} 暂未接入`);
+      return;
+    }
+    const slice = currentSlice();
+    const src = slice.actions_cat3 || {};
+    const rows = sortActionRows(filteredActions(src[state.action]));
     if (!rows.length) {
-      toast('当前批次无可导出数据');
+      toast('当前顶部筛选下无可导出的三级类目数据');
       return;
     }
     const meta = ACTION_META[state.action];
-    let cols; let valueFn;
-    if (byCat3) {
-      cols = [
-        { key: 'cat3', name: '三级类目' },
-        { key: 'sku_cnt', name: 'SKU数量' },
-        { key: 'listing_cnt', name: 'Listing数量' },
-        { key: 'amount', name: '销售金额' },
-        { key: 'orders', name: '出单量' },
-        { key: 'mail_cnt', name: '合规邮件' },
-        { key: 'cpc', name: 'CPC认证' },
-      ];
-      valueFn = (r, c) => {
-        if (c.key === 'cpc') return r.cpc ? '是' : '否';
-        if (c.key === 'amount') return r.amount == null ? '' : r.amount;
-        return r[c.key];
-      };
-    } else if (byListing) {
-      cols = [
-        { key: 'msku', name: 'MSKU' },
-        { key: 'site', name: '站点' },
-        { key: 'sku', name: 'SKU' },
-        { key: 'title', name: '标题' },
-        { key: 'cat3', name: '三级类目' },
-        { key: 'amount', name: '销量金额' },
-        { key: 'orders', name: '出单量' },
-        { key: 'mail_cnt', name: '合规邮件' },
-        { key: 'cpc', name: 'CPC认证' },
-      ];
-      valueFn = (r, c) => (c.key === 'cpc' ? (r.cpc ? '是' : '否') : r[c.key]);
-    } else {
-      cols = [
-        { key: 'sku', name: 'SKU' },
-        { key: 'title', name: '标题' },
-        { key: 'cat3', name: '三级类目' },
-        { key: 'sites', name: '站点' },
-        { key: 'listing_cnt', name: 'Listing数量' },
-        { key: 'amount', name: '销量金额' },
-        { key: 'orders', name: '出单量' },
-        { key: 'mail_cnt', name: '合规邮件' },
-        { key: 'cpc', name: 'CPC认证' },
-      ];
-      valueFn = (r, c) => {
-        if (c.key === 'sites') return (r.sites || []).join('/');
-        if (c.key === 'cpc') return r.cpc ? '是' : '否';
-        return r[c.key];
-      };
-    }
-    const name = byCat3
-      ? `合规看板_${meta.title || state.action}_三级类目.csv`
-      : `合规看板_${meta.title || state.action}_预览导出.csv`;
-    downloadCsv(name, cols, rows, valueFn);
-    toast(byCat3 ? `已导出 ${rows.length} 个三级类目` : `已导出本批预览 ${rows.length} 条`);
+    const cols = [
+      { key: 'cat3', name: '三级类目' },
+      { key: 'sku_cnt', name: 'SKU数量' },
+      { key: 'listing_cnt', name: 'Listing数量' },
+      { key: 'amount', name: '销售金额' },
+      { key: 'orders', name: '出单量' },
+      { key: 'mail_cnt', name: '合规邮件' },
+      { key: 'cpc', name: 'CPC认证' },
+    ];
+    const valueFn = (r, c) => {
+      if (c.key === 'cpc') return r.cpc ? '是' : '否';
+      if (c.key === 'amount') return r.amount == null ? '' : r.amount;
+      return r[c.key];
+    };
+    downloadCsv(`合规看板_${meta.title || state.action}_三级类目.csv`, cols, rows, valueFn);
+    toast(`已导出 ${rows.length} 个三级类目（按顶部筛选）`);
   }
 
   const EXTRA_DEPTS = [
@@ -4035,7 +3997,7 @@
       return;
     }
     const moreHint = totalN > previewRows.length
-      ? `<div class="empty" style="padding:10px 12px">当前预览 Top ${showN}${availableN < previewLimit && previewLimit > availableN ? `（样本仅 ${availableN} 条）` : ''}；完整 ${fmt(totalN)} 个请点「导出本批」</div>`
+      ? `<div class="empty" style="padding:10px 12px">当前预览 Top ${showN}${availableN < previewLimit && previewLimit > availableN ? `（样本仅 ${availableN} 条）` : ''}；完整三级类目请点「导出」</div>`
       : '';
     if (byCat3) {
       document.getElementById('actionList').innerHTML = previewRows.map(r => `
