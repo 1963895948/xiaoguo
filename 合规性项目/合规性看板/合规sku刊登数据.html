@@ -453,7 +453,7 @@
                 <div class="chart-title">
                   <span id="listingSalesChartTitle">日度 · 刊登与销量</span>
                   <span class="demo-badge" id="listingSalesDemoBadge" style="display:none" title="当前样本跨度不足，以下为编造数据，仅供布局展示">编造·仅展示</span>
-                  <span class="help" tabindex="0"><span class="help-pop" id="listingSalesHelpPop">看刊登量与出单、销量的关系。<br>· 刊登 Listing/SKU：当段新刊登数<br>· 有销量 Listing/SKU：当段有出单的 Listing/SKU<br>· 订单量：当段订单量（左轴）<br>· 销售额：当段金额（右轴柱）</span>?</span>
+                  <span class="help" tabindex="0"><span class="help-pop" id="listingSalesHelpPop">看刊登量与出单、订单的关系。<br>· 刊登 Listing/SKU：该时间段内新刊登数<br>· 有销量 Listing/SKU：该批刊登中累计有出单的数量<br>· 订单量：该时间段内新刊登 Listing/SKU，从刊登日起累计至查看时点的订单量（左轴）<br>· 销售额：该时间段内新刊登 Listing/SKU，从刊登日起累计至查看时点的销售额（右轴柱）</span>?</span>
                 </div>
                 <div class="seg" id="listingSalesGrainSeg" style="margin-left:8px">
                   <button type="button" class="on" data-sales-grain="day">日</button>
@@ -474,7 +474,7 @@
             </div>
             <div class="chart-box">
                 <div class="chart-hd">
-                  <div class="chart-title"><span id="siteChartTitle">分站点对比</span><span class="help" tabindex="0"><span class="help-pop" id="siteHelpPop">按站点看刊登 Listing/SKU、邮件 Listing/SKU，以及订单量（左轴）与销售额（右轴柱）。站点暂无独立邮件SKU时按总览比例估算。默认十大站，点击柱可联动顶部站点筛选。</span>?</span></div>
+                  <div class="chart-title"><span id="siteChartTitle">分站点对比</span><span class="help" tabindex="0"><span class="help-pop" id="siteHelpPop">按站点看刊登 Listing/SKU、邮件 Listing/SKU；订单量、销售额为对应刊登从刊登日起累计至查看时点（左轴/右轴柱）。站点暂无独立邮件SKU时按总览比例估算。默认十大站，点击柱可联动顶部站点筛选。</span>?</span></div>
                   <div class="chart-sub" id="siteChartHint"></div>
                   <span class="spacer"></span>
                   <div class="chart-tools">
@@ -501,7 +501,7 @@
             </div>
             <div class="chart-box">
                 <div class="chart-hd">
-                  <div class="chart-title"><span id="cat1ChartTitle">分一级类目对比</span><span class="help" tabindex="0"><span class="help-pop" id="cat1HelpPop">按一级类目看刊登 Listing/SKU、邮件 Listing/SKU，以及订单量（左轴）与销售额（右轴柱）。类目暂无独立邮件SKU时按总览比例估算。</span>?</span></div>
+                  <div class="chart-title"><span id="cat1ChartTitle">分一级类目对比</span><span class="help" tabindex="0"><span class="help-pop" id="cat1HelpPop">按一级类目看刊登 Listing/SKU、邮件 Listing/SKU；订单量、销售额为对应刊登从刊登日起累计至查看时点（左轴/右轴柱）。类目暂无独立邮件SKU时按总览比例估算。</span>?</span></div>
                   <div class="chart-sub" id="cat1ChartHint"></div>
                   <span class="spacer"></span>
                   <div class="chart-tools">
@@ -540,7 +540,7 @@
                 <div class="chart-title">
                   <span id="cpcTrendChartTitle">日度 · CPC刊登与销量</span>
                   <span class="demo-badge" id="cpcTrendDemoBadge" style="display:none" title="当前样本跨度不足，以下为编造数据，仅供布局展示">编造·仅展示</span>
-                  <span class="help" tabindex="0"><span class="help-pop" id="cpcTrendHelpPop">已认证子集：刊登 Listing/SKU、邮件、订单量（左轴）与销售额（右轴柱）。</span>?</span>
+                  <span class="help" tabindex="0"><span class="help-pop" id="cpcTrendHelpPop">已认证子集：刊登 Listing/SKU、邮件；订单量、销售额为当段新刊登且已认证的 Listing/SKU，从刊登日起累计至查看时点（左轴/右轴柱）。</span>?</span>
                 </div>
                 <div class="seg" id="cpcTrendGrainSeg" style="margin-left:8px">
                   <button type="button" class="on" data-cpc-trend-grain="day">日</button>
@@ -3654,7 +3654,7 @@
     if (salesHelp) {
       const unit = grain === 'day' ? '日' : (grain === 'week' ? '周' : '月');
       const demo = (grain === 'week' || grain === 'month') ? '【编造·仅展示】' : '';
-      salesHelp.innerHTML = `${demo}看刊登与出单、销量的关系。<br>· 刊登 Listing/SKU：当${unit}新刊登数<br>· 有销量 Listing/SKU：当${unit}有出单的 Listing/SKU<br>· 订单量：当${unit}订单量（左轴）<br>· 销售额：当${unit}金额（右轴柱）`;
+      salesHelp.innerHTML = `${demo}看刊登与出单、订单的关系。<br>· 刊登 Listing/SKU：当${unit}新刊登数<br>· 有销量 Listing/SKU：该批刊登中累计有出单的数量<br>· 订单量：当${unit}新刊登 Listing/SKU，从刊登日起累计至查看时点的订单量（左轴）<br>· 销售额：当${unit}新刊登 Listing/SKU，从刊登日起累计至查看时点的销售额（右轴柱）`;
     }
   }
 
@@ -3677,7 +3677,7 @@
     if (helpPop) {
       const unit = grain === 'day' ? '日' : (grain === 'week' ? '周' : '月');
       const demo = (grain === 'week' || grain === 'month') ? '【编造·仅展示】' : '';
-      helpPop.innerHTML = `${demo}只统计已做 CPC 认证的子集，指标与上方「刊登与邮件 / 销量」对齐。<br>· CPC Listing / SKU：当${unit}已认证数<br>· 邮件 Listing / SKU：认证子集中收到合规邮件数（原型按占比估算）<br>· 订单量 / 销售额：认证子集订单量（原型按占比估算）`;
+      helpPop.innerHTML = `${demo}只统计已做 CPC 认证的子集，指标与上方「刊登与邮件 / 销量」对齐。<br>· CPC Listing / SKU：当${unit}已认证数<br>· 邮件 Listing / SKU：认证子集中收到合规邮件数（按占比估算）<br>· 订单量 / 销售额：当${unit}新刊登且已认证的 Listing/SKU，从刊登日起累计至查看时点的累计值（原型按占比估算）`;
     }
   }
 
