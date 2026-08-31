@@ -172,8 +172,23 @@
     }
     .policy-ops .link-btn:hover{border-color:var(--pri);color:var(--pri)}
     .policy-ops .link-btn.danger{background:#fff1f0;border-color:#ffccc7;color:var(--danger)}
-    .policy-content-link{color:var(--pri);cursor:pointer;font-weight:500;font-size:12px}
-    .policy-content-link:hover{text-decoration:underline}
+    .policy-content-preview{
+      max-width:300px;font-size:12px;line-height:1.55;color:var(--text);cursor:pointer;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+      overflow:hidden;word-break:break-word;
+    }
+    .policy-content-preview:hover{color:var(--pri)}
+    .policy-content-more{margin-top:2px;color:var(--pri);font-size:11px;line-height:1.4}
+    .policy-content-tip{
+      position:fixed;z-index:85;display:none;max-width:440px;min-width:220px;
+      background:#fff;border:1px solid var(--line);border-radius:6px;
+      box-shadow:0 8px 24px rgba(20,40,80,.14);padding:10px 12px;
+      font-size:12px;line-height:1.65;color:var(--text);white-space:pre-wrap;word-break:break-word;
+    }
+    .policy-content-tip.show{display:block}
+    .policy-content-tip .tip-hd{font-weight:600;margin-bottom:4px;color:var(--sub);font-size:11px}
+    .policy-content-tip .tip-block{margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed #eef1f5}
+    .policy-content-tip .tip-block:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
     .policy-group-hd td{
       background:#f4f7fb;font-weight:600;font-size:12px;color:var(--text);
       border-bottom:1px solid #e8edf3;
@@ -1119,7 +1134,7 @@
               <tr class="detect-data-row" data-sku="1941272"
                   data-title-cn="不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭"
                   data-title-en="Stainless Steel Candle Snuffer with Handle for Birthday Candles"
-                  data-sys-result="合规品" data-sys-desc="系统判定为合规品候选，需人工确认后打标"
+                  data-sys-result="合规品" data-sys-desc="不锈钢+蜡烛熄灭工具，命中加州 Prop 65 重金属披露义务，建议人工确认后打标"
                   data-risk-sites="—"
                   data-safe-sites="美国、英国、加拿大、法国、德国、日本"
                   data-audit="待审核" data-audit-remark="—" data-status="检测完成">
@@ -1134,7 +1149,7 @@
                 <td><span class="tag t-y">检测完成</span></td>
                 <td class="cell-sites">美国、英国、加拿大、法国、德国、日本</td>
                 <td><span class="tag t-d">合规品</span></td>
-                <td class="cell-desc">系统判定为合规品候选，需人工确认后打标</td>
+                <td class="cell-desc">不锈钢+蜡烛熄灭工具，命中加州 Prop 65 重金属披露义务，建议人工确认后打标</td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="">—</td>
                 <td class="cell-meta"><div><b>提交</b> 张三</div><div><b>审核</b> —</div></td>
@@ -1158,9 +1173,10 @@
               <tr class="detect-data-row" data-sku="SKU-A1001"
                   data-title-cn="儿童毛绒玩具套装 带音乐功能"
                   data-title-en="Plush Toy Set with Music for Kids"
-                  data-sys-result="非合规品" data-sys-desc="系统判定为非合规品，无需审核打标"
-                  data-risk-sites="美国" data-safe-sites="—"
-                  data-audit="非合规品" data-audit-remark="系统已判定非合规品，无需处理" data-status="检测完成">
+                  data-sys-result="合规品" data-sys-desc="类目Toys+标题含儿童/毛绒，命中12岁以下玩具 CPC 路径（需 CPC 及第三方检测），建议人工确认后打标"
+                  data-risk-sites="—"
+                  data-safe-sites="美国、加拿大"
+                  data-audit="待审核" data-audit-remark="—" data-status="检测完成">
                 <td><input type="checkbox" class="detect-row-cb" /></td>
                 <td><div class="thumb"></div></td>
                 <td>SKU-A1001</td>
@@ -1170,11 +1186,11 @@
                 </td>
                 <td class="cell-ellipsis" title="儿童毛绒玩具套装 带音乐功能">儿童毛绒玩具套装 带音乐功能</td>
                 <td><span class="tag t-y">检测完成</span></td>
-                <td class="cell-sites">—</td>
-                <td><span class="tag t-y">非合规品</span></td>
-                <td class="cell-desc">系统判定为非合规品，无需审核打标</td>
-                <td><span class="tag t-y">非合规品</span></td>
-                <td class="cell-ellipsis" title="系统已判定非合规品，无需处理">系统已判定非合规品，无需处理</td>
+                <td class="cell-sites">美国、加拿大</td>
+                <td><span class="tag t-d">合规品</span></td>
+                <td class="cell-desc">类目Toys+标题含儿童/毛绒，命中12岁以下玩具 CPC 路径（需 CPC 及第三方检测），建议人工确认后打标</td>
+                <td><span class="tag t-w">待审核</span></td>
+                <td class="cell-ellipsis" title="—">—</td>
                 <td class="cell-meta"><div><b>提交</b> 李四</div><div><b>审核</b> —</div></td>
                 <td class="cell-meta">
                   <div><b>提交</b> 2026-06-11 15:08</div>
@@ -1186,6 +1202,7 @@
                     <span class="op-more" title="操作">☰</span>
                     <div class="op-menu">
                       <button type="button" data-act="copy">复制检测</button>
+                      <button type="button" data-act="audit">审核</button>
                       <button type="button" data-act="detail">查看详情</button>
                       <button type="button" data-act="log">日志</button>
                     </div>
@@ -1195,7 +1212,7 @@
               <tr class="detect-data-row" data-sku="SKU-A1002"
                   data-title-cn="不锈钢厨房收纳架 三层"
                   data-title-en="3-Tier Stainless Steel Kitchen Storage Rack"
-                  data-sys-result="合规品" data-sys-desc="系统判定为合规品候选，需人工确认后打标"
+                  data-sys-result="合规品" data-sys-desc="不锈钢厨房收纳，命中食品接触材料路径（FDA / LFGB），建议人工确认后打标"
                   data-risk-sites="—"
                   data-safe-sites="美国、英国、德国、法国、日本"
                   data-audit="合规品" data-audit-remark="人工确认合规品，可同步打标" data-status="检测完成">
@@ -1207,7 +1224,7 @@
                 <td><span class="tag t-y">检测完成</span></td>
                 <td class="cell-sites">美国、英国、德国、法国、日本</td>
                 <td><span class="tag t-d">合规品</span></td>
-                <td class="cell-desc">系统判定为合规品候选，需人工确认后打标</td>
+                <td class="cell-desc">不锈钢厨房收纳，命中食品接触材料路径（FDA / LFGB），建议人工确认后打标</td>
                 <td><span class="tag t-d">合规品</span></td>
                 <td class="cell-ellipsis" title="人工确认合规品，可同步打标">人工确认合规品，可同步打标</td>
                 <td class="cell-meta"><div><b>提交</b> 王五</div><div><b>审核</b> 王五</div></td>
@@ -1375,11 +1392,11 @@
         </section>
 
         <section id="rescan-result" class="route">
-          <p class="hint" style="margin:0 0 12px">统一展示<strong>存量回扫任务</strong>与<strong>增量回扫任务</strong>（一个回扫队列批次 = 一条任务）。</p>
+          <p class="hint" style="margin:0 0 12px">统一展示<strong>人工创建回扫任务</strong>与<strong>增量回扫任务</strong>（一个回扫队列批次 = 一条任务）。</p>
           <div class="row">
             <input class="input" placeholder="任务编号" />
             <input class="input" placeholder="任务名称" />
-            <select class="sel"><option>回扫类型</option><option>存量回扫</option><option>增量 SKU 回扫</option><option>增量政策回扫</option><option>增量邮件回扫</option></select>
+            <select class="sel"><option>回扫类型</option><option>人工创建回扫</option><option>增量 SKU 回扫</option><option>增量政策回扫</option><option>增量邮件回扫</option></select>
             <select class="sel"><option>回扫状态</option><option>待回扫</option><option>回扫中</option><option>回扫完成</option></select>
             <select class="sel"><option>审核状态</option><option>待分配</option><option>审核中</option><option>审核完成</option></select>
             <input class="input" placeholder="生成时间起" />
@@ -1403,7 +1420,7 @@
               <tr>
                 <td>100001</td>
                 <td>儿童玩具-CPC 存量回扫</td>
-                <td>存量回扫</td>
+                <td>人工创建回扫</td>
                 <td>亚马逊：美国</td>
                 <td><span class="tag t-y">回扫完成</span></td>
                 <td><span class="tag t-w">待分配</span></td>
@@ -1415,7 +1432,7 @@
               <tr>
                 <td>100002</td>
                 <td>儿童玩具-CPC 指定SKU回扫</td>
-                <td>存量回扫</td>
+                <td>人工创建回扫</td>
                 <td>亚马逊：美国</td>
                 <td><span class="tag t-w">回扫中</span></td>
                 <td><span class="tag t-w">审核中</span></td>
@@ -1427,7 +1444,7 @@
               <tr>
                 <td>100003</td>
                 <td>电子类-FCC 存量回扫</td>
-                <td>存量回扫</td>
+                <td>人工创建回扫</td>
                 <td>亚马逊：美国、加拿大</td>
                 <td><span class="tag t-y">回扫完成</span></td>
                 <td><span class="tag t-y">审核完成</span></td>
@@ -1439,7 +1456,7 @@
               <tr>
                 <td>100004</td>
                 <td>婴儿用品-易燃性存量回扫</td>
-                <td>存量回扫</td>
+                <td>人工创建回扫</td>
                 <td>亚马逊：英国</td>
                 <td><span class="tag t-w">待回扫</span></td>
                 <td>—</td>
@@ -1499,7 +1516,7 @@
               <tr>
                 <td>100005</td>
                 <td>厨房用品-存量人工回扫</td>
-                <td>存量回扫</td>
+                <td>人工创建回扫</td>
                 <td>亚马逊：美国</td>
                 <td><span class="tag t-y">回扫完成</span></td>
                 <td><span class="tag t-y">审核完成</span></td>
@@ -1569,8 +1586,8 @@
 
           <div class="stat-tabs">
             <div class="stat-tab on">全部<em>(10)</em></div>
-            <div class="stat-tab">待审核<em>(3)</em></div>
-            <div class="stat-tab">非合规品<em>(5)</em></div>
+            <div class="stat-tab">待审核<em>(4)</em></div>
+            <div class="stat-tab">非合规品<em>(4)</em></div>
             <div class="stat-tab">合规品<em>(2)</em></div>
             <div class="stat-tab">已同步产品库<em>(1)</em></div>
             <div class="stat-tab">待同步产品库<em>(1)</em></div>
@@ -1598,7 +1615,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr class="rescan-data-row" data-sku="23110438" data-title-cn="不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭" data-sys-result="合规品" data-audit="待审核">
+              <tr class="rescan-data-row" data-sku="23110438" data-title-cn="不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭" data-sys-result="合规品" data-sys-desc="不锈钢+蜡烛熄灭工具，命中加州 Prop 65 重金属披露义务，建议人工确认后打标" data-audit="待审核">
                 <td><input type="checkbox" /></td>
                 <td>200008-01</td>
                 <td><div class="thumb"></div></td>
@@ -1610,12 +1627,12 @@
                 <td class="cell-prod-info"><div class="prod-name">不锈钢灭烛罩带手柄，适用于生日蜡烛安全熄灭</div><div class="prod-cat">Home & Kitchen › Home Decor › …</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">美国、加拿大</td>
-                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="系统判定为合规品候选，需人工确认后打标">系统判定为合规品候选，需人工确认后打标</div></td>
+                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="不锈钢+蜡烛熄灭工具，命中加州 Prop 65 重金属披露义务，建议人工确认后打标">不锈钢+蜡烛熄灭工具，命中加州 Prop 65 重金属披露义务，建议人工确认后打标</div></td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="—">—</td>
                 <td><span class="link rescan-audit-btn">审核</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
               </tr>
-              <tr class="rescan-data-row" data-sku="SKU-D3301" data-title-cn="儿童毛绒玩具套装 带音乐功能" data-sys-result="非合规品" data-audit="非合规品">
+              <tr class="rescan-data-row" data-sku="SKU-D3301" data-title-cn="儿童毛绒玩具套装 带音乐功能" data-sys-result="合规品" data-sys-desc="类目Toys+标题含儿童/毛绒，命中12岁以下玩具 CPC 路径（需 CPC 及第三方检测），建议人工确认后打标" data-audit="待审核">
                 <td><input type="checkbox" /></td>
                 <td>200008-02</td>
                 <td><div class="thumb"></div></td>
@@ -1627,12 +1644,12 @@
                 <td class="cell-prod-info"><div class="prod-name">儿童毛绒玩具套装 带音乐功能</div><div class="prod-cat">Toys & Games › Stuffed Animals</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">美国、加拿大</td>
-                <td class="cell-sys-result"><span class="tag t-y">非合规品</span><div class="sys-desc" title="系统判定为非合规品，无需处理">系统判定为非合规品，无需处理</div></td>
-                <td><span class="tag t-y">非合规品</span></td>
-                <td class="cell-ellipsis" title="系统判定非合规品，无需审核打标">系统判定非合规品，无需审核打标</td>
-                <td><span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
+                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="类目Toys+标题含儿童/毛绒，命中12岁以下玩具 CPC 路径（需 CPC 及第三方检测），建议人工确认后打标">类目Toys+标题含儿童/毛绒，命中12岁以下玩具 CPC 路径（需 CPC 及第三方检测），建议人工确认后打标</div></td>
+                <td><span class="tag t-w">待审核</span></td>
+                <td class="cell-ellipsis" title="—">—</td>
+                <td><span class="link rescan-audit-btn">审核</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
               </tr>
-              <tr class="rescan-data-row" data-sku="SKU-D3302" data-title-cn="不锈钢厨房收纳架 三层" data-sys-result="合规品" data-audit="待审核">
+              <tr class="rescan-data-row" data-sku="SKU-D3302" data-title-cn="不锈钢厨房收纳架 三层" data-sys-result="合规品" data-sys-desc="不锈钢厨房收纳，命中食品接触材料路径（FDA / LFGB），建议人工确认后打标" data-audit="待审核">
                 <td><input type="checkbox" /></td>
                 <td>200008-03</td>
                 <td><div class="thumb"></div></td>
@@ -1641,7 +1658,7 @@
                 <td class="cell-prod-info"><div class="prod-name">不锈钢厨房收纳架 三层</div><div class="prod-cat">Home & Kitchen › Storage</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">美国、加拿大</td>
-                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="系统判定为合规品候选，需人工确认后打标">系统判定为合规品候选，需人工确认后打标</div></td>
+                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="不锈钢厨房收纳，命中食品接触材料路径（FDA / LFGB），建议人工确认后打标">不锈钢厨房收纳，命中食品接触材料路径（FDA / LFGB），建议人工确认后打标</div></td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="—">—</td>
                 <td><span class="link rescan-audit-btn">审核</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1680,7 +1697,7 @@
                 <td class="cell-ellipsis" title="系统判定非合规品，无需同步打标">系统判定非合规品，无需同步打标</td>
                 <td><span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
               </tr>
-              <tr class="rescan-data-row" data-sku="SKU-E3310" data-title-cn="蓝牙音箱 便携防水" data-sys-result="合规品" data-audit="合规品">
+              <tr class="rescan-data-row" data-sku="SKU-E3310" data-title-cn="蓝牙音箱 便携防水" data-sys-result="合规品" data-sys-desc="含蓝牙射频模块，命中 FCC Part 15 / ISED 射频认证义务，建议人工确认后打标" data-audit="合规品">
                 <td><input type="checkbox" /></td>
                 <td>200008-06</td>
                 <td><div class="thumb"></div></td>
@@ -1689,7 +1706,7 @@
                 <td class="cell-prod-info"><div class="prod-name">蓝牙音箱 便携防水</div><div class="prod-cat">Electronics › Audio</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">美国、加拿大</td>
-                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="系统判定为合规品候选，需人工确认后打标">系统判定为合规品候选，需人工确认后打标</div></td>
+                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="含蓝牙射频模块，命中 FCC Part 15 / ISED 射频认证义务，建议人工确认后打标">含蓝牙射频模块，命中 FCC Part 15 / ISED 射频认证义务，建议人工确认后打标</div></td>
                 <td><span class="tag t-d">合规品</span></td>
                 <td class="cell-ellipsis" title="人工确认合规品，待同步打标">人工确认合规品，待同步打标</td>
                 <td><span class="link rescan-sync-btn">同步</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1711,7 +1728,7 @@
                 <td class="cell-ellipsis" title="系统判定非合规品，无需审核打标">系统判定非合规品，无需审核打标</td>
                 <td><span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
               </tr>
-              <tr class="rescan-data-row" data-sku="SKU-G6602" data-title-cn="硅胶烘焙模具套装" data-sys-result="合规品" data-audit="合规品" data-synced="1">
+              <tr class="rescan-data-row" data-sku="SKU-G6602" data-title-cn="硅胶烘焙模具套装" data-sys-result="合规品" data-sys-desc="食品接触硅胶烘焙器具，命中 FDA、LFGB 食品级认证义务，人工已确认" data-audit="合规品" data-synced="1">
                 <td><input type="checkbox" /></td>
                 <td>200008-08</td>
                 <td><div class="thumb"></div></td>
@@ -1720,7 +1737,7 @@
                 <td class="cell-prod-info"><div class="prod-name">硅胶烘焙模具套装</div><div class="prod-cat">Home › Bakeware</div></td>
                 <td class="cell-sites">美国、英国</td>
                 <td class="cell-sites">美国、加拿大</td>
-                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="系统判定为合规品候选，人工已确认">系统判定为合规品候选，人工已确认</div></td>
+                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="食品接触硅胶烘焙器具，命中 FDA、LFGB 食品级认证义务，人工已确认">食品接触硅胶烘焙器具，命中 FDA、LFGB 食品级认证义务，人工已确认</div></td>
                 <td><span class="tag t-d">合规品</span></td>
                 <td class="cell-ellipsis" title="已同步产品库打标">已同步产品库打标</td>
                 <td><span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -1742,7 +1759,7 @@
                 <td class="cell-ellipsis" title="系统判定非合规品，无需同步打标">系统判定非合规品，无需同步打标</td>
                 <td><span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
               </tr>
-              <tr class="rescan-data-row" data-sku="SKU-J8804" data-title-cn="无线充电器 三合一" data-sys-result="合规品" data-audit="待审核">
+              <tr class="rescan-data-row" data-sku="SKU-J8804" data-title-cn="无线充电器 三合一" data-sys-result="合规品" data-sys-desc="无线充电设备，命中 FCC 射频与电能传输认证义务，建议人工确认后打标" data-audit="待审核">
                 <td><input type="checkbox" /></td>
                 <td>200008-10</td>
                 <td><div class="thumb"></div></td>
@@ -1754,7 +1771,7 @@
                 <td class="cell-prod-info"><div class="prod-name">无线充电器 三合一</div><div class="prod-cat">Electronics › Chargers</div></td>
                 <td class="cell-sites">—</td>
                 <td class="cell-sites">美国、加拿大</td>
-                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="系统判定为合规品候选，需人工确认后打标">系统判定为合规品候选，需人工确认后打标</div></td>
+                <td class="cell-sys-result"><span class="tag t-d">合规品</span><div class="sys-desc" title="无线充电设备，命中 FCC 射频与电能传输认证义务，建议人工确认后打标">无线充电设备，命中 FCC 射频与电能传输认证义务，建议人工确认后打标</div></td>
                 <td><span class="tag t-w">待审核</span></td>
                 <td class="cell-ellipsis" title="—">—</td>
                 <td><span class="link rescan-audit-btn">审核</span> · <span class="link rescan-view-btn">查看</span> · <span class="link rescan-log-btn">日志</span></td>
@@ -2005,6 +2022,7 @@
     </div>
   </div>
   <div class="plat-hover-tip" id="policySiteHoverTip"></div>
+  <div class="policy-content-tip" id="policyContentHoverTip"></div>
   <div class="modal-mask" id="policyDetailModal" aria-hidden="true">
     <div class="modal-box lg" role="dialog" aria-labelledby="policyDetailTitle">
       <div class="modal-hd">
@@ -2645,8 +2663,7 @@
     fillComplianceCategorySelects();
 
     function statusTagHtml(status){
-      if (status === '已通过') return '<span class="tag t-y">已通过</span>';
-      if (status === '已生效') return '<span class="tag t-y">已生效</span>';
+      if (status === '已通过' || status === '已生效') return '<span class="tag t-y">已通过</span>';
       if (status === '已停用') return '<span class="tag t-d">已停用</span>';
       if (status === '待审核') return '<span class="tag t-w">待审核</span>';
       if (status === '学习中') return '<span class="tag t-w">学习中</span>';
@@ -2663,7 +2680,8 @@
       });
       if (bodies.some(b => b.status === '待审核')) return '待审核';
       if (bodies.every(b => b.status === '已驳回')) return '已驳回';
-      if (bodies.every(b => b.status === '已通过' && b.learned)) return '已生效';
+      // 内容已通过且模型学习完成 → 与筛选项「已通过」一致（不再用「已生效」）
+      if (bodies.every(b => b.status === '已通过' && b.learned)) return '已通过';
       if (bodies.every(b => b.status === '已通过')) return '学习中';
       if (bodies.some(b => b.status === '已通过')) return '部分通过';
       return '待审核';
@@ -2676,7 +2694,7 @@
           <span class="link-btn policy-view-btn" data-category="${cat}">详情</span>
         </div>`;
       }
-      if (g.status === '已生效') {
+      if (g.status === '已通过' || g.status === '已生效') {
         return `<div class="policy-ops">
           <span class="link-btn danger policy-disable-btn" data-category="${cat}">停用</span>
           <span class="link-btn policy-view-btn" data-category="${cat}">详情</span>
@@ -2726,6 +2744,31 @@
       });
       return `<div class="chip-row">${parts.join('')}</div>`;
     }
+    function categoryUniqueContents(rows){
+      const seen = new Set();
+      const list = [];
+      (rows || []).forEach(r => {
+        const text = (getPolicyContent(r.content).content || '').trim();
+        if (!text || seen.has(text)) return;
+        seen.add(text);
+        list.push(text);
+      });
+      return list;
+    }
+    function policyContentCellHtml(g){
+      const cat = g.category.replace(/"/g, '&quot;');
+      const contents = categoryUniqueContents(g.rows);
+      if (!contents.length) {
+        return '<span style="color:var(--sub)">—</span>';
+      }
+      const preview = contents[0].replace(/</g, '&lt;');
+      const more = contents.length > 1
+        ? `<div class="policy-content-more">等 ${contents.length} 条不同内容 · 悬停查看</div>`
+        : '';
+      return `<div class="policy-content-hover policy-view-btn" data-category="${cat}" style="cursor:pointer">
+        <div class="policy-content-preview">${preview}</div>${more}
+      </div>`;
+    }
     function renderPolicyTable(){
       const tbody = document.getElementById('policyTableBody');
       if (!tbody) return;
@@ -2742,7 +2785,7 @@
             <td><div class="chip-row">${certs}</div></td>
             <td>${statusTagHtml(g.status)}</td>
             <td>${policyOpsHtml(g)}</td>
-            <td><span class="policy-content-link policy-view-btn" data-category="${cat}">详情 →</span></td>
+            <td>${policyContentCellHtml(g)}</td>
           </tr>`;
         }).join('');
       }
@@ -4058,7 +4101,7 @@
         category: row.querySelector('.prod-cat')?.textContent?.trim() || '—',
         riskSites: markedRaw,
         sysResult,
-        sysDesc: sysResult === '合规品' ? '系统判定为合规品候选，需人工确认后打标' : (sysResult === '非合规品' ? '系统判定为非合规品，无需处理' : '—'),
+        sysDesc: row.dataset.sysDesc || (row.querySelector('.sys-desc')?.getAttribute('title') || row.querySelector('.sys-desc')?.textContent?.trim()) || (sysResult === '非合规品' ? '系统判定为非合规品，无需处理' : '—'),
         audit: text(9),
         auditRemark: text(10)
       });
@@ -5330,8 +5373,41 @@
     function hidePolicySiteHover(){
       document.getElementById('policySiteHoverTip')?.classList.remove('show');
     }
+    function showPolicyContentHover(el){
+      const tip = document.getElementById('policyContentHoverTip');
+      const category = el.getAttribute('data-category');
+      if (!tip || !category) return;
+      const rows = POLICY_STORE.filter(p => p.category === category);
+      const contents = categoryUniqueContents(rows);
+      if (!contents.length) {
+        tip.classList.remove('show');
+        return;
+      }
+      tip.innerHTML = contents.map((c, i) => {
+        const hd = contents.length > 1 ? `<div class="tip-hd">内容 ${i + 1}</div>` : '';
+        return `<div class="tip-block">${hd}${c.replace(/</g, '&lt;')}</div>`;
+      }).join('');
+      tip.classList.add('show');
+      const rect = el.getBoundingClientRect();
+      const tipW = Math.min(440, tip.offsetWidth || 320);
+      let left = rect.left;
+      let top = rect.bottom + 6;
+      if (left + tipW > window.innerWidth - 12) left = Math.max(12, window.innerWidth - tipW - 12);
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+      requestAnimationFrame(() => {
+        const h = tip.offsetHeight || 120;
+        if (top + h > window.innerHeight - 8) {
+          tip.style.top = Math.max(8, rect.top - h - 6) + 'px';
+        }
+      });
+    }
+    function hidePolicyContentHover(){
+      document.getElementById('policyContentHoverTip')?.classList.remove('show');
+    }
     function openPolicySitesModal(category){
       hidePolicySiteHover();
+      hidePolicyContentHover();
       document.getElementById('policySitesTitle').textContent = `${category} · 站点配置`;
       document.getElementById('policySitesList').innerHTML = policySitesListHtml(category);
       document.getElementById('policySitesModal')?.classList.add('show');
@@ -5354,6 +5430,8 @@
       }
       const btn = e.target.closest('.policy-view-btn, .policy-audit-btn, .policy-disable-btn');
       if (!btn) return;
+      hidePolicySiteHover();
+      hidePolicyContentHover();
       const category = btn.getAttribute('data-category');
       if (!category) return;
       if (btn.classList.contains('policy-view-btn')) openPolicyDetailModal(category, 'view');
@@ -5362,11 +5440,24 @@
     });
     document.getElementById('policyTableBody')?.addEventListener('mouseover', e => {
       const chip = e.target.closest('.policy-sites-pop');
-      if (chip) showPolicySiteHover(chip);
-      else hidePolicySiteHover();
+      const contentEl = e.target.closest('.policy-content-hover');
+      if (chip) {
+        hidePolicyContentHover();
+        showPolicySiteHover(chip);
+      } else if (contentEl) {
+        hidePolicySiteHover();
+        showPolicyContentHover(contentEl);
+      } else {
+        hidePolicySiteHover();
+        hidePolicyContentHover();
+      }
     });
-    document.getElementById('policyTableBody')?.addEventListener('mouseleave', hidePolicySiteHover);
+    document.getElementById('policyTableBody')?.addEventListener('mouseleave', () => {
+      hidePolicySiteHover();
+      hidePolicyContentHover();
+    });
     document.getElementById('policySiteHoverTip')?.addEventListener('mouseleave', hidePolicySiteHover);
+    document.getElementById('policyContentHoverTip')?.addEventListener('mouseleave', hidePolicyContentHover);
   </script>
 </body>
 </html>

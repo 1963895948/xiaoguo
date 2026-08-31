@@ -129,6 +129,8 @@
     .panel-box{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}
     .panel-hd{padding:10px 14px;background:#f6f8fb;border-bottom:1px solid var(--line);font-weight:600;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
     .action-hd-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;flex:1}
+    .action-hd-right{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
+    .export-note{font-weight:400;font-size:11px;color:var(--muted);line-height:1.4;max-width:280px;text-align:right}
     .action-preview-ctl{display:inline-flex;align-items:center;gap:6px;font-weight:400;color:var(--sub);font-size:12px}
     .action-preview-ctl select.ctrl{height:28px;min-width:68px;padding:0 8px;font-weight:600;color:var(--text)}
     /* Quick BI 风格图表区 */
@@ -614,7 +616,10 @@
                   <span id="actionPreviewTail">/ 0 SKU</span>
                 </span>
               </div>
-              <button type="button" class="btn" id="btnActionExport" style="height:28px" title="按顶部筛选条件导出三级类目汇总，不含 SKU 明细">导出</button>
+              <div class="action-hd-right">
+                <span class="export-note">按顶部筛选导出；仅三级类目汇总，不含 SKU 明细</span>
+                <button type="button" class="btn" id="btnActionExport" style="height:28px" title="按顶部筛选条件导出三级类目汇总，不含 SKU 明细">导出</button>
+              </div>
             </div>
             <div class="arow" style="background:#fafbfd;font-weight:600;color:var(--sub);cursor:default" id="actionHead">
               <div>SKU</div><div>标题 / 类目</div><div class="m">Listing数量</div><div class="m">销量金额</div><div class="m">出单量</div><div class="m">合规邮件</div><div class="m">CPC认证</div>
@@ -3997,7 +4002,7 @@
       return;
     }
     const moreHint = totalN > previewRows.length
-      ? `<div class="empty" style="padding:10px 12px">当前预览 Top ${showN}${availableN < previewLimit && previewLimit > availableN ? `（样本仅 ${availableN} 条）` : ''}；完整三级类目请点「导出」</div>`
+      ? `<div class="empty" style="padding:10px 12px">当前预览 Top ${showN}${availableN < previewLimit && previewLimit > availableN ? `（样本仅 ${availableN} 条）` : ''}；完整三级类目请点「导出」（按顶部筛选，仅类目维度）</div>`
       : '';
     if (byCat3) {
       document.getElementById('actionList').innerHTML = previewRows.map(r => `
