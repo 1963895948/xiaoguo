@@ -199,7 +199,8 @@
     .atab .n{margin-left:4px;opacity:.85}
     .action-list{max-height:420px;overflow:auto}
     .arow{display:grid;grid-template-columns:88px 1fr 72px 90px 70px 70px 64px;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
-    .arow.arow-cat3{grid-template-columns:minmax(120px,1.4fr) 72px 72px 90px 70px 70px 64px}
+    .arow.arow-cat3{grid-template-columns:minmax(100px,1.15fr) repeat(9,minmax(56px,1fr));min-width:980px}
+    #actionHead.arow-cat3{min-width:980px}
     .arow:hover{background:#fafbfd}
     .arow .sku{font-family:Consolas,"Courier New",monospace;font-size:11px;font-weight:700;color:var(--pri)}
     .arow .meta{font-size:12px;color:var(--text)}
@@ -2313,6 +2314,46 @@
     toast(`已导出 ${rows.length} 条（不展示明细）`);
   }
 
+  function cat3ActionMetrics(r, ov, actionKey) {
+    ov = ov || currentSlice().overview || {};
+    const hasOrder = actionKey === 'certify' || actionKey === 'keep' || (Number(r.orders) || 0) > 0;
+    const mailListing = Number(r.mail_cnt) || 0;
+    const listingCnt = Number(r.listing_cnt) || 0;
+    const skuCnt = Number(r.sku_cnt) || 0;
+    const mailSkuRatio = (Number(ov.mail_listing) || 0) > 0
+      ? (Number(ov.mail_sku) || 0) / Number(ov.mail_listing) : 0;
+    const orderListingRatio = (Number(ov.listing) || 0) > 0
+      ? (Number(ov.order_listing) || 0) / Number(ov.listing) : 0;
+    const orderSkuRatio = (Number(ov.sku) || 0) > 0
+      ? (Number(ov.order_sku) || 0) / Number(ov.sku) : 0;
+    const mailSku = r.mail_sku != null ? Number(r.mail_sku) || 0 : Math.round(mailListing * mailSkuRatio);
+    const mailList = r.mail_listing != null ? Number(r.mail_listing) || 0 : mailListing;
+    const orderSku = r.order_sku != null ? Number(r.order_sku) || 0
+      : (hasOrder ? Math.max(1, Math.round(skuCnt * orderSkuRatio)) : 0);
+    const orderListing = r.order_listing != null ? Number(r.order_listing) || 0
+      : (hasOrder ? Math.max(1, Math.round(listingCnt * orderListingRatio)) : 0);
+    let cpcSku = r.cpc_sku != null ? Number(r.cpc_sku) || 0 : null;
+    if (cpcSku == null) {
+      if (!r.cpc && !(Number(r.cpc_listing) || 0)) cpcSku = 0;
+      else if (listingCnt > 0 && (Number(r.cpc_listing) || 0) > 0) {
+        cpcSku = Math.max(1, Math.round((Number(r.cpc_listing) || 0) * (skuCnt / listingCnt)));
+      } else if (r.cpc) {
+        cpcSku = Math.max(1, Math.round(skuCnt * ((Number(ov.cpc_sku) || 0) / Math.max(Number(ov.sku) || 1, 1))));
+      } else cpcSku = 0;
+    }
+    return {
+      sku_cnt: skuCnt,
+      listing_cnt: listingCnt,
+      order_sku: orderSku,
+      order_listing: orderListing,
+      amount: r.amount,
+      orders: r.orders,
+      mail_sku: mailSku,
+      mail_listing: mailList,
+      cpc_sku: cpcSku,
+    };
+  }
+
   function exportActionBatch() {
     readFilters();
     if (!platformReady()) {
@@ -2327,19 +2368,24 @@
       return;
     }
     const meta = ACTION_META[state.action];
+    const ov = slice.overview || {};
     const cols = [
       { key: 'cat3', name: '三级类目' },
-      { key: 'sku_cnt', name: 'SKU数量' },
-      { key: 'listing_cnt', name: 'Listing数量' },
+      { key: 'sku_cnt', name: '刊登SKU数量' },
+      { key: 'listing_cnt', name: '刊登Listing数量' },
+      { key: 'order_sku', name: '有销量sku数量' },
+      { key: 'order_listing', name: '有销量listing数量' },
       { key: 'amount', name: '销售金额' },
       { key: 'orders', name: '出单量' },
-      { key: 'mail_cnt', name: '合规邮件' },
-      { key: 'cpc', name: 'CPC认证' },
+      { key: 'mail_sku', name: '收到合规邮件sku数量' },
+      { key: 'mail_listing', name: '收到合规邮件listing数量' },
+      { key: 'cpc_sku', name: 'sku有cpc认证数量' },
     ];
     const valueFn = (r, c) => {
-      if (c.key === 'cpc') return r.cpc ? '是' : '否';
-      if (c.key === 'amount') return r.amount == null ? '' : r.amount;
-      return r[c.key];
+      if (c.key === 'cat3') return r.cat3;
+      const m = cat3ActionMetrics(r, ov, state.action);
+      if (c.key === 'amount') return m.amount == null ? '' : m.amount;
+      return m[c.key];
     };
     downloadCsv(`合规看板_${meta.title || state.action}_三级类目.csv`, cols, rows, valueFn);
     toast(`已导出 ${rows.length} 个三级类目（按顶部筛选）`);
@@ -2664,7 +2710,29 @@
     cert: '#b45309',
     obs: '#64748b',
     tight: '#be123c',
+    unassigned: '#cbd5e1',
   };
+
+  function buildComplianceCrossSlices(cross, totalN) {
+    const n = Number(totalN) || 0;
+    const slices = COMPLIANCE_QUAD_UI.map(ci => {
+      const cn = Number(cross[ci.key]) || 0;
+      const cshare = n ? Math.round(10000 * cn / n) / 100 : 0;
+      return { ...ci, cn, cshare };
+    });
+    const assigned = slices.reduce((s, r) => s + r.cn, 0);
+    let unassignedN = Number(cross.unassigned);
+    if (!Number.isFinite(unassignedN)) unassignedN = Math.max(0, n - assigned);
+    slices.push({
+      key: 'unassigned',
+      cls: 'unassigned',
+      axis: '未分配类目',
+      tip: '尚未在原始划分表中配置业绩×邮件象限的类目（按当前维度计数）。',
+      cn: unassignedN,
+      cshare: n ? Math.round(10000 * unassignedN / n) / 100 : 0,
+    });
+    return slices;
+  }
   let quadMainChart = null;
   let quadDetailChart = null;
   let quadViewCache = null;
@@ -2798,11 +2866,7 @@
       const n = Number(q[item.key]) || 0;
       const share = qTotal ? Math.round(10000 * n / qTotal) / 100 : 0;
       const cross = x[item.key] || {};
-      const slices = COMPLIANCE_QUAD_UI.map(ci => {
-        const cn = Number(cross[ci.key]) || 0;
-        const cshare = n ? Math.round(10000 * cn / n) / 100 : 0;
-        return { ...ci, cn, cshare };
-      });
+      const slices = buildComplianceCrossSlices(cross, n);
       return {
         key: item.key,
         cls: item.cls,
@@ -3917,12 +3981,17 @@
   }
 
   // 单列排序
-  const ACTION_SORT_KEYS = ['sku', 'listing', 'amount', 'orders', 'mail'];
+  const ACTION_SORT_KEYS = ['sku', 'listing', 'order_sku', 'order_listing', 'amount', 'orders', 'mail_sku', 'mail_listing', 'cpc_sku', 'mail'];
 
   function actionSortValue(r, key) {
+    if (state.actionDim === 'cat3') {
+      const m = cat3ActionMetrics(r, currentSlice().overview, state.action);
+      if (key === 'mail') return Number(m.mail_listing) || 0;
+      if (key in m) return Number(m[key]) || 0;
+    }
     if (key === 'amount') return Number(r.amount) || 0;
     if (key === 'orders') return Number(r.orders) || 0;
-    if (key === 'mail') return Number(r.mail_cnt) || 0;
+    if (key === 'mail' || key === 'mail_listing') return Number(r.mail_cnt) || 0;
     if (key === 'listing') return Number(r.listing_cnt) || 0;
     if (key === 'sku') return Number(r.sku_cnt != null ? r.sku_cnt : 0) || 0;
     return 0;
@@ -3955,7 +4024,16 @@
   function actionHeadHtml(byCat3, byListing) {
     const metrics = `${actionMetricHead('listing', 'Listing数量', '该 SKU / 类目下的 Listing 条数。点击表头按本列排序。')}${actionMetricHead('amount', '销量金额', '刊登后累计销售额（金额）。点击表头按本列排序。')}${actionMetricHead('orders', '出单量', '刊登后产生的订单件数。点击表头按本列排序。')}${actionMetricHead('mail', '合规邮件', '是否收到过合规相关邮件，或邮件次数（按数据字段）。点击表头按本列排序。')}<div class="m">${withHelp('CPC认证', '是否已完成 CPC 合规认证。')}</div>`;
     if (byCat3) {
-      return `<div>${withHelp('三级类目', '商品类目第 3 级名称。')}</div>${actionMetricHead('sku', 'SKU数量', '该类目下的 SKU 数。点击表头按本列排序。')}${metrics}`;
+      return `<div>${withHelp('三级类目', '商品类目第 3 级名称。')}</div>`
+        + `${actionMetricHead('sku', '刊登SKU数量', '该类目下已刊登的 SKU 数。点击表头按本列排序。')}`
+        + `${actionMetricHead('listing', '刊登Listing数量', '该类目下已刊登的 Listing 数。点击表头按本列排序。')}`
+        + `${actionMetricHead('order_sku', '有销量sku数量', '该类目下刊登后有出单的 SKU 数。点击表头按本列排序。')}`
+        + `${actionMetricHead('order_listing', '有销量listing数量', '该类目下刊登后有出单的 Listing 数。点击表头按本列排序。')}`
+        + `${actionMetricHead('amount', '销售金额', '该类目下刊登后累计销售额。点击表头按本列排序。')}`
+        + `${actionMetricHead('orders', '出单量', '该类目下刊登后产生的订单件数。点击表头按本列排序。')}`
+        + `${actionMetricHead('mail_sku', '收到合规邮件sku数量', '该类目下收到合规邮件的 SKU 数。点击表头按本列排序。')}`
+        + `${actionMetricHead('mail_listing', '收到合规邮件listing数量', '该类目下收到合规邮件的 Listing 数。点击表头按本列排序。')}`
+        + `${actionMetricHead('cpc_sku', 'sku有cpc认证数量', '该类目下已完成 CPC 认证的 SKU 数。点击表头按本列排序。')}`;
     }
     if (byListing) return `<div>${withHelp('msku', '店铺侧商品编码 / Listing 标识。')}</div><div>标题 / 类目</div>${metrics}`;
     return `<div>${withHelp('SKU', '公司内部商品编码。')}</div><div>标题 / 类目</div>${metrics}`;
@@ -4005,16 +4083,23 @@
       ? `<div class="empty" style="padding:10px 12px">当前预览 Top ${showN}${availableN < previewLimit && previewLimit > availableN ? `（样本仅 ${availableN} 条）` : ''}；完整三级类目请点「导出」（按顶部筛选，仅类目维度）</div>`
       : '';
     if (byCat3) {
-      document.getElementById('actionList').innerHTML = previewRows.map(r => `
+      const ov = currentSlice().overview || {};
+      document.getElementById('actionList').innerHTML = previewRows.map(r => {
+        const m = cat3ActionMetrics(r, ov, state.action);
+        return `
         <div class="arow arow-cat3" data-cat3="${encodeURIComponent(r.cat3)}">
           <div class="sku" title="${escHtml(r.cat3 || '')}">${escHtml((r.cat3 || '-').slice(0, 18))}${(r.cat3 || '').length > 18 ? '…' : ''}</div>
-          <div class="m">${fmt(r.sku_cnt)}</div>
-          <div class="m">${fmt(r.listing_cnt)}</div>
-          <div class="m">${money(r.amount)}</div>
-          <div class="m">${fmt(r.orders)}</div>
-          <div class="m ${r.mail_cnt ? 'num-warn' : ''}">${fmt(r.mail_cnt)}</div>
-          <div class="m">${r.cpc ? '<span class="tag ok">是</span>' : '<span class="tag muted">否</span>'}</div>
-        </div>`).join('') + moreHint;
+          <div class="m">${fmt(m.sku_cnt)}</div>
+          <div class="m">${fmt(m.listing_cnt)}</div>
+          <div class="m">${fmt(m.order_sku)}</div>
+          <div class="m">${fmt(m.order_listing)}</div>
+          <div class="m">${money(m.amount)}</div>
+          <div class="m">${fmt(m.orders)}</div>
+          <div class="m ${m.mail_sku ? 'num-warn' : ''}">${fmt(m.mail_sku)}</div>
+          <div class="m ${m.mail_listing ? 'num-warn' : ''}">${fmt(m.mail_listing)}</div>
+          <div class="m">${fmt(m.cpc_sku)}</div>
+        </div>`;
+      }).join('') + moreHint;
       return;
     }
     if (byListing) {
@@ -4259,7 +4344,18 @@
     const key = cell.dataset.sort;
     toggleActionSort(key);
     renderActions();
-    const nameMap = { sku: 'SKU数量', listing: 'Listing数量', amount: '销量金额', orders: '出单量', mail: '合规邮件' };
+    const nameMap = {
+      sku: state.actionDim === 'cat3' ? '刊登SKU数量' : 'SKU数量',
+      listing: state.actionDim === 'cat3' ? '刊登Listing数量' : 'Listing数量',
+      order_sku: '有销量sku数量',
+      order_listing: '有销量listing数量',
+      amount: state.actionDim === 'cat3' ? '销售金额' : '销量金额',
+      orders: '出单量',
+      mail_sku: '收到合规邮件sku数量',
+      mail_listing: '收到合规邮件listing数量',
+      cpc_sku: 'sku有cpc认证数量',
+      mail: '合规邮件',
+    };
     toast(`按「${nameMap[key] || key}」${state.actionSortDir === 'asc' ? '升序' : '降序'}`);
   });
   document.getElementById('fActionPreviewN').onchange = () => {
