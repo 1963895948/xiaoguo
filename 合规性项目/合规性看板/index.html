@@ -339,7 +339,7 @@
   <div class="body">
     <aside class="sidenav">
       <div class="nav-group">合规性项目</div>
-      <a class="nav-item active" href="./index.html">合规sku刊登数据</a>
+      <a class="nav-item active" href="./合规sku刊登数据.html">合规sku刊登数据</a>
       <a class="nav-item" href="../三级类目配置/index.html">三级类目配置</a>
     </aside>
 
@@ -453,7 +453,7 @@
                 <div class="chart-title">
                   <span id="listingSalesChartTitle">日度 · 刊登与销量</span>
                   <span class="demo-badge" id="listingSalesDemoBadge" style="display:none" title="当前样本跨度不足，以下为编造数据，仅供布局展示">编造·仅展示</span>
-                  <span class="help" tabindex="0"><span class="help-pop" id="listingSalesHelpPop">看刊登量与出单、销量的关系。<br>· 刊登 Listing/SKU：当段新刊登数<br>· 有销量 Listing/SKU：当段有出单的 Listing/SKU<br>· 销售量：当段销量（左轴）<br>· 销售额：当段金额（右轴柱）</span>?</span>
+                  <span class="help" tabindex="0"><span class="help-pop" id="listingSalesHelpPop">看刊登量与出单、订单的关系。<br>· 刊登 Listing/SKU：该时间段内新刊登数<br>· 有销量 Listing/SKU：该批刊登中累计有出单的数量<br>· 订单量：该时间段内新刊登 Listing/SKU，从刊登日起累计至查看时点的订单量（左轴）<br>· 销售额：该时间段内新刊登 Listing/SKU，从刊登日起累计至查看时点的销售额（右轴柱）</span>?</span>
                 </div>
                 <div class="seg" id="listingSalesGrainSeg" style="margin-left:8px">
                   <button type="button" class="on" data-sales-grain="day">日</button>
@@ -474,7 +474,7 @@
             </div>
             <div class="chart-box">
                 <div class="chart-hd">
-                  <div class="chart-title"><span id="siteChartTitle">分站点对比</span><span class="help" tabindex="0"><span class="help-pop" id="siteHelpPop">按站点看刊登 Listing/SKU、邮件 Listing/SKU，以及销售量（左轴）与销售额（右轴柱）。站点暂无独立邮件SKU时按总览比例估算。默认十大站，点击柱可联动顶部站点筛选。</span>?</span></div>
+                  <div class="chart-title"><span id="siteChartTitle">分站点对比</span><span class="help" tabindex="0"><span class="help-pop" id="siteHelpPop">按站点看刊登 Listing/SKU、邮件 Listing/SKU；订单量、销售额为对应刊登从刊登日起累计至查看时点（左轴/右轴柱）。站点暂无独立邮件SKU时按总览比例估算。默认十大站，点击柱可联动顶部站点筛选。</span>?</span></div>
                   <div class="chart-sub" id="siteChartHint"></div>
                   <span class="spacer"></span>
                   <div class="chart-tools">
@@ -484,7 +484,7 @@
                         <option value="mail_listing">邮件Listing</option>
                         <option value="sku">SKU数量</option>
                         <option value="mail_sku">邮件SKU</option>
-                        <option value="orders_sum">销售量</option>
+                        <option value="orders_sum">订单量</option>
                         <option value="amount_sum">销售额</option>
                       </select>
                     </label>
@@ -501,7 +501,7 @@
             </div>
             <div class="chart-box">
                 <div class="chart-hd">
-                  <div class="chart-title"><span id="cat1ChartTitle">分一级类目对比</span><span class="help" tabindex="0"><span class="help-pop" id="cat1HelpPop">按一级类目看刊登 Listing/SKU、邮件 Listing/SKU，以及销售量（左轴）与销售额（右轴柱）。类目暂无独立邮件SKU时按总览比例估算。</span>?</span></div>
+                  <div class="chart-title"><span id="cat1ChartTitle">分一级类目对比</span><span class="help" tabindex="0"><span class="help-pop" id="cat1HelpPop">按一级类目看刊登 Listing/SKU、邮件 Listing/SKU；订单量、销售额为对应刊登从刊登日起累计至查看时点（左轴/右轴柱）。类目暂无独立邮件SKU时按总览比例估算。</span>?</span></div>
                   <div class="chart-sub" id="cat1ChartHint"></div>
                   <span class="spacer"></span>
                   <div class="chart-tools">
@@ -511,7 +511,7 @@
                         <option value="mail_listing">邮件Listing</option>
                         <option value="sku">SKU数量</option>
                         <option value="mail_sku">邮件SKU</option>
-                        <option value="orders_sum">销售量</option>
+                        <option value="orders_sum">订单量</option>
                         <option value="amount_sum">销售额</option>
                       </select>
                     </label>
@@ -530,7 +530,7 @@
 
           <div class="bi-sec-hd" style="margin-top:18px">
             <div class="bi-title">已做cpc认证数据
-              <span class="help" tabindex="0"><span class="help-pop">只看「已做 CPC 认证」的 Listing/SKU，统计方式与上方「刊登与邮件 / 销量」一致：刊登量、收到邮件、销售量与销售额。认证量远小于大盘，故单独成图。</span>?</span>
+              <span class="help" tabindex="0"><span class="help-pop">只看「已做 CPC 认证」的 Listing/SKU，统计方式与上方「刊登与邮件 / 销量」一致：刊登量、收到邮件、订单量与销售额。认证量远小于大盘，故单独成图。</span>?</span>
             </div>
             <div class="bi-desc">口径：CPC=是。Listing/SKU/有销量为汇总字段；邮件与销售额在正式环境按 CPC 子集汇总，本原型按站点「CPC÷刊登」占比估算，仅供示意。</div>
           </div>
@@ -540,7 +540,7 @@
                 <div class="chart-title">
                   <span id="cpcTrendChartTitle">日度 · CPC刊登与销量</span>
                   <span class="demo-badge" id="cpcTrendDemoBadge" style="display:none" title="当前样本跨度不足，以下为编造数据，仅供布局展示">编造·仅展示</span>
-                  <span class="help" tabindex="0"><span class="help-pop" id="cpcTrendHelpPop">已认证子集：刊登 Listing/SKU、邮件、销售量（左轴）与销售额（右轴柱）。</span>?</span>
+                  <span class="help" tabindex="0"><span class="help-pop" id="cpcTrendHelpPop">已认证子集：刊登 Listing/SKU、邮件；订单量、销售额为当段新刊登且已认证的 Listing/SKU，从刊登日起累计至查看时点（左轴/右轴柱）。</span>?</span>
                 </div>
                 <div class="seg" id="cpcTrendGrainSeg" style="margin-left:8px">
                   <button type="button" class="on" data-cpc-trend-grain="day">日</button>
@@ -571,7 +571,7 @@
                       <option value="cpc_mail_listing">邮件Listing</option>
                       <option value="cpc_sku">CPC SKU</option>
                       <option value="cpc_mail_sku">邮件SKU</option>
-                      <option value="cpc_orders_sum">销售量</option>
+                      <option value="cpc_orders_sum">订单量</option>
                       <option value="cpc_amount_sum">销售额</option>
                     </select>
                   </label>
@@ -1531,7 +1531,7 @@
     mail_listing: '邮件Listing',
     sku: 'SKU数量',
     mail_sku: '邮件SKU',
-    orders_sum: '销售量',
+    orders_sum: '订单量',
     amount_sum: '销售额',
   };
   const CPC_COMPARE_SORT_KEYS = ['cpc_listing', 'cpc_mail_listing', 'cpc_sku', 'cpc_mail_sku', 'cpc_orders_sum', 'cpc_amount_sum'];
@@ -1540,7 +1540,7 @@
     cpc_mail_listing: '邮件Listing',
     cpc_sku: 'CPC SKU',
     cpc_mail_sku: '邮件SKU',
-    cpc_orders_sum: '销售量',
+    cpc_orders_sum: '订单量',
     cpc_amount_sum: '销售额',
   };
 
@@ -1915,7 +1915,7 @@
           { key: 'cpc_sku', name: 'CPC SKU' },
           { key: 'cpc_mail_listing', name: '邮件Listing' },
           { key: 'cpc_mail_sku', name: '邮件SKU' },
-          { key: 'cpc_orders_sum', name: '销售量' },
+          { key: 'cpc_orders_sum', name: '订单量' },
           { key: 'cpc_amount_sum', name: '销售额' },
         ],
       };
@@ -1941,7 +1941,7 @@
           { key: 'cpc_sku', name: 'CPC SKU' },
           { key: 'cpc_mail_listing', name: '邮件Listing' },
           { key: 'cpc_mail_sku', name: '邮件SKU' },
-          { key: 'cpc_orders_sum', name: '销售量' },
+          { key: 'cpc_orders_sum', name: '订单量' },
           { key: 'cpc_amount_sum', name: '销售额' },
           { key: 'note', name: '说明' },
         ],
@@ -1967,7 +1967,7 @@
           { key: 'mail_listing', name: '邮件Listing' },
           { key: 'sku', name: 'SKU数量' },
           { key: 'mail_sku', name: '邮件SKU' },
-          { key: 'orders_sum', name: '销售量' },
+          { key: 'orders_sum', name: '订单量' },
           { key: 'amount_sum', name: '销售额' },
         ],
       };
@@ -1992,7 +1992,7 @@
           { key: 'mail_listing', name: '邮件Listing' },
           { key: 'sku', name: 'SKU数量' },
           { key: 'mail_sku', name: '邮件SKU' },
-          { key: 'orders_sum', name: '销售量' },
+          { key: 'orders_sum', name: '订单量' },
           { key: 'amount_sum', name: '销售额' },
         ],
       };
@@ -2018,7 +2018,7 @@
           { key: 'sku', name: '刊登SKU' },
           { key: 'order_listing', name: '有销量Listing' },
           { key: 'order_sku', name: '有销量SKU' },
-          { key: 'orders_sum', name: '销售量' },
+          { key: 'orders_sum', name: '订单量' },
           { key: 'amount_sum', name: '销售额' },
           ...(isDemo ? [{ key: 'note', name: '说明' }] : []),
         ],
@@ -3361,7 +3361,7 @@
       { type: 'bar', label: '有销量Listing', data: rows.map(r => r.order_listing || 0), backgroundColor: '#7B61FF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '刊登SKU', data: rows.map(r => r.sku || 0), backgroundColor: '#3D7EFF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '有销量SKU', data: rows.map(r => r.order_sku || 0), backgroundColor: '#E85D75', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
-      { type: 'bar', label: '销售量', data: rows.map(r => r.orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
+      { type: 'bar', label: '订单量', data: rows.map(r => r.orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '销售额', data: rows.map(r => r.amount_sum || 0), backgroundColor: '#16A34A', borderRadius: 2, maxBarThickness: t, yAxisID: 'y1', order: 2 },
     ];
   }
@@ -3502,7 +3502,7 @@
       { type: 'bar', label: '邮件Listing', data: rows.map(r => r.cpc_mail_listing || 0), backgroundColor: '#7B61FF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: 'CPC SKU', data: rows.map(r => r.cpc_sku || 0), backgroundColor: '#3D7EFF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '邮件SKU', data: rows.map(r => r.cpc_mail_sku || 0), backgroundColor: '#E85D75', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
-      { type: 'bar', label: '销售量', data: rows.map(r => r.cpc_orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
+      { type: 'bar', label: '订单量', data: rows.map(r => r.cpc_orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '销售额', data: rows.map(r => r.cpc_amount_sum || 0), backgroundColor: '#16A34A', borderRadius: 2, maxBarThickness: t, yAxisID: 'y1', order: 2 },
     ];
   }
@@ -3598,7 +3598,7 @@
       { type: 'bar', label: '邮件Listing', data: rows.map(r => r.mail_listing || 0), backgroundColor: '#7B61FF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: 'SKU数量', data: rows.map(r => r.sku || 0), backgroundColor: '#3D7EFF', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '邮件SKU', data: rows.map(r => r.mail_sku || 0), backgroundColor: '#E85D75', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
-      { type: 'bar', label: '销售量', data: rows.map(r => r.orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
+      { type: 'bar', label: '订单量', data: rows.map(r => r.orders_sum || 0), backgroundColor: '#F5A623', borderRadius: 2, maxBarThickness: t, yAxisID: 'y', order: 2 },
       { type: 'bar', label: '销售额', data: rows.map(r => r.amount_sum || 0), backgroundColor: '#16A34A', borderRadius: 2, maxBarThickness: t, yAxisID: 'y1', order: 2 },
     ];
   }
@@ -3654,7 +3654,7 @@
     if (salesHelp) {
       const unit = grain === 'day' ? '日' : (grain === 'week' ? '周' : '月');
       const demo = (grain === 'week' || grain === 'month') ? '【编造·仅展示】' : '';
-      salesHelp.innerHTML = `${demo}看刊登与出单、销量的关系。<br>· 刊登 Listing/SKU：当${unit}新刊登数<br>· 有销量 Listing/SKU：当${unit}有出单的 Listing/SKU<br>· 销售量：当${unit}销量（左轴）<br>· 销售额：当${unit}金额（右轴柱）`;
+      salesHelp.innerHTML = `${demo}看刊登与出单、订单的关系。<br>· 刊登 Listing/SKU：当${unit}新刊登数<br>· 有销量 Listing/SKU：该批刊登中累计有出单的数量<br>· 订单量：当${unit}新刊登 Listing/SKU，从刊登日起累计至查看时点的订单量（左轴）<br>· 销售额：当${unit}新刊登 Listing/SKU，从刊登日起累计至查看时点的销售额（右轴柱）`;
     }
   }
 
@@ -3677,7 +3677,7 @@
     if (helpPop) {
       const unit = grain === 'day' ? '日' : (grain === 'week' ? '周' : '月');
       const demo = (grain === 'week' || grain === 'month') ? '【编造·仅展示】' : '';
-      helpPop.innerHTML = `${demo}只统计已做 CPC 认证的子集，指标与上方「刊登与邮件 / 销量」对齐。<br>· CPC Listing / SKU：当${unit}已认证数<br>· 邮件 Listing / SKU：认证子集中收到合规邮件数（原型按占比估算）<br>· 销售量 / 销售额：认证子集销量（原型按占比估算）`;
+      helpPop.innerHTML = `${demo}只统计已做 CPC 认证的子集，指标与上方「刊登与邮件 / 销量」对齐。<br>· CPC Listing / SKU：当${unit}已认证数<br>· 邮件 Listing / SKU：认证子集中收到合规邮件数（按占比估算）<br>· 订单量 / 销售额：当${unit}新刊登且已认证的 Listing/SKU，从刊登日起累计至查看时点的累计值（原型按占比估算）`;
     }
   }
 
