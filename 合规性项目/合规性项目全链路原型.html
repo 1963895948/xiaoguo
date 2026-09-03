@@ -393,7 +393,7 @@
       padding-bottom:8px;border-bottom:1px dashed #eef1f6;
     }
     .ps-platform-name{
-      flex:none;width:72px;font-weight:600;font-size:12px;padding-top:2px;
+      flex:none;width:118px;font-weight:600;font-size:12px;padding-top:2px;
     }
     .ps-platform-name label{display:flex;align-items:center;gap:6px;cursor:pointer}
     .ps-sites{
@@ -2865,7 +2865,8 @@
       { id: 'lazada', name: 'LAZADA', sites: ['印度尼西亚','新加坡','马来西亚','菲律宾','泰国','越南'] },
       { id: 'shopee', name: 'SHOPEE', sites: ['巴西','墨西哥','智利','台湾','波兰','泰国','哥伦比亚','法国','菲律宾','西班牙','印度尼西亚','马来西亚','新加坡','越南'] },
       { id: 'onbuy', name: 'OnBuy', sites: ['波兰','瑞士','荷兰','葡萄牙','希腊','英国','丹麦','法国','捷克','瑞典','匈牙利','奥地利','芬兰','罗马尼亚','斯洛伐克','意大利','德国','比利时','挪威','西班牙','爱尔兰'] },
-      { id: 'tiktok', name: 'Tiktok', sites: ['菲律宾','英国','越南','泰国','马来西亚','墨西哥','新加坡','美国'] }
+      { id: 'tiktok', name: 'Tiktok', sites: ['菲律宾','美国','西班牙','越南','英国','法国','马来西亚','墨西哥','意大利','新加坡','德国'] },
+      { id: 'mercadolibre', name: 'Mercadolibre国际', sites: ['巴西','阿根廷','墨西哥','哥伦比亚','智利','秘鲁'] }
     ];
     const AMAZON_EU_UK = ['英国','德国','法国','意大利','西班牙','荷兰','波兰','瑞典','比利时','爱尔兰'];
     const AMAZON_EU = ['德国','法国','意大利','西班牙','荷兰','波兰','瑞典','比利时'];
@@ -2881,7 +2882,11 @@
 
     function siteKey(p, s){ return `${p}|${s}` }
     function parseKey(k){ const i = k.indexOf('|'); return { platform: k.slice(0, i), site: k.slice(i + 1) }; }
-    function formatLabel(k){ const { site } = parseKey(k); return site; }
+    function formatLabel(k){
+      const { platform, site } = parseKey(k);
+      // 合规站点等需区分平台：展示「平台-站点」
+      return platform ? `${platform}-${site}` : site;
+    }
     function allSiteKeys(){
       const keys = [];
       PLATFORM_SITES.forEach(p => p.sites.forEach(s => keys.push(siteKey(p.name, s))));
@@ -2890,6 +2895,11 @@
     function amazonKeys(filterFn){
       const am = PLATFORM_SITES.find(p => p.id === 'amazon');
       return am.sites.filter(filterFn).map(s => siteKey(am.name, s));
+    }
+    function platformsForModal(){
+      // 政策管理本期仅亚马逊；审核/检测/回扫为平台+站点
+      if (modalTarget === 'policy') return PLATFORM_SITES.filter(p => p.id === 'amazon');
+      return PLATFORM_SITES;
     }
 
     function renderPlatformPicked(){
@@ -2953,26 +2963,44 @@
       const list = document.getElementById('psList');
       if (!bulk || !list) return;
 
-      const platforms = PLATFORM_SITES.filter(p => p.id === 'amazon');
+      const platforms = platformsForModal();
+      const amazonOnly = platforms.length === 1 && platforms[0].id === 'amazon';
 
-      const bulkDefs = [
-        { label: '全选-全部站点', keys: amazonKeys(() => true) },
-        { label: '全选-欧英', keys: amazonKeys(s => AMAZON_EU_UK.includes(s)) },
-        { label: '全选-欧盟', keys: amazonKeys(s => AMAZON_EU.includes(s)) },
-        { label: '全选-欧洲', keys: amazonKeys(s => AMAZON_EUROPE.includes(s)) }
-      ];
-      bulk.innerHTML = bulkDefs.map((b, i) =>
-        `<label><input type="checkbox" class="ps-bulk-cb" data-bulk="${i}" /> ${b.label}</label>`
-      ).join('');
+      const bulkDefs = amazonOnly
+        ? [
+            { label: '全选-全部站点', keys: amazonKeys(() => true) },
+            { label: '全选-欧英', keys: amazonKeys(s => AMAZON_EU_UK.includes(s)) },
+            { label: '全选-欧盟', keys: amazonKeys(s => AMAZON_EU.includes(s)) },
+            { label: '全选-欧洲', keys: amazonKeys(s => AMAZON_EUROPE.includes(s)) }
+          ]
+        : [
+            { label: '全选-所有平台', keys: allSiteKeys() },
+            { label: '全选-Amazon欧英', keys: amazonKeys(s => AMAZON_EU_UK.includes(s)) },
+            { label: '全选-Amazon欧盟', keys: amazonKeys(s => AMAZON_EU.includes(s)) },
+            { label: '全选-Amazon欧洲', keys: amazonKeys(s => AMAZON_EUROPE.includes(s)) }
+          ];
+      bulk.innerHTML = bulkDefs.map((b, i) => {
+        const allOn = b.keys.length && b.keys.every(k => draftSites.has(k));
+        return `<label><input type="checkbox" class="ps-bulk-cb" data-bulk="${i}" ${allOn ? 'checked' : ''} /> ${b.label}</label>`;
+      }).join('');
 
       list.innerHTML = platforms.map(p => {
+        const selectedCount = p.sites.filter(s => draftSites.has(siteKey(p.name, s))).length;
+        const allChecked = selectedCount === p.sites.length && p.sites.length > 0;
+        const someChecked = selectedCount > 0 && !allChecked;
         const siteCells = p.sites.map(s => {
           const k = siteKey(p.name, s);
           const checked = draftSites.has(k) ? 'checked' : '';
-          return `<label title="${s}"><input type="checkbox" class="ps-site-cb" data-key="${k}" data-platform="${p.name}" ${checked} /> ${s}</label>`;
+          return `<label title="${p.name}-${s}"><input type="checkbox" class="ps-site-cb" data-key="${k}" data-platform="${p.name}" ${checked} /> ${s}</label>`;
         }).join('');
         return `<div class="ps-platform" data-platform-id="${p.id}">
           <div class="ps-platform-hd">
+            <div class="ps-platform-name">
+              <label title="${p.name}">
+                <input type="checkbox" class="ps-plat-cb" data-platform="${p.name}" ${allChecked ? 'checked' : ''} ${someChecked ? 'data-indeterminate="1"' : ''} />
+                ${p.name}
+              </label>
+            </div>
             <div class="ps-sites">${siteCells}</div>
           </div>
         </div>`;
@@ -3012,7 +3040,6 @@
       modalTarget = target;
       const modal = document.getElementById('platformModal');
       modal?.classList.toggle('above', target === 'audit');
-      // 审核选合规站点与检测/回扫一致，展示快速关联（当前选择 + 全选快捷项）
       document.getElementById('psSummary')?.removeAttribute('hidden');
       document.getElementById('psBulk')?.removeAttribute('hidden');
       if (target === 'policy') {
@@ -3023,10 +3050,10 @@
         document.getElementById('platformModalTitle').textContent = '快速关联';
       } else if (target === 'audit') {
         draftSites = new Set(auditSites);
-        document.getElementById('platformModalTitle').textContent = '选择合规站点';
+        document.getElementById('platformModalTitle').textContent = '快速关联';
       } else {
         draftSites = new Set(confirmedSites);
-        document.getElementById('platformModalTitle').textContent = '选择回扫站点';
+        document.getElementById('platformModalTitle').textContent = '快速关联';
       }
       updatePsCurrentText();
       renderPlatformModal();
@@ -3056,9 +3083,7 @@
         detectSites = new Set(draftSites);
         renderDetectPlatformPicked();
       } else if (modalTarget === 'audit') {
-        auditSites = new Set(
-          [...draftSites].filter(k => k.startsWith('亚马逊|'))
-        );
+        auditSites = new Set(draftSites);
         renderAuditSitePicked();
       } else {
         confirmedSites = new Set(draftSites);
