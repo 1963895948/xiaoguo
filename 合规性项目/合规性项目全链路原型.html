@@ -1934,6 +1934,14 @@
             </select>
           </div>
         </div>
+        <div class="form-field" id="auditComplianceSitesField" hidden>
+          <label><span class="req">*</span>合规站点</label>
+          <div class="ctl">
+            <span class="add-chip" id="openAuditSiteModal" title="快速关联">+</span>
+            <div class="picked" id="auditSitePicked"></div>
+            <div class="hint" style="margin-top:6px">同步产品库时写入「sku已标记合规站点」；可点 + 打开快速关联多选站点。</div>
+          </div>
+        </div>
         <div class="form-field audit-cert-field" id="auditRiskSitesField" hidden>
           <label><span class="req">*</span>所需相关认证</label>
           <div class="ctl">
@@ -3005,9 +3013,9 @@
       modalTarget = target;
       const modal = document.getElementById('platformModal');
       modal?.classList.toggle('above', target === 'audit');
-      const hideTop = target === 'audit';
-      document.getElementById('psSummary')?.toggleAttribute('hidden', hideTop);
-      document.getElementById('psBulk')?.toggleAttribute('hidden', hideTop);
+      // 审核选合规站点与检测/回扫一致，展示快速关联（当前选择 + 全选快捷项）
+      document.getElementById('psSummary')?.removeAttribute('hidden');
+      document.getElementById('psBulk')?.removeAttribute('hidden');
       if (target === 'policy') {
         draftSites = new Set([...policySiteNames].map(s => siteKey('亚马逊', s)));
         document.getElementById('platformModalTitle').textContent = '选择站点';
@@ -3016,7 +3024,7 @@
         document.getElementById('platformModalTitle').textContent = '快速关联';
       } else if (target === 'audit') {
         draftSites = new Set(auditSites);
-        document.getElementById('platformModalTitle').textContent = '选择检测站点';
+        document.getElementById('platformModalTitle').textContent = '选择合规站点';
       } else {
         draftSites = new Set(confirmedSites);
         document.getElementById('platformModalTitle').textContent = '选择回扫站点';
@@ -3887,9 +3895,36 @@
     const batchAuditDetail = document.getElementById('batchAuditDetail');
     const batchAuditResultSel = document.getElementById('batchAuditResult');
     const auditRiskSitesField = document.getElementById('auditRiskSitesField');
+    const auditComplianceSitesField = document.getElementById('auditComplianceSitesField');
     let auditMode = 'batch';
     let auditSource = 'detect';
     let auditSingleSku = '';
+
+    function parseSitesTextToKeys(text){
+      const keys = new Set();
+      String(text || '')
+        .split(/[、,，;；\s]+/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(site => {
+          if (site === '—' || site === '-') return;
+          keys.add(siteKey('亚马逊', site));
+        });
+      return keys;
+    }
+    function prefillsAuditSitesFromRow(row){
+      if (!row) return new Set();
+      // 回扫详情：优先「回扫站点」（第二个 .cell-sites）；检测结果：仅一列「系统检测合规站点」
+      const siteCells = [...row.querySelectorAll('td.cell-sites')];
+      let text = '';
+      if (row.classList.contains('rescan-data-row') && siteCells.length >= 2) {
+        text = siteCells[1].textContent?.trim() || '';
+      } else {
+        text = siteCells[0]?.textContent?.trim() || '';
+      }
+      const keys = parseSitesTextToKeys(text);
+      return keys.size ? keys : new Set();
+    }
 
     function getCheckedRescanRows(){
       return rescanDetailSection
@@ -3927,19 +3962,30 @@
     function syncAuditRiskSitesField(){
       const show = getBatchAuditResult() === '合规品';
       if (auditRiskSitesField) auditRiskSitesField.hidden = !show;
+      if (auditComplianceSitesField) auditComplianceSitesField.hidden = !show;
       if (!show) {
         auditCertRows = [];
         renderAuditCertRows();
-      } else if (!auditCertRows.length) {
-        auditCertRows = [{ cert: '', countries: [] }];
-        renderAuditCertRows();
+        // 合规站点在切到非合规品时清空；初始未选结果时保留预填
+        if (getBatchAuditResult() === '非合规品') {
+          auditSites = new Set();
+          renderAuditSitePicked();
+        }
+      } else {
+        if (!auditCertRows.length) {
+          auditCertRows = [{ cert: '', countries: [] }];
+          renderAuditCertRows();
+        }
+        renderAuditSitePicked();
       }
     }
-    function resetBatchAuditForm(){
+    function resetBatchAuditForm(prefillsSites){
       if (batchAuditResultSel) batchAuditResultSel.value = '';
       if (batchAuditDetail) batchAuditDetail.value = '';
       auditCertRows = [];
+      auditSites = prefillsSites instanceof Set ? new Set(prefillsSites) : new Set();
       renderAuditCertRows();
+      renderAuditSitePicked();
       syncAuditRiskSitesField();
     }
     batchAuditResultSel?.addEventListener('change', syncAuditRiskSitesField);
@@ -3975,7 +4021,9 @@
       auditSingleSku = row?.dataset.sku || '';
       const titleEl = document.getElementById('batchAuditModalTitle');
       if (titleEl) titleEl.textContent = mode === 'single' ? '审核' : '批量审核';
-      resetBatchAuditForm();
+      // 单条审核时默认带出回扫站点 / 检测站点，便于确认后打标
+      const prefills = mode === 'single' ? prefillsAuditSitesFromRow(row) : new Set();
+      resetBatchAuditForm(prefills);
       batchAuditModal?.classList.add('show');
     }
     function closeBatchAuditModal(){
@@ -3997,6 +4045,11 @@
         return;
       }
       if (result === '合规品') {
+        if (!auditSites.size) {
+          showToast('请选择合规站点');
+          document.getElementById('openAuditSiteModal')?.focus();
+          return;
+        }
         auditCertRows = collectAuditCertRows();
         const invalid = auditCertRows.some(r => !r.cert || !(r.countries && r.countries.length));
         if (!auditCertRows.length || invalid) {
@@ -4012,7 +4065,7 @@
       }
       const label = auditMode === 'single' ? (auditSingleSku || '当前记录') : `${n} 条`;
       const siteTip = result === '合规品'
-        ? `，认证：${auditCertRows.map(r => `${r.cert}（${r.countries.join('、')}）`).join('；')}`
+        ? `，合规站点：${[...auditSites].sort().map(formatLabel).join('、')}；认证：${auditCertRows.map(r => `${r.cert}（${r.countries.join('、')}）`).join('；')}`
         : '';
       closeBatchAuditModal();
       showToast(`已对 ${label} 审核为「${result}」${siteTip}`);
