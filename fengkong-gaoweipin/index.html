@@ -992,10 +992,6 @@
     return skuCatalog[code] || null;
   }
 
-  function currentEditIdType() {
-    if (editMode.batch) return document.getElementById("batch-idtype").value;
-    return document.getElementById("edit-idtype").value;
-  }
   function syncReplyHint() {
     const hint = document.getElementById("edit-reply-hint");
     const ta = document.getElementById("edit-reply");
