@@ -111,6 +111,7 @@
     .link-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .reply-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
     .ops a { margin-right: 10px; cursor: pointer; }
+    .ops a.danger { color: #cf1322; }
     .empty { text-align: center; padding: 48px 16px; color: var(--text-3); }
     .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; color: var(--text-2); }
     .threshold-tip { display: inline-flex; align-items: center; gap: 6px; background: #e6f7ff; border: 1px solid #91d5ff; color: #096dd9; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
@@ -246,8 +247,10 @@
         </div>
         <div class="toolbar">
           <button class="btn btn-primary" type="button" data-act="add-data">+ 新 增</button>
+          <button class="btn" type="button" data-act="batch-edit">批量修改</button>
+          <button class="btn btn-danger" type="button" data-act="batch-delete">删 除</button>
           <button class="btn" type="button" data-act="export-data">导 出</button>
-          <span class="hint">同步：历史人工为准，后续仅提报单（时间待定）</span>
+          <span class="hint">勾选后可批量修改禁售主类/类目，或删除</span>
           <span class="spacer"></span>
           <span class="meta-count" id="data-count"></span>
         </div>
@@ -395,6 +398,45 @@
   </div>
 </div>
 
+
+<!-- 批量修改禁售主类 / 类目 -->
+<div class="overlay" id="batchEditOverlay">
+  <div class="modal" style="width:520px;max-width:96vw;">
+    <div class="modal-hd">
+      <span>批量修改</span>
+      <button class="btn btn-ghost" type="button" data-close-batch-edit>×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="hint" id="batch-edit-count" style="margin-bottom:12px;">已选 0 条</div>
+      <div class="form-grid">
+        <div class="field span2">
+          <label>禁售主类</label>
+          <select id="batch-edit-cat">
+            <option value="">不修改</option>
+            <option>吸毒</option><option>武器</option><option>色情</option>
+            <option>冒犯</option><option>非法</option><option>监听</option>
+          </select>
+        </div>
+        <div class="field span2">
+          <label>类目（单选）</label>
+          <div class="cat-pick">
+            <div class="cat-tags" id="batch-edit-cate-tags"><span class="cat-empty">不修改类目</span></div>
+            <div class="cat-pick-actions">
+              <button class="btn" type="button" data-act="open-cate-batch-edit">选择类目</button>
+              <button class="btn-text" type="button" data-act="clear-cate-batch-edit">不修改类目</button>
+            </div>
+          </div>
+          <input type="hidden" id="batch-edit-cate" value="" />
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px;">仅填写要改的项；两项都「不修改」时无法提交</div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" type="button" data-close-batch-edit>取 消</button>
+      <button class="btn btn-primary" type="button" data-act="save-batch-edit">确 定</button>
+    </div>
+  </div>
+</div>
 
 <!-- 选择 Amazon 类目 -->
 <div class="overlay cat-overlay" id="cateOverlay">
@@ -552,12 +594,75 @@
         <td>${r.cate}</td>
         <td>${thumb(r.cat)}</td>
         <td class="link-cell"><a href="${r.link}" target="_blank" rel="noopener">${r.link}</a></td>
-        <td class="ops"><a data-edit-data="${r.id}">编辑</a><a data-log-data="${r.id}">日志</a></td>
+        <td class="ops"><a data-edit-data="${r.id}">编辑</a><a data-del-data="${r.id}" style="color:#cf1322;">删除</a><a data-log-data="${r.id}">日志</a></td>
       </tr>`).join("") || `<tr><td colspan="10"><div class="empty">暂无数据，请点击「新增」</div></td></tr>`;
   }
 
   let batchRows = [];
   let editMode = { type: "data", id: null, batch: false };
+  let batchEditCateNodes = [];
+  let batchEditCateTouched = false;
+
+  function selectedDataRows() {
+    return productData.filter((r) => r.checked);
+  }
+  function openBatchEdit() {
+    const rows = selectedDataRows();
+    if (!rows.length) { toast("请先勾选要修改的数据"); return; }
+    document.getElementById("batch-edit-count").textContent = `已选 ${rows.length} 条，将统一修改下列字段`;
+    document.getElementById("batch-edit-cat").value = "";
+    batchEditCateNodes = [];
+    batchEditCateTouched = false;
+    document.getElementById("batch-edit-cate").value = "";
+    renderCateTags("batch-edit-cate-tags", []);
+    const empty = document.querySelector("#batch-edit-cate-tags .cat-empty");
+    if (empty) empty.textContent = "不修改类目";
+    document.getElementById("batchEditOverlay").classList.add("show");
+  }
+  function closeBatchEdit() {
+    document.getElementById("batchEditOverlay").classList.remove("show");
+  }
+  function saveBatchEdit() {
+    const rows = selectedDataRows();
+    if (!rows.length) { toast("请先勾选要修改的数据"); return; }
+    const cat = document.getElementById("batch-edit-cat").value;
+    const cate = document.getElementById("batch-edit-cate").value.trim();
+    const changeCate = batchEditCateTouched;
+    if (!cat && !changeCate) { toast("请至少修改禁售主类或类目中的一项"); return; }
+    rows.forEach((r) => {
+      if (cat) r.cat = cat;
+      if (changeCate) r.cate = cate;
+    });
+    rows.forEach((r) => { r.checked = false; });
+    document.getElementById("data-check-all").checked = false;
+    renderData();
+    closeBatchEdit();
+    const parts = [];
+    if (cat) parts.push("禁售主类");
+    if (changeCate) parts.push("类目");
+    toast(`已批量修改 ${rows.length} 条的` + parts.join("、"));
+  }
+  function deleteSelectedData() {
+    const rows = selectedDataRows();
+    if (!rows.length) { toast("请先勾选要删除的数据"); return; }
+    if (!confirm(`确认删除已选 ${rows.length} 条高危品数据？删除后不可恢复（原型演示）`)) return;
+    const ids = new Set(rows.map((r) => r.id));
+    for (let i = productData.length - 1; i >= 0; i--) {
+      if (ids.has(productData[i].id)) productData.splice(i, 1);
+    }
+    document.getElementById("data-check-all").checked = false;
+    renderData();
+    toast(`已删除 ${rows.length} 条`);
+  }
+  function deleteOneData(id) {
+    const row = productData.find((x) => x.id === +id);
+    if (!row) return;
+    if (!confirm(`确认删除 ${idTypeLabel(row.idType)} ${row.code}？`)) return;
+    const idx = productData.findIndex((x) => x.id === +id);
+    if (idx >= 0) productData.splice(idx, 1);
+    renderData();
+    toast("已删除");
+  }
 
   function setSkuStatus(ok, text) {
     const el = document.getElementById("edit-sku-status");
@@ -801,9 +906,10 @@
   }
 
   document.body.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-act],[data-edit-data],[data-log-data],[data-close-edit],[data-batch-remove],[data-batch-img]");
+    const t = e.target.closest("[data-act],[data-edit-data],[data-del-data],[data-log-data],[data-close-edit],[data-close-batch-edit],[data-batch-remove],[data-batch-img]");
     if (!t) return;
     if (t.hasAttribute("data-close-edit")) { closeEdit(); return; }
+    if (t.hasAttribute("data-close-batch-edit")) { closeBatchEdit(); return; }
 
     const br = t.getAttribute("data-batch-remove");
     if (br != null) {
@@ -855,6 +961,19 @@
       renderData(); toast(act === "reset-data" ? "已重置" : "已搜索"); return;
     }
     if (act === "add-data") { openEdit(null); return; }
+    if (act === "batch-edit") { openBatchEdit(); return; }
+    if (act === "save-batch-edit") { saveBatchEdit(); return; }
+    if (act === "batch-delete") { deleteSelectedData(); return; }
+    if (act === "open-cate-batch-edit") { openCateModal("batchEdit"); return; }
+    if (act === "clear-cate-batch-edit") {
+      batchEditCateNodes = [];
+      batchEditCateTouched = false;
+      document.getElementById("batch-edit-cate").value = "";
+      renderCateTags("batch-edit-cate-tags", []);
+      const empty = document.querySelector("#batch-edit-cate-tags .cat-empty");
+      if (empty) empty.textContent = "不修改类目";
+      return;
+    }
     if (act === "save-edit") { saveEdit(); return; }
     if (act === "upload-img") {
       document.getElementById("edit-thumb").textContent = "已传";
@@ -865,6 +984,8 @@
     if (act === "export-data") { toast("原型：按当前条件导出"); return; }
     const ed = t.getAttribute("data-edit-data");
     if (ed) { openEdit(productData.find((x) => x.id === +ed)); return; }
+    const delId = t.getAttribute("data-del-data");
+    if (delId) { deleteOneData(delId); return; }
     if (t.hasAttribute("data-log-data")) {
       toast("维护日志示意（回扫审核日志在统一回扫能力中查看）");
       return;
@@ -911,6 +1032,9 @@
 
   document.getElementById("editOverlay").addEventListener("click", (e) => {
     if (e.target.id === "editOverlay") closeEdit();
+  });
+  document.getElementById("batchEditOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "batchEditOverlay") closeBatchEdit();
   });
 
   const editKeyEl = document.getElementById("edit-key");
@@ -1016,7 +1140,7 @@
     return [];
   }
 
-  let cateTarget = "filter"; // filter | edit
+  let cateTarget = "filter"; // filter | edit | batchEdit
   let filterCateNodes = [];
   let editCateNodes = [];
   let cateDraft = new Set();
@@ -1160,7 +1284,8 @@
   }
   function openCateModal(target) {
     cateTarget = target;
-    const src = (target === "filter" ? filterCateNodes : editCateNodes).slice(0, 1);
+    const srcMap = { filter: filterCateNodes, edit: editCateNodes, batchEdit: batchEditCateNodes };
+    const src = (srcMap[target] || []).slice(0, 1);
     cateSelectedNodes = new Set(src);
     cateDraft = new Set();
     src.forEach((id) => AMZ_LEAVES[id].forEach((l) => cateDraft.add(l)));
@@ -1179,6 +1304,15 @@
     if (cateTarget === "filter") {
       filterCateNodes = ids;
       renderCateTags("filter-cate-tags", filterCateNodes);
+    } else if (cateTarget === "batchEdit") {
+      batchEditCateNodes = ids;
+      batchEditCateTouched = true;
+      document.getElementById("batch-edit-cate").value = ids.map(amzPathLabel).join("");
+      renderCateTags("batch-edit-cate-tags", ids);
+      if (!ids.length) {
+        const empty = document.querySelector("#batch-edit-cate-tags .cat-empty");
+        if (empty) empty.textContent = "将清空所选记录的类目";
+      }
     } else {
       editCateNodes = ids;
       renderCateTags("edit-cate-tags", editCateNodes);
