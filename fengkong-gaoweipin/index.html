@@ -116,6 +116,15 @@
     .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; color: var(--text-2); }
     .threshold-tip { display: inline-flex; align-items: center; gap: 6px; background: #e6f7ff; border: 1px solid #91d5ff; color: #096dd9; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
 
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 8px; width: 560px; max-width: 96vw; max-height: 90vh; overflow: auto; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
+    .modal-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; }
+    .modal-bd { padding: 16px 20px; }
+    .modal-ft { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; position: sticky; bottom: 0; background: #fff; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid .span2 { grid-column: 1 / -1; }
+    .req::before { content: "*"; color: var(--danger); margin-right: 2px; }
     .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); background: #1f1f1f; color: #fff; padding: 10px 18px; border-radius: 6px; z-index: 200; opacity: 0; transition: .25s; pointer-events: none; }
     .toast.show { opacity: 1; top: 36px; }
 
