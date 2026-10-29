@@ -270,7 +270,7 @@
 
     <div class="content">
       <div class="note">
-        <strong>说明：</strong>本原型挂在<strong>禁售品管理</strong>下。「高危品数据」「回扫审核结果」为新增菜单；其余禁售子菜单为现有能力示意。高危品 = 挂过店 / 易导致店铺停用；SKU / 提报单共用同一套字段与产品库查询；保存后按<strong>原图</strong>实时回扫（交互参考禁售品回扫 / TRO）。
+        <strong>说明：</strong>本原型挂在<strong>禁售品管理</strong>下。「高危品数据」「回扫审核结果」为新增菜单；其余禁售子菜单为现有能力示意。高危品 = 挂过店 / 易导致店铺停用；SKU / 提报单共用同一套字段与产品库查询；<strong>风控回复</strong>：存量 SKU 不同步、可手改，增量提报单可查询带出。保存后按<strong>原图</strong>实时回扫。
       </div>
 
       <!-- 高危品数据（原存量+增量合并） -->
@@ -305,7 +305,7 @@
         <div class="toolbar">
           <button class="btn btn-primary" type="button" data-act="add-data">+ 新 增</button>
           <button class="btn" type="button" data-act="export-data">导 出</button>
-          <span class="hint">编号类型可选 SKU 或提报单，查询同一产品库；保存后自动回扫</span>
+          <span class="hint">SKU 风控回复需手填；提报单可查询带出；保存后自动回扫</span>
           <span class="spacer"></span>
           <span class="meta-count" id="data-count"></span>
         </div>
@@ -540,7 +540,8 @@
         </div>
         <div class="field span2">
           <label>风控回复</label>
-          <textarea id="edit-reply" rows="2" placeholder="填写风控审核回复说明，如：挂店风险说明、处置建议等"></textarea>
+          <textarea id="edit-reply" rows="2" placeholder="填写风控审核回复说明"></textarea>
+          <div class="hint" id="edit-reply-hint" style="margin-top:4px;">存量（SKU）无同步数据，可手工编辑；增量（提报单）可查询带出后修改</div>
         </div>
         <div class="field span2">
           <label>类目</label>
@@ -642,6 +643,7 @@
   function thumb(t) { return `<div class="thumb">${(t || "图").slice(0, 2)}</div>`; }
 
   // 原型：模拟产品库，按编号（SKU/提报单）查询带出（正式对接同一产品库接口）
+  // 产品库带出字段；风控回复仅提报单（增量）可查询同步，SKU（存量）无此字段
   const skuCatalog = {
     "13430831": { name: "登山手杖伸缩三节碎砖甩棍橡胶手柄", cate: "家居、厨具、家装>>家具>>客厅家具", link: "https://1688.com/offer/s1", img: "登山" },
     "14334713": { name: "鱼缸玻璃进出水管", cate: "家居、厨具、家装>>厨房与餐厅>>炊具", link: "https://1688.com/offer/s2", img: "水管" },
@@ -652,21 +654,22 @@
     "10086001": { name: "战术折叠刀不锈钢户外求生刀", cate: "汽车用品>>工具与设备>>应急启动电源", link: "https://1688.com/offer/demo-10086001", img: "刀具" },
     "10086002": { name: "金属烟斗造型装饰摆件", cate: "手工制品>>家居装饰>>蜡烛", link: "https://1688.com/offer/demo-10086002", img: "烟斗" },
     "10086003": { name: "超薄磁吸GPS定位追踪器", cate: "办公用品>>办公电子>>计算器", link: "https://1688.com/offer/demo-10086003", img: "定位" },
-    "XB20261027001": { name: "合金弹弓高强度户外弹弓", cate: "玩具和游戏>>积木>>积木套装", link: "https://1688.com/offer/i1", img: "弹弓" },
-    "XB20261025088": { name: "超薄GPS定位器磁吸款", cate: "办公用品>>办公电子>>计算器", link: "https://1688.com/offer/i2", img: "定位" },
-    "XB20261022015": { name: "研磨器金属粉碎器", cate: "家居、厨具、家装>>床上用品>>枕头", link: "https://1688.com/offer/i3", img: "研磨" },
+    "XB20261027001": { name: "合金弹弓高强度户外弹弓", cate: "玩具和游戏>>积木>>积木套装", link: "https://1688.com/offer/i1", img: "弹弓", reply: "提报打回：弹射类武器风险" },
+    "XB20261025088": { name: "超薄GPS定位器磁吸款", cate: "办公用品>>办公电子>>计算器", link: "https://1688.com/offer/i2", img: "定位", reply: "跟踪定位器，按监听类管控" },
+    "XB20261022015": { name: "研磨器金属粉碎器", cate: "家居、厨具、家装>>床上用品>>枕头", link: "https://1688.com/offer/i3", img: "研磨", reply: "打回：疑似吸毒工具" },
   };
 
   // 统一高危品数据：字段通用，仅标识类型名称不同（sku / order）
+  // reply：SKU=手工维护（无同步）；提报单=查询同步可带出
   const productData = [
-    { id: 1, idType: "sku", code: "13430831", cat: "武器", name: "登山手杖伸缩三节碎砖甩棍橡胶手柄", reply: "易被认定为管制器械，禁止刊登美站", cate: "家居、厨具、家装>>家具>>客厅家具", link: "https://1688.com/offer/s1", checked: false, hasImg: true },
-    { id: 2, idType: "sku", code: "14334713", cat: "吸毒", name: "鱼缸玻璃进出水管", reply: "名称/用途易触发吸毒类政策", cate: "家居、厨具、家装>>厨房与餐厅>>炊具", link: "https://1688.com/offer/s2", checked: false, hasImg: true },
-    { id: 3, idType: "sku", code: "12921582", cat: "色情", name: "调教束缚反手捆绑手颈套", reply: "成人向束缚类，全站点禁售", cate: "美容和个人护理>>彩妆>>口红", link: "https://1688.com/offer/s3", checked: false, hasImg: true },
-    { id: 4, idType: "sku", code: "66018821", cat: "监听", name: "迷你摄像头隐蔽录音笔二合一", reply: "隐蔽摄像录音，高风险", cate: "办公用品>>办公电子>>打印机", link: "https://1688.com/offer/s4", checked: false, hasImg: true },
+    { id: 1, idType: "sku", code: "13430831", cat: "武器", name: "登山手杖伸缩三节碎砖甩棍橡胶手柄", reply: "（手工）易被认定为管制器械，禁止刊登美站", cate: "家居、厨具、家装>>家具>>客厅家具", link: "https://1688.com/offer/s1", checked: false, hasImg: true },
+    { id: 2, idType: "sku", code: "14334713", cat: "吸毒", name: "鱼缸玻璃进出水管", reply: "", cate: "家居、厨具、家装>>厨房与餐厅>>炊具", link: "https://1688.com/offer/s2", checked: false, hasImg: true },
+    { id: 3, idType: "sku", code: "12921582", cat: "色情", name: "调教束缚反手捆绑手颈套", reply: "（手工）成人向束缚类，全站点禁售", cate: "美容和个人护理>>彩妆>>口红", link: "https://1688.com/offer/s3", checked: false, hasImg: true },
+    { id: 4, idType: "sku", code: "66018821", cat: "监听", name: "迷你摄像头隐蔽录音笔二合一", reply: "", cate: "办公用品>>办公电子>>打印机", link: "https://1688.com/offer/s4", checked: false, hasImg: true },
     { id: 5, idType: "order", code: "XB20261027001", cat: "武器", name: "合金弹弓高强度户外弹弓", reply: "提报打回：弹射类武器风险", cate: "玩具和游戏>>积木>>积木套装", link: "https://1688.com/offer/i1", checked: false, hasImg: true },
     { id: 6, idType: "order", code: "XB20261025088", cat: "监听", name: "超薄GPS定位器磁吸款", reply: "跟踪定位器，按监听类管控", cate: "办公用品>>办公电子>>计算器", link: "https://1688.com/offer/i2", checked: false, hasImg: true },
     { id: 7, idType: "order", code: "XB20261022015", cat: "吸毒", name: "研磨器金属粉碎器", reply: "打回：疑似吸毒工具", cate: "家居、厨具、家装>>床上用品>>枕头", link: "https://1688.com/offer/i3", checked: false, hasImg: true },
-    { id: 8, idType: "sku", code: "44887766", cat: "冒犯", name: "敏感政治图案印花T恤", reply: "敏感图案，建议下架", cate: "手工制品>>首饰>>项链", link: "https://1688.com/offer/s5", checked: false, hasImg: true },
+    { id: 8, idType: "sku", code: "44887766", cat: "冒犯", name: "敏感政治图案印花T恤", reply: "（手工）敏感图案，建议下架", cate: "手工制品>>首饰>>项链", link: "https://1688.com/offer/s5", checked: false, hasImg: true },
   ];
   function idTypeLabel(t) { return t === "order" ? "提报单" : "SKU"; }
 
@@ -989,6 +992,23 @@
     return skuCatalog[code] || null;
   }
 
+  function currentEditIdType() {
+    if (editMode.batch) return document.getElementById("batch-idtype").value;
+    return document.getElementById("edit-idtype").value;
+  }
+  function syncReplyHint(idType) {
+    const hint = document.getElementById("edit-reply-hint");
+    const ta = document.getElementById("edit-reply");
+    if (!hint || !ta) return;
+    if (idType === "order") {
+      hint.textContent = "增量提报单：可从提报系统查询带出风控回复，带出后仍可修改";
+      ta.placeholder = "查询提报单后自动带出，可修改";
+    } else {
+      hint.textContent = "存量 SKU：无同步数据，请手工填写风控回复";
+      ta.placeholder = "请手工填写风控回复（存量不同步）";
+    }
+  }
+
   function fillFromSku(code, { silent } = {}) {
     const info = lookupSku(code);
     if (!code) {
@@ -1007,8 +1027,16 @@
     document.getElementById("edit-link").value = info.link;
     document.getElementById("edit-thumb").textContent = info.img;
     document.getElementById("edit-thumb").dataset.has = "1";
-    setSkuStatus(true, "已从产品库带出（含主图），可修改");
-    if (!silent) toast("已带出产品信息");
+    const idType = currentEditIdType();
+    syncReplyHint(idType);
+    if (idType === "order") {
+      document.getElementById("edit-reply").value = info.reply || "";
+      setSkuStatus(true, info.reply ? "已带出产品信息及风控回复，可修改" : "已带出产品信息；该提报单暂无风控回复，可手工填写");
+      if (!silent) toast(info.reply ? "已带出产品信息与风控回复" : "已带出产品信息（无风控回复）");
+    } else {
+      setSkuStatus(true, "已从产品库带出（含主图）；风控回复需手工填写");
+      if (!silent) toast("已带出产品信息（风控回复请手工填写）");
+    }
     return true;
   }
 
@@ -1038,6 +1066,8 @@
     document.getElementById("batch-th-code").textContent = label;
     document.getElementById("batch-skus").placeholder =
       "粘贴多个" + label + "，支持换行 / 逗号 / 空格分隔\n示例：14334713\n10086001,10086002";
+    const thReply = document.querySelector("#edit-batch th:nth-child(4)");
+    if (thReply) thReply.title = idType === "order" ? "提报单可查询带出风控回复" : "存量 SKU 无同步，需手工填写";
   }
 
   function renderBatchList() {
@@ -1058,7 +1088,7 @@
           </div>
         </td>
         <td><input data-batch-field="name" data-batch-idx="${idx}" value="${r.name.replace(/"/g, "&quot;")}" style="width:100%;height:28px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;font:inherit;" /></td>
-        <td><input data-batch-field="reply" data-batch-idx="${idx}" value="${(r.reply || "").replace(/"/g, "&quot;")}" placeholder="风控回复" style="width:100%;height:28px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;font:inherit;" /></td>
+        <td><input data-batch-field="reply" data-batch-idx="${idx}" value="${(r.reply || "").replace(/"/g, "&quot;")}" placeholder="${document.getElementById("batch-idtype").value === "order" ? "查询带出/可改" : "手工填写"}" style="width:100%;height:28px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;font:inherit;" /></td>
         <td><input data-batch-field="cate" data-batch-idx="${idx}" value="${r.cate.replace(/"/g, "&quot;")}" style="width:100%;height:28px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;font:inherit;" /></td>
         <td><input data-batch-field="link" data-batch-idx="${idx}" value="${r.link.replace(/"/g, "&quot;")}" style="width:100%;height:28px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;font:inherit;" /></td>
         <td>
@@ -1086,6 +1116,7 @@
     batchRows = codes.map((code) => {
       const info = lookupSku(code);
       if (info) hit++;
+      const idType = document.getElementById("batch-idtype").value;
       return {
         code,
         found: !!info,
@@ -1095,12 +1126,16 @@
         img: info ? info.img : "",
         hasImg: !!info,
         cat: defaultCat,
-        reply: "",
+        reply: idType === "order" && info && info.reply ? info.reply : "",
       };
     });
     status.style.display = "block";
     status.style.color = "#389e0d";
-    status.textContent = `已解析 ${codes.length} 个${label}，产品库命中 ${hit} 个（含主图），可在下列表修改`;
+    const idType = document.getElementById("batch-idtype").value;
+    const replyHit = idType === "order" ? batchRows.filter((r) => r.reply).length : 0;
+    status.textContent = idType === "order"
+      ? `已解析 ${codes.length} 个提报单，产品库命中 ${hit} 个，其中风控回复带出 ${replyHit} 条，可在下列表修改`
+      : `已解析 ${codes.length} 个SKU，产品库命中 ${hit} 个（含主图）；风控回复无同步，请手工填写`;
     renderBatchList();
     toast(`已带出 ${hit}/${codes.length} 条`);
   }
@@ -1138,6 +1173,7 @@
     document.getElementById("edit-key").value = row.code;
     document.getElementById("edit-name").value = row.name;
     document.getElementById("edit-reply").value = row.reply || "";
+    syncReplyHint(row.idType);
     document.getElementById("edit-cate").value = row.cate;
     editCateNodes = amzFindNodesFromCateStr(row.cate);
     renderCateTags("edit-cate-tags", editCateNodes);
@@ -1396,6 +1432,11 @@
       const label = idTypeLabel(t.value);
       document.getElementById("edit-key-label").textContent = label;
       document.getElementById("edit-key").placeholder = "请输入" + label + "，自动带出信息";
+      syncReplyHint(t.value);
+      if (t.value === "order") {
+        const code = document.getElementById("edit-key").value.trim();
+        if (code) fillFromSku(code, { silent: true });
+      }
     }
   });
 
