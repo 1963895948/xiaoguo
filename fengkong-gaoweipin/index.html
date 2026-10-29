@@ -116,8 +116,16 @@
     .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; color: var(--text-2); }
     .threshold-tip { display: inline-flex; align-items: center; gap: 6px; background: #e6f7ff; border: 1px solid #91d5ff; color: #096dd9; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
 
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .overlay.show { display: flex; }
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: none !important; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
+      visibility: hidden; pointer-events: none;
+    }
+    .overlay.show {
+      display: flex !important; visibility: visible; pointer-events: auto;
+    }
+    .overlay[hidden] { display: none !important; }
     .modal { background: #fff; border-radius: 8px; width: 560px; max-width: 96vw; max-height: 90vh; overflow: auto; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
     .modal-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; }
     .modal-bd { padding: 16px 20px; }
@@ -290,7 +298,7 @@
 </div><!-- shell -->
 
 <!-- 新增/编辑：存量(批量SKU) or 增量/存量编辑(单条) -->
-<div class="overlay" id="editOverlay">
+<div class="overlay" id="editOverlay" hidden>
   <div class="modal" id="editModal" style="width:920px;max-width:96vw;">
     <div class="modal-hd">
       <span id="editTitle">新增</span>
@@ -409,7 +417,7 @@
 
 
 <!-- 批量修改禁售主类 / 类目 -->
-<div class="overlay" id="batchEditOverlay">
+<div class="overlay" id="batchEditOverlay" hidden>
   <div class="modal" style="width:520px;max-width:96vw;">
     <div class="modal-hd">
       <span>批量修改</span>
@@ -448,7 +456,7 @@
 </div>
 
 <!-- 选择 Amazon 类目 -->
-<div class="overlay cat-overlay" id="cateOverlay">
+<div class="overlay cat-overlay" id="cateOverlay" hidden>
   <div class="cat-modal" id="cateModal">
     <div class="cat-modal-head">
       <div class="cat-modal-title">选择Amazon类目（单选）</div>
@@ -497,6 +505,18 @@
     t.classList.add("show");
     clearTimeout(toast._tm);
     toast._tm = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+  function showOverlay(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = false;
+    el.classList.add("show");
+  }
+  function hideOverlay(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove("show");
+    el.hidden = true;
   }
   function catTag(c) {
     const map = { 吸毒: "tag-red", 武器: "tag-red", 色情: "tag-orange", 冒犯: "tag-orange", 非法: "tag-red", 监听: "tag-blue" };
@@ -626,10 +646,10 @@
     renderCateTags("batch-edit-cate-tags", []);
     const empty = document.querySelector("#batch-edit-cate-tags .cat-empty");
     if (empty) empty.textContent = "不修改类目";
-    document.getElementById("batchEditOverlay").classList.add("show");
+    showOverlay("batchEditOverlay");
   }
   function closeBatchEdit() {
-    document.getElementById("batchEditOverlay").classList.remove("show");
+    hideOverlay("batchEditOverlay");
   }
   function saveBatchEdit() {
     const rows = selectedDataRows();
@@ -830,7 +850,7 @@
       syncEditCateHidden();
       syncBatchIdTypeUI();
       renderBatchList();
-      document.getElementById("editOverlay").classList.add("show");
+      showOverlay("editOverlay");
       setTimeout(() => document.getElementById("batch-skus").focus(), 50);
       return;
     }
@@ -852,12 +872,12 @@
     document.getElementById("edit-thumb").textContent = row.hasImg ? (row.cat || "图").slice(0, 2) : "预览";
     document.getElementById("edit-thumb").dataset.has = row.hasImg ? "1" : "0";
     setSkuStatus(false, "");
-    document.getElementById("editOverlay").classList.add("show");
+    showOverlay("editOverlay");
   }
   function closeEdit() {
     clearTimeout(skuLookupTimer);
     document.getElementById("edit-idtype").disabled = false;
-    document.getElementById("editOverlay").classList.remove("show");
+    hideOverlay("editOverlay");
   }
 
   function saveEdit() {
@@ -1302,11 +1322,11 @@
     cateSearchResults = null;
     document.getElementById("cateSearchInput").value = "";
     cateSetTab("browse");
-    document.getElementById("cateOverlay").classList.add("show");
+    showOverlay("cateOverlay");
     cateRender();
   }
   function closeCateModal() {
-    document.getElementById("cateOverlay").classList.remove("show");
+    hideOverlay("cateOverlay");
   }
   function commitCateModal() {
     const ids = cateDisplayIds().slice(0, 1);
