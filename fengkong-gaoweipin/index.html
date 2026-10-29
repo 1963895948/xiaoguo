@@ -232,7 +232,7 @@
           <div class="field span2" style="grid-column:1/-1;">
             <label>类目</label>
             <div class="cat-pick">
-              <div class="cat-tags" id="filter-cate-tags"><span class="cat-empty">未选择类目（点击选择）</span></div>
+              <div class="cat-tags" id="filter-cate-tags"><span class="cat-empty">未选择类目（单选）</span></div>
               <div class="cat-pick-actions">
                 <button class="btn" type="button" data-act="open-cate-filter">选择类目</button>
                 <button class="btn-text" type="button" data-act="clear-cate-filter">清空</button>
@@ -367,7 +367,7 @@
         <div class="field span2">
           <label>类目</label>
           <div class="cat-pick">
-            <div class="cat-tags" id="edit-cate-tags"><span class="cat-empty">未选择类目</span></div>
+            <div class="cat-tags" id="edit-cate-tags"><span class="cat-empty">未选择类目（单选）</span></div>
             <div class="cat-pick-actions">
               <button class="btn" type="button" data-act="open-cate-edit">选择类目</button>
               <button class="btn-text" type="button" data-act="clear-cate-edit">清空</button>
@@ -401,7 +401,7 @@
 <div class="overlay cat-overlay" id="cateOverlay">
   <div class="cat-modal" id="cateModal">
     <div class="cat-modal-head">
-      <div class="cat-modal-title">选择Amazon类目</div>
+      <div class="cat-modal-title">选择Amazon类目（单选）</div>
       <div class="head-acts">
         <button type="button" class="btn" data-act="cate-clear-all">一键清空</button>
         <button type="button" class="btn" data-act="cate-cancel">取消</button>
@@ -424,8 +424,7 @@
         <button type="button" class="btn btn-primary" data-act="cate-search">搜索</button>
       </div>
       <div class="cat-search-head">
-        <span class="cb none" id="cateSearchAllCb"></span>
-        <span class="lbl" id="cateSearchAllLbl">全选类目</span>
+        <span class="hint" style="flex:1;">仅支持单选，点击一条结果即可选中</span>
         <button type="button" class="btn" id="cateSearchClear" disabled data-act="cate-search-clear">清空</button>
       </div>
       <div class="cat-search-list" id="cateSearchList"></div>
@@ -1014,12 +1013,11 @@
   function amzFindNodesFromCateStr(str) {
     if (!str) return [];
     const parts = String(str).split(/[；;]/).map((s) => s.trim()).filter(Boolean);
-    const ids = [];
-    parts.forEach((p) => {
+    for (const p of parts) {
       const id = amzFindByPathLabel(p) || AMZ_ORDER.find((x) => amzPathLabel(x).includes(p) || AMZ_NODE[x].cn === p);
-      if (id && !ids.includes(id)) ids.push(id);
-    });
-    return ids;
+      if (id) return [id];
+    }
+    return [];
   }
 
   let cateTarget = "filter"; // filter | edit
@@ -1068,41 +1066,21 @@
   }
   function cateToggleNode(id) {
     const leaves = AMZ_LEAVES[id];
-    if (cateTriOf(leaves) !== "all") {
-      leaves.forEach((l) => cateDraft.add(l));
-      [...cateSelectedNodes].forEach((sid) => { if (sid === id || cateIsDesc(sid, id)) cateSelectedNodes.delete(sid); });
-      cateSelectedNodes.add(id);
-      catePruneDisplay();
-    } else {
-      cateUncheckLeaves(leaves);
-    }
-    cateRender();
-  }
-  function cateToggleAllL1() {
-    if (cateTriOf(AMZ_ALL_LEAVES) !== "all") {
-      AMZ_ALL_LEAVES.forEach((l) => cateDraft.add(l));
-      cateSelectedNodes = new Set(AMZ_TREE.map((n) => n.id));
-    } else {
-      cateDraft.clear();
-      cateSelectedNodes.clear();
-    }
-    cateRender();
-  }
-  function cateInvertAll() {
-    AMZ_ALL_LEAVES.forEach((l) => (cateDraft.has(l) ? cateDraft.delete(l) : cateDraft.add(l)));
+    const already = cateSelectedNodes.size === 1 && cateSelectedNodes.has(id) && cateTriOf(leaves) === "all";
+    cateDraft.clear();
     cateSelectedNodes.clear();
-    AMZ_TREE.forEach((l1) => {
-      if (cateTriOf(AMZ_LEAVES[l1.id]) === "all") cateSelectedNodes.add(l1.id);
-    });
-    catePruneDisplay();
+    if (!already) {
+      leaves.forEach((l) => cateDraft.add(l));
+      cateSelectedNodes.add(id);
+    }
     cateRender();
   }
   function cateRenderSel() {
     const box = document.getElementById("cateSelBox");
     const list = cateDisplayIds();
     box.innerHTML = list.length
-      ? list.map((id) => `<div class="cat-sel-item"><span class="txt" title="${amzEsc(amzPathLabel(id))}">${amzEsc(amzPathLabel(id))}</span><i class="cat-sel-del" data-cate-del="${id}" title="移除">×</i></div>`).join("")
-      : '<div class="cat-sel-empty">暂未选择类目，勾选下方类目即可添加</div>';
+      ? list.slice(0, 1).map((id) => `<div class="cat-sel-item"><span class="txt" title="${amzEsc(amzPathLabel(id))}">${amzEsc(amzPathLabel(id))}</span><i class="cat-sel-del" data-cate-del="${id}" title="移除">×</i></div>`).join("")
+      : '<div class="cat-sel-empty">暂未选择类目（单选），点击下方类目选择</div>';
   }
   function cateRenderPreview() {
     const path = cateActivePath.map((id) => AMZ_NODE[id].cn);
@@ -1117,9 +1095,7 @@
     });
     const lvName = ["一级类目", "二级类目", "三级类目", "四级类目", "五级类目"];
     wrap.innerHTML = cols.map((col) => {
-      const head = col.level === 0
-        ? `<div class="cat-col-head"><span class="cb ${cateTriOf(AMZ_ALL_LEAVES)}" data-cate-act="all"></span><span class="lbl" data-cate-act="all">全选</span><button type="button" class="btn-text" data-cate-act="invert">反选</button><span class="lvl">${lvName[0]}</span></div>`
-        : `<div class="cat-col-head"><span class="lvl" style="margin-left:0;">${lvName[col.level] || (col.level + 1) + "级类目"}</span></div>`;
+      const head = `<div class="cat-col-head"><span class="lvl" style="margin-left:0;">${lvName[col.level] || (col.level + 1) + "级类目"}</span><span class="hint" style="margin-left:auto;">单选</span></div>`;
       const rows = col.items.map((n) => {
         const active = cateActivePath[col.level] === n.id ? "active" : "";
         return `<div class="cat-row ${active}" data-cate-id="${n.id}" data-cate-level="${col.level}">
@@ -1157,9 +1133,8 @@
   function cateRenderSearch() {
     const box = document.getElementById("cateSearchList");
     const leaves = cateSearchLeaves();
-    document.getElementById("cateSearchAllCb").className = "cb " + (leaves.length ? cateTriOf(leaves) : "none");
     document.getElementById("cateSearchClear").disabled = !leaves.some((l) => cateDraft.has(l));
-    if (cateSearchResults === null) { box.innerHTML = '<div class="cat-search-tip">输入关键词后点击「搜索」</div>'; return; }
+    if (cateSearchResults === null) { box.innerHTML = '<div class="cat-search-tip">输入关键词后点击「搜索」（单选）</div>'; return; }
     box.innerHTML = cateSearchResults.length
       ? cateSearchResults.map((id) => `<div class="cat-row" data-cate-search="${id}"><span class="cb ${cateTriOf(AMZ_LEAVES[id])}" data-cate-cb="${id}"></span><span class="txt" title="${amzEsc(amzPathLabel(id))}">${amzEsc(amzPathLabel(id))}</span></div>`).join("")
       : '<div class="cat-search-tip">未找到匹配的类目</div>';
@@ -1182,14 +1157,14 @@
     if (!box) return;
     box.innerHTML = nodeIds.length
       ? nodeIds.map((id) => `<span class="cat-tag" title="${amzEsc(amzPathLabel(id))}">${amzEsc(amzPathLabel(id))}</span>`).join("")
-      : '<span class="cat-empty">未选择类目</span>';
+      : '<span class="cat-empty">未选择类目（单选）</span>';
   }
   function syncEditCateHidden() {
-    document.getElementById("edit-cate").value = editCateNodes.map(amzPathLabel).join("；");
+    document.getElementById("edit-cate").value = editCateNodes.slice(0, 1).map(amzPathLabel).join("");
   }
   function openCateModal(target) {
     cateTarget = target;
-    const src = target === "filter" ? filterCateNodes : editCateNodes;
+    const src = (target === "filter" ? filterCateNodes : editCateNodes).slice(0, 1);
     cateSelectedNodes = new Set(src);
     cateDraft = new Set();
     src.forEach((id) => AMZ_LEAVES[id].forEach((l) => cateDraft.add(l)));
@@ -1204,7 +1179,7 @@
     document.getElementById("cateOverlay").classList.remove("show");
   }
   function commitCateModal() {
-    const ids = cateDisplayIds();
+    const ids = cateDisplayIds().slice(0, 1);
     if (cateTarget === "filter") {
       filterCateNodes = ids;
       renderCateTags("filter-cate-tags", filterCateNodes);
@@ -1214,7 +1189,7 @@
       syncEditCateHidden();
     }
     closeCateModal();
-    toast(ids.length ? `已选择 ${ids.length} 个类目` : "已清空类目");
+    toast(ids.length ? "已选择类目" : "已清空类目");
   }
 
 
@@ -1225,28 +1200,12 @@
   document.getElementById("cateSearchInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); cateDoSearch(); }
   });
-  document.getElementById("cateSearchAllCb").addEventListener("click", () => {
-    const ids = cateSearchResults || [];
-    if (!ids.length) return;
-    const leaves = cateSearchLeaves();
-    if (cateTriOf(leaves) !== "all") {
-      leaves.forEach((l) => cateDraft.add(l));
-      ids.forEach((id) => cateSelectedNodes.add(id));
-      catePruneDisplay();
-    } else {
-      cateUncheckLeaves(leaves);
-    }
-    cateRender();
-  });
-  document.getElementById("cateSearchAllLbl").addEventListener("click", () => document.getElementById("cateSearchAllCb").click());
   document.getElementById("cateCols").addEventListener("scroll", (e) => { if (cateTab === "browse") cateColsScroll = e.target.scrollLeft; });
   document.getElementById("cateSelBox").addEventListener("click", (e) => {
     const del = e.target.closest("[data-cate-del]");
     if (del) cateToggleNode(del.dataset.cateDel);
   });
   document.getElementById("cateCols").addEventListener("click", (e) => {
-    const actEl = e.target.closest("[data-cate-act]");
-    if (actEl) { actEl.dataset.cateAct === "all" ? cateToggleAllL1() : cateInvertAll(); return; }
     const cb = e.target.closest("[data-cate-cb]");
     if (cb) { cateToggleNode(cb.dataset.cateCb); return; }
     const row = e.target.closest(".cat-row");
