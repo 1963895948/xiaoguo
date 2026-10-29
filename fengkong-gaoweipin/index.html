@@ -898,7 +898,6 @@
       const r = productData.find((x) => x.id === +t.dataset.dataId);
       if (r) r.checked = t.checked;
     }
-    }
     if (t.id === "data-check-all") {
       filteredData().forEach((r) => { r.checked = t.checked; });
       renderData();
