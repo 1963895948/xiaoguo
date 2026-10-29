@@ -115,63 +115,6 @@
     .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; color: var(--text-2); }
     .threshold-tip { display: inline-flex; align-items: center; gap: 6px; background: #e6f7ff; border: 1px solid #91d5ff; color: #096dd9; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
 
-    /* 回扫：以原图为维度（对齐 TRO 回扫结果） */
-    .rescan-row {
-      display: grid; grid-template-columns: 240px 1fr; gap: 12px;
-      border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 12px; margin-bottom: 12px; background: #fff;
-    }
-    @media (max-width: 900px) { .rescan-row { grid-template-columns: 1fr; } }
-    .src-card {
-      border: 1px solid var(--border-light); border-radius: var(--radius);
-      padding: 10px; background: #fafafa;
-    }
-    .src-card .src-img {
-      width: 100%; aspect-ratio: 1; border-radius: 4px; margin-bottom: 8px;
-      background: linear-gradient(135deg, #fff1f0, #fff7e6);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-3); border: 1px solid var(--border); font-size: 12px;
-      position: relative; overflow: hidden;
-    }
-    .src-card .badge { position: absolute; top: 6px; left: 6px; }
-    .src-meta { font-size: 12px; color: var(--text-2); line-height: 1.7; }
-    .src-meta b { color: var(--text); font-weight: 500; }
-    .match-head {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 8px; color: var(--text-2); font-size: 12px;
-    }
-    .match-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;
-    }
-    .match-card {
-      border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; background: #fff;
-    }
-    .match-card.risk { border-color: #ffa39e; background: #fffafa; }
-    .match-card.safe { border-color: #b7eb8f; background: #f6ffed; }
-    .match-card .m-img {
-      width: 100%; aspect-ratio: 1; border-radius: 4px; margin-bottom: 6px;
-      background: linear-gradient(135deg, #e6f7ff, #f0f5ff);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-3); font-size: 11px; border: 1px solid var(--border-light);
-    }
-    .match-card .sim { font-weight: 600; color: var(--danger); font-size: 12px; }
-    .match-card .sim.mid { color: var(--warning); }
-    .match-card .sku { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
-    .match-card .title {
-      font-size: 12px; color: var(--text-2); margin-top: 2px; min-height: 36px;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    }
-    .match-card .check { display: flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; }
-
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .overlay.show { display: flex; }
-    .modal { background: #fff; border-radius: 8px; width: 560px; max-width: 96vw; max-height: 90vh; overflow: auto; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
-    .modal-hd { padding: 14px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; }
-    .modal-bd { padding: 16px 20px; }
-    .modal-ft { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; position: sticky; bottom: 0; background: #fff; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-grid .span2 { grid-column: 1 / -1; }
-    .req::before { content: "*"; color: var(--danger); margin-right: 2px; }
     .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); background: #1f1f1f; color: #fff; padding: 10px 18px; border-radius: 6px; z-index: 200; opacity: 0; transition: .25s; pointer-events: none; }
     .toast.show { opacity: 1; top: 36px; }
 
@@ -247,7 +190,6 @@
           <div class="menu-sub-item" title="现有菜单，本原型不演示">禁售产品提报</div>
           <div class="menu-sub-item" title="现有菜单，本原型不演示">禁用词管理</div>
           <div class="menu-sub-item active" data-tab="data">高危品数据</div>
-          <div class="menu-sub-item" data-tab="rescan">回扫审核结果</div>
         </div>
       </div>
       <div class="menu-item"><span class="ico">合</span>合规管理</div>
@@ -270,7 +212,7 @@
 
     <div class="content">
       <div class="note">
-        <strong>说明：</strong>本原型挂在<strong>禁售品管理</strong>下。「高危品数据」「回扫审核结果」为新增菜单；其余禁售子菜单为现有能力示意。高危品 = 挂过店 / 易导致店铺停用；SKU / 提报单共用同一套字段与产品库查询。<strong>数据同步</strong>：历史以人工数据为准；后续仅同步提报单（启动时间待定）。保存后按<strong>原图</strong>实时回扫。
+        <strong>说明：</strong>本原型挂在<strong>禁售品管理</strong>下。本期仅新增「高危品数据」；回扫审核由另一产品统一建设，本侧后续在统一回扫中加「高危品」回扫类型即可，本原型不演示回扫页。其余禁售子菜单为现有能力示意。<strong>数据同步</strong>：历史以人工数据为准；后续仅同步提报单（启动时间待定）。
       </div>
 
       <!-- 高危品数据（原存量+增量合并） -->
@@ -305,7 +247,7 @@
         <div class="toolbar">
           <button class="btn btn-primary" type="button" data-act="add-data">+ 新 增</button>
           <button class="btn" type="button" data-act="export-data">导 出</button>
-          <span class="hint">同步：历史人工为准，后续仅提报单（时间待定）；保存后自动回扫</span>
+          <span class="hint">同步：历史人工为准，后续仅提报单（时间待定）</span>
           <span class="spacer"></span>
           <span class="meta-count" id="data-count"></span>
         </div>
@@ -331,130 +273,9 @@
         <div class="pager" id="data-pager"></div>
       </section>
 
-      <!-- 回扫：以原图为维度（左原图 + 右产品库命中，对齐 TRO 回扫） -->
-      <section class="mod-panel" id="panel-rescan">
-        <div class="page-title">回扫审核结果</div>
-        <div class="filter">
-          <div class="field"><label>命中SKU</label><input id="rs-sku" placeholder="请输入SKU" /></div>
-          <div class="field">
-            <label>审核结果</label>
-            <select id="rs-result"><option value="">全部</option><option>待审核</option><option>有风险</option><option>无风险</option></select>
-          </div>
-          <div class="field">
-            <label>原图标识类型</label>
-            <select id="rs-source">
-              <option value="">全部</option>
-              <option value="sku">SKU</option>
-              <option value="order">提报单</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>禁售主类（原图）</label>
-            <select id="rs-cat">
-              <option value="">全部</option>
-              <option>吸毒</option><option>武器</option><option>色情</option>
-              <option>冒犯</option><option>非法</option><option>监听</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>相似度</label>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <input id="rs-sim-min" type="number" min="0" max="1" step="0.01" value="0.85" placeholder="最小" style="flex:1;" />
-              <span style="color:var(--text-3);">~</span>
-              <input id="rs-sim-max" type="number" min="0" max="1" step="0.01" value="1" placeholder="最大" style="flex:1;" />
-            </div>
-          </div>
-          <div class="field"><label>产品线</label><input id="rs-line" placeholder="请输入产品线" /></div>
-          <div class="field filter-actions">
-            <button class="btn btn-primary" type="button" data-act="search-rs">搜 索</button>
-            <button class="btn" type="button" data-act="reset-rs">重 置</button>
-          </div>
-        </div>
-        <div class="toolbar">
-          <button class="btn btn-success" type="button" data-act="batch-safe">批量无风险</button>
-          <button class="btn btn-danger" type="button" data-act="batch-risk">批量有风险</button>
-          <button class="btn" type="button" data-act="batch-sku">批量提取SKU</button>
-          <button class="btn" type="button" data-act="rs-stat">审核统计</button>
-          <button class="btn" type="button" data-act="rs-log">操作日志</button>
-          <span class="spacer"></span>
-          <span class="threshold-tip">以原图为维度 · 存量/增量新增后用其图片实时回扫产品库 · 相似度区间筛选</span>
-          <span class="meta-count" id="rs-count"></span>
-        </div>
-        <div id="rs-list"></div>
-        <div class="pager" id="rs-pager"></div>
-      </section>
     </div><!-- content -->
   </div><!-- main -->
 </div><!-- shell -->
-
-<!-- 审核统计 -->
-<div class="overlay" id="statOverlay">
-  <div class="modal" style="width:520px;">
-    <div class="modal-hd">
-      <span>审核统计</span>
-      <button class="btn btn-ghost" type="button" data-close-stat>×</button>
-    </div>
-    <div class="modal-bd" id="statBody"></div>
-    <div class="modal-ft">
-      <button class="btn btn-primary" type="button" data-close-stat>关 闭</button>
-    </div>
-  </div>
-</div>
-
-<!-- 操作日志（对齐 TRO 回扫日志） -->
-<div class="overlay" id="logOverlay">
-  <div class="modal" style="width:920px;max-width:96vw;">
-    <div class="modal-hd">
-      <span>操作日志</span>
-      <button class="btn btn-ghost" type="button" data-close-log>×</button>
-    </div>
-    <div class="modal-bd">
-      <div class="filter" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px;">
-        <div class="field"><label>SKU</label><input id="log-sku" placeholder="请输入SKU" /></div>
-        <div class="field">
-          <label>操作人</label>
-          <select id="log-user">
-            <option value="">请选择操作人</option>
-            <option>袁效国</option><option>马婷婷</option><option>原型用户</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>操作时间</label>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <input id="log-date-from" type="date" style="flex:1;" />
-            <span style="color:var(--text-3);">→</span>
-            <input id="log-date-to" type="date" style="flex:1;" />
-          </div>
-        </div>
-        <div class="field filter-actions">
-          <button class="btn btn-primary" type="button" data-act="search-log">搜 索</button>
-          <button class="btn" type="button" data-act="reset-log">重 置</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table class="data" style="min-width:0;">
-          <thead>
-            <tr>
-              <th>回扫ID</th>
-              <th>sku</th>
-              <th>操作内容</th>
-              <th>操作人</th>
-              <th>操作时间</th>
-            </tr>
-          </thead>
-          <tbody id="log-tbody"></tbody>
-        </table>
-      </div>
-      <div class="pager" style="margin-top:10px;">
-        <span class="meta-count" id="log-count">共 0 条</span>
-        <span class="hint">20 条/页</span>
-      </div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn" type="button" data-close-log>关 闭</button>
-    </div>
-  </div>
-</div>
 
 <!-- 新增/编辑：存量(批量SKU) or 增量/存量编辑(单条) -->
 <div class="overlay" id="editOverlay">
@@ -563,7 +384,7 @@
           <div style="display:flex;gap:10px;align-items:center;">
             <div class="thumb" id="edit-thumb" style="width:72px;height:72px;">预览</div>
             <button class="btn" type="button" data-act="upload-img">更换图片</button>
-            <span class="hint" id="edit-img-hint">图片由系统带出，可更换；保存后自动实时回扫</span>
+            <span class="hint" id="edit-img-hint">图片由系统带出，可更换</span>
           </div>
         </div>
       </div>
@@ -621,10 +442,6 @@
 <script>
 (function () {
   const CATS = ["吸毒", "武器", "色情", "冒犯", "非法", "监听"];
-  const LINES = ["泛铺", "精品", "综合平台海外仓", "半托管"];
-  const PLATS = ["Amazon US", "Amazon UK", "Amazon DE", "Walmart", "全平台站点"];
-  const LVS = ["高", "中", "低"];
-
   function toast(msg) {
     const t = document.getElementById("toast");
     t.textContent = msg;
@@ -635,10 +452,6 @@
   function catTag(c) {
     const map = { 吸毒: "tag-red", 武器: "tag-red", 色情: "tag-orange", 冒犯: "tag-orange", 非法: "tag-red", 监听: "tag-blue" };
     return `<span class="tag ${map[c] || "tag-gray"}">${c}</span>`;
-  }
-  function riskTag(lv) {
-    const map = { 高: "tag-red", 中: "tag-orange", 低: "tag-blue" };
-    return `<span class="tag ${map[lv] || "tag-gray"}">${lv}</span>`;
   }
   function thumb(t) { return `<div class="thumb">${(t || "图").slice(0, 2)}</div>`; }
 
@@ -673,52 +486,7 @@
   ];
   function idTypeLabel(t) { return t === "order" ? "提报单" : "SKU"; }
 
-  function buildMatches(seed, n) {
-    const arr = [];
-    for (let i = 0; i < n; i++) {
-      const sim = +(0.85 + (seed * 7 + i * 13) % 13 / 100).toFixed(5);
-      arr.push({
-        id: `${seed}-${i}`,
-        sim,
-        sku: String(11000000 + seed * 1000 + i * 37),
-        line: LINES[(seed + i) % LINES.length],
-        name: ["相似造型商品样例", "图搜命中近似SKU", "库内同主图变体", "近似品名命中款"][i % 4] + `-${i + 1}`,
-        cate: ["户外/配件", "家居/装饰", "数码/周边", "服装/印花"][i % 4],
-        link: "https://1688.com/offer/match-" + seed + "-" + i,
-        platforms: PLATS[i % PLATS.length],
-        riskLv: LVS[i % 3],
-        status: "待审核",
-        checked: false,
-      });
-    }
-    return arr;
-  }
-
-  // 以原图为维度：每组 = 高危品原图 + 产品库命中
-  const rescanGroups = [
-    {
-      id: 1, idType: "sku", cat: "武器",
-      refKey: "13430831", refName: "登山手杖伸缩三节碎砖甩棍橡胶手柄", refCate: "户外/登山",
-      refLink: "https://1688.com/offer/s1",
-      matches: buildMatches(1, 6),
-    },
-    {
-      id: 2, idType: "sku", cat: "吸毒",
-      refKey: "14334713", refName: "鱼缸玻璃进出水管", refCate: "宠物/水族",
-      refLink: "https://1688.com/offer/s2",
-      matches: buildMatches(2, 5),
-    },
-    {
-      id: 3, idType: "order", cat: "监听",
-      refKey: "XB20261025088", refName: "超薄GPS定位器磁吸款", refCate: "数码/定位",
-      refLink: "https://1688.com/offer/i2",
-      matches: buildMatches(3, 4),
-    },
-  ];
-  rescanGroups[0].matches[0].status = "有风险";
-  rescanGroups[0].matches[0].checked = true;
-
-  const TAB_LABEL = { data: "高危品数据", rescan: "回扫审核结果" };
+  const TAB_LABEL = { data: "高危品数据" };
 
   function switchTab(key) {
     document.querySelectorAll(".menu-sub-item").forEach((t) => t.classList.toggle("active", t.dataset.tab === key));
@@ -739,7 +507,7 @@
 
   document.querySelectorAll(".menu-sub-item").forEach((el) => {
     el.addEventListener("click", () => {
-      if (!el.dataset.tab) { toast("现有菜单，本原型仅演示「高危品数据 / 回扫审核结果」"); return; }
+      if (!el.dataset.tab) { toast("现有菜单，本原型仅演示「高危品数据」"); return; }
       switchTab(el.dataset.tab);
     });
   });
@@ -788,194 +556,6 @@
         <td class="link-cell"><a href="${r.link}" target="_blank" rel="noopener">${r.link}</a></td>
         <td class="ops"><a data-edit-data="${r.id}">编辑</a><a data-log-data="${r.id}">日志</a></td>
       </tr>`).join("") || `<tr><td colspan="10"><div class="empty">暂无数据，请点击「新增」</div></td></tr>`;
-  }
-
-  function filteredRescanGroups() {
-    const sku = document.getElementById("rs-sku").value.trim();
-    const line = document.getElementById("rs-line").value.trim();
-    const source = document.getElementById("rs-source").value;
-    const cat = document.getElementById("rs-cat").value;
-    const simMinRaw = document.getElementById("rs-sim-min").value;
-    const simMaxRaw = document.getElementById("rs-sim-max").value;
-    const simMin = simMinRaw === "" ? 0 : parseFloat(simMinRaw);
-    const simMax = simMaxRaw === "" ? 1 : parseFloat(simMaxRaw);
-    const result = document.getElementById("rs-result").value;
-    return rescanGroups
-      .filter((g) => {
-        if (source && g.idType !== source) return false;
-        if (cat && g.cat !== cat) return false;
-        return true;
-      })
-      .map((g) => {
-        const matches = g.matches.filter((m) => {
-          if (m.sim < simMin || m.sim > simMax) return false;
-          if (sku && !m.sku.includes(sku)) return false;
-          if (line && !m.line.includes(line)) return false;
-          if (result && m.status !== result) return false;
-          return true;
-        });
-        return { ...g, matches };
-      })
-      .filter((g) => g.matches.length > 0);
-  }
-
-  function calcRescanStats() {
-    let total = 0, pending = 0, risk = 0, safe = 0;
-    rescanGroups.forEach((g) => g.matches.forEach((m) => {
-      total++;
-      if (m.status === "有风险") risk++;
-      else if (m.status === "无风险") safe++;
-      else pending++;
-    }));
-    return { groups: rescanGroups.length, total, pending, risk, safe };
-  }
-
-  let logIdSeq = 274320;
-  // 仅记录操作类型=审核 的数据；页面不展示操作类型
-  const opLogs = [
-    { scanId: 274316, sku: "23624434", content: "审核为无风险", user: "袁效国", time: "2026-10-27 17:46:46" },
-    { scanId: 274315, sku: "23624370", content: "审核为无风险", user: "袁效国", time: "2026-10-27 17:46:46" },
-    { scanId: 274314, sku: "22921255", content: "审核为无风险", user: "袁效国", time: "2026-10-27 17:46:46" },
-    { scanId: 274313, sku: "21164371", content: "审核为无风险", user: "袁效国", time: "2026-10-27 17:46:46" },
-    { scanId: 274312, sku: "17752036", content: "审核为无风险", user: "袁效国", time: "2026-10-27 17:46:46" },
-    { scanId: 274311, sku: "13509742", content: "审核为无风险", user: "袁效国", time: "2026-10-27 17:46:46" },
-    { scanId: 274310, sku: "11006447", content: "审核为有风险", user: "马婷婷", time: "2026-10-27 16:20:11" },
-  ];
-
-  function filteredLogs() {
-    const sku = document.getElementById("log-sku").value.trim();
-    const user = document.getElementById("log-user").value;
-    const from = document.getElementById("log-date-from").value;
-    const to = document.getElementById("log-date-to").value;
-    return opLogs.filter((r) => {
-      if (sku && !String(r.sku).includes(sku)) return false;
-      if (user && r.user !== user) return false;
-      const day = (r.time || "").slice(0, 10);
-      if (from && day < from) return false;
-      if (to && day > to) return false;
-      return true;
-    });
-  }
-
-  function renderLogs() {
-    const list = filteredLogs();
-    document.getElementById("log-count").textContent = `共 ${list.length} 条`;
-    document.getElementById("log-tbody").innerHTML = list.map((r) => `
-      <tr>
-        <td>${r.scanId}</td>
-        <td>${r.sku}</td>
-        <td>${r.content}</td>
-        <td>${r.user}</td>
-        <td style="white-space:nowrap;">${r.time}</td>
-      </tr>
-    `).join("") || `<tr><td colspan="5"><div class="empty">暂无日志</div></td></tr>`;
-  }
-
-  function pushAuditLog({ sku, content, user }) {
-    opLogs.unshift({
-      scanId: ++logIdSeq,
-      sku: sku || "-",
-      content,
-      user: user || "原型用户",
-      time: new Date().toISOString().slice(0, 19).replace("T", " "),
-    });
-  }
-
-  function openStat() {
-    const s = calcRescanStats();
-    document.getElementById("statBody").innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="border:1px solid var(--border);border-radius:6px;padding:14px;">
-          <div class="hint">原图组数</div>
-          <div style="font-size:24px;font-weight:600;margin-top:4px;">${s.groups}</div>
-        </div>
-        <div style="border:1px solid var(--border);border-radius:6px;padding:14px;">
-          <div class="hint">命中SKU总数</div>
-          <div style="font-size:24px;font-weight:600;margin-top:4px;">${s.total}</div>
-        </div>
-        <div style="border:1px solid var(--border);border-radius:6px;padding:14px;">
-          <div class="hint">待审核</div>
-          <div style="font-size:24px;font-weight:600;margin-top:4px;color:var(--warning);">${s.pending}</div>
-        </div>
-        <div style="border:1px solid var(--border);border-radius:6px;padding:14px;">
-          <div class="hint">有风险 / 无风险</div>
-          <div style="font-size:24px;font-weight:600;margin-top:4px;">
-            <span style="color:var(--danger);">${s.risk}</span>
-            <span style="color:var(--text-3);font-weight:400;"> / </span>
-            <span style="color:var(--success);">${s.safe}</span>
-          </div>
-        </div>
-      </div>
-      <p class="hint" style="margin-top:12px;">统计范围为当前全部回扫结果（非筛选后子集）。正式环境可按时间/审核人下钻。</p>
-    `;
-    document.getElementById("statOverlay").classList.add("show");
-  }
-
-  function openLog() {
-    renderLogs();
-    document.getElementById("logOverlay").classList.add("show");
-  }
-
-  function matchStatusClass(st) {
-    if (st === "有风险") return "risk";
-    if (st === "无风险") return "safe";
-    return "";
-  }
-
-  function renderRescan() {
-    const list = filteredRescanGroups();
-    const totalMatch = list.reduce((s, g) => s + g.matches.length, 0);
-    document.getElementById("rs-count").textContent = `共 ${list.length} 组原图 · ${totalMatch} 条命中SKU`;
-    const box = document.getElementById("rs-list");
-    if (!list.length) {
-      box.innerHTML = `<div class="empty">暂无回扫命中；高危品新增后会用原图自动回扫产品库，也可调低相似度阈值</div>`;
-      return;
-    }
-    box.innerHTML = list.map((g) => {
-      const keyLabel = idTypeLabel(g.idType);
-      return `
-      <div class="rescan-row" data-group="${g.id}">
-        <div class="src-card">
-          <div class="src-img">
-            <span class="badge">${catTag(g.cat)}</span>
-            原图示意
-          </div>
-          <div class="src-meta">
-            <div><b>标识类型：</b>${keyLabel}</div>
-            <div><b>${keyLabel}：</b>${g.refKey}</div>
-            <div><b>中文名：</b>${g.refName}</div>
-            <div><b>类目：</b>${g.refCate}</div>
-            <div><b>采购链接：</b><a href="${g.refLink}" target="_blank" rel="noopener">查看</a></div>
-          </div>
-        </div>
-        <div>
-          <div class="match-head">
-            <span>产品库回扫结果（相似度区间内）</span>
-            <span>
-              <button class="btn" type="button" data-select-all="${g.id}">全 选</button>
-              <button class="btn" type="button" data-select-inv="${g.id}">反 选</button>
-            </span>
-          </div>
-          <div class="match-grid">
-            ${g.matches.map((m) => `
-              <div class="match-card ${matchStatusClass(m.status)}" data-match="${m.id}">
-                <div class="m-img">库内图</div>
-                <div class="sim ${m.sim >= 0.9 ? "" : "mid"}">相似度：${m.sim}</div>
-                <div class="sku">SKU：${m.sku}</div>
-                <div style="font-size:12px;color:var(--text-2);">产品线：${m.line}</div>
-                <div class="title" title="${m.name}">${m.name}</div>
-                <div style="font-size:11px;color:var(--text-3);margin-top:4px;">类目：${m.cate}</div>
-                <div style="font-size:11px;margin-top:2px;">禁售站点：${m.platforms}</div>
-                <div style="margin-top:4px;">风险等级：${riskTag(m.riskLv)}</div>
-                <div class="check">
-                  <label><input type="checkbox" data-match-check="${g.id}|${m.id}" ${m.checked ? "checked" : ""} /> ${m.status === "待审核" ? "有风险" : m.status}</label>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-      </div>`;
-    }).join("");
   }
 
   let batchRows = [];
@@ -1170,19 +750,6 @@
     document.getElementById("editOverlay").classList.remove("show");
   }
 
-  function addRescanForItem(idType, item, seed) {
-    rescanGroups.unshift({
-      id: seed,
-      idType,
-      cat: item.cat,
-      refKey: item.code,
-      refName: item.name,
-      refCate: item.cate || "-",
-      refLink: item.link || "#",
-      matches: buildMatches(seed % 1000, 4),
-    });
-  }
-
   function saveEdit() {
     if (editMode.batch) {
       const idType = document.getElementById("batch-idtype").value;
@@ -1201,13 +768,10 @@
           link: r.link.trim(), checked: false, hasImg: true,
         };
         productData.unshift(row);
-        addRescanForItem(idType, row, id);
       });
       renderData();
-      renderRescan();
       closeEdit();
-      toast(`已新增 ${batchRows.length} 条，并按原图自动回扫`);
-      switchTab("rescan");
+      toast(`已新增 ${batchRows.length} 条`);
       return;
     }
 
@@ -1220,7 +784,7 @@
     const link = document.getElementById("edit-link").value.trim();
     const hasImg = document.getElementById("edit-thumb").dataset.has === "1";
     if (!key || !name) { toast("请填写必填项：标识与中文名"); return; }
-    if (!hasImg && !editMode.id) { toast("请确保已带出/更换主图（实时回扫依赖主图）"); return; }
+    if (!hasImg && !editMode.id) { toast("请确保已带出/更换主图"); return; }
 
     if (editMode.id) {
       Object.assign(productData.find((x) => x.id === editMode.id), {
@@ -1235,20 +799,15 @@
     const id = Date.now();
     const row = { id, idType, code: key, cat, name, reply, cate, link, checked: false, hasImg: true };
     productData.unshift(row);
-    addRescanForItem(idType, row, id);
     renderData();
-    renderRescan();
     closeEdit();
-    toast("已保存，并用该原图自动回扫产品库");
-    switchTab("rescan");
+    toast("已保存");
   }
 
   document.body.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-act],[data-edit-data],[data-log-data],[data-close-edit],[data-close-stat],[data-close-log],[data-select-all],[data-select-inv],[data-batch-remove],[data-batch-img]");
+    const t = e.target.closest("[data-act],[data-edit-data],[data-log-data],[data-close-edit],[data-batch-remove],[data-batch-img]");
     if (!t) return;
     if (t.hasAttribute("data-close-edit")) { closeEdit(); return; }
-    if (t.hasAttribute("data-close-stat")) { document.getElementById("statOverlay").classList.remove("show"); return; }
-    if (t.hasAttribute("data-close-log")) { document.getElementById("logOverlay").classList.remove("show"); return; }
 
     const br = t.getAttribute("data-batch-remove");
     if (br != null) {
@@ -1299,14 +858,6 @@
       }
       renderData(); toast(act === "reset-data" ? "已重置" : "已搜索"); return;
     }
-    if (act === "search-rs" || act === "reset-rs") {
-      if (act === "reset-rs") {
-        ["rs-sku","rs-line","rs-source","rs-cat","rs-result"].forEach((id) => { document.getElementById(id).value = ""; });
-        document.getElementById("rs-sim-min").value = "0.85";
-        document.getElementById("rs-sim-max").value = "1";
-      }
-      renderRescan(); toast(act === "reset-rs" ? "已重置" : "已搜索"); return;
-    }
     if (act === "add-data") { openEdit(null); return; }
     if (act === "save-edit") { saveEdit(); return; }
     if (act === "upload-img") {
@@ -1316,56 +867,10 @@
       return;
     }
     if (act === "export-data") { toast("原型：按当前条件导出"); return; }
-    if (act === "batch-safe" || act === "batch-risk") {
-      const to = act === "batch-safe" ? "无风险" : "有风险";
-      let n = 0;
-      rescanGroups.forEach((g) => g.matches.forEach((m) => {
-        if (m.checked) { m.status = to; n++; }
-      }));
-      renderRescan();
-      if (n) {
-        rescanGroups.forEach((g) => g.matches.forEach((m) => {
-          if (m.checked) pushAuditLog({ sku: m.sku, content: `审核为${to}` });
-        }));
-      }
-      toast(n ? `已将 ${n} 条标为「${to}」` : "请先勾选命中SKU");
-      return;
-    }
-    if (act === "batch-sku") {
-      const skus = [];
-      rescanGroups.forEach((g) => g.matches.forEach((m) => { if (m.checked) skus.push(m.sku); }));
-      if (!skus.length) { toast("请先勾选SKU"); return; }
-      navigator.clipboard?.writeText(skus.join("\n")).catch(() => {});
-      toast(`已提取 ${skus.length} 个SKU`);
-      return;
-    }
-    if (act === "rs-stat") { openStat(); return; }
-    if (act === "rs-log") { openLog(); return; }
-    if (act === "search-log") { renderLogs(); toast("已搜索"); return; }
-    if (act === "reset-log") {
-      ["log-sku", "log-user", "log-date-from", "log-date-to"].forEach((id) => { document.getElementById(id).value = ""; });
-      renderLogs();
-      toast("已重置");
-      return;
-    }
     const ed = t.getAttribute("data-edit-data");
     if (ed) { openEdit(productData.find((x) => x.id === +ed)); return; }
     if (t.hasAttribute("data-log-data")) {
-      toast("原型：查看操作日志");
-      return;
-    }
-    const sa = t.getAttribute("data-select-all");
-    if (sa) {
-      const g = rescanGroups.find((x) => String(x.id) === String(sa));
-      if (g) g.matches.forEach((m) => { m.checked = true; if (m.status === "待审核") m.status = "有风险"; });
-      renderRescan();
-      return;
-    }
-    const si = t.getAttribute("data-select-inv");
-    if (si) {
-      const g = rescanGroups.find((x) => String(x.id) === String(si));
-      if (g) g.matches.forEach((m) => { m.checked = !m.checked; });
-      renderRescan();
+      toast("维护日志示意（回扫审核日志在统一回扫能力中查看）");
       return;
     }
   });
@@ -1394,16 +899,6 @@
       const r = productData.find((x) => x.id === +t.dataset.dataId);
       if (r) r.checked = t.checked;
     }
-    if (t.matches("[data-match-check]")) {
-      const [gid, mid] = t.dataset.matchCheck.split("|");
-      const g = rescanGroups.find((x) => String(x.id) === String(gid));
-      const m = g && g.matches.find((x) => x.id === mid);
-      if (m) {
-        m.checked = t.checked;
-        if (t.checked && m.status === "待审核") m.status = "有风险";
-        if (!t.checked && m.status === "有风险") m.status = "待审核";
-        renderRescan();
-      }
     }
     if (t.id === "data-check-all") {
       filteredData().forEach((r) => { r.checked = t.checked; });
@@ -1421,12 +916,6 @@
 
   document.getElementById("editOverlay").addEventListener("click", (e) => {
     if (e.target.id === "editOverlay") closeEdit();
-  });
-  document.getElementById("statOverlay").addEventListener("click", (e) => {
-    if (e.target.id === "statOverlay") document.getElementById("statOverlay").classList.remove("show");
-  });
-  document.getElementById("logOverlay").addEventListener("click", (e) => {
-    if (e.target.id === "logOverlay") document.getElementById("logOverlay").classList.remove("show");
   });
 
   const editKeyEl = document.getElementById("edit-key");
@@ -1777,7 +1266,6 @@
 
 
   renderData();
-  renderRescan();
 })();
 </script>
 </body>
