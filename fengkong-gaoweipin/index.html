@@ -362,7 +362,6 @@
         <div class="field span2">
           <label>高危原因</label>
           <textarea id="edit-reply" rows="2" placeholder="查询带出或手工填写高危原因"></textarea>
-          <div class="hint" id="edit-reply-hint" style="margin-top:4px;">SKU / 提报单逻辑相同：均可查询同步带出，带出后可修改</div>
         </div>
         <div class="field span2">
           <label>类目</label>
@@ -572,11 +571,9 @@
   }
 
   function syncReplyHint() {
-    const hint = document.getElementById("edit-reply-hint");
     const ta = document.getElementById("edit-reply");
-    if (!hint || !ta) return;
-    hint.textContent = "SKU / 提报单逻辑相同：均可查询同步带出高危原因，带出后可修改";
-    ta.placeholder = "查询编号后自动带出，可修改";
+    if (!ta) return;
+    ta.placeholder = "查询带出或手工填写高危原因";
   }
 
   function fillFromSku(code, { silent } = {}) {
