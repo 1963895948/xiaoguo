@@ -270,7 +270,7 @@
 
     <div class="content">
       <div class="note">
-        <strong>说明：</strong>本原型挂在<strong>禁售品管理</strong>下。「高危品数据」「回扫审核结果」为新增菜单；其余禁售子菜单为现有能力示意。高危品 = 挂过店 / 易导致店铺停用；SKU / 提报单共用同一套字段与产品库查询；<strong>高危原因</strong>均可查询同步带出，带出后可改。保存后按<strong>原图</strong>实时回扫。
+        <strong>说明：</strong>本原型挂在<strong>禁售品管理</strong>下。「高危品数据」「回扫审核结果」为新增菜单；其余禁售子菜单为现有能力示意。高危品 = 挂过店 / 易导致店铺停用；SKU / 提报单共用同一套字段与产品库查询。<strong>数据同步</strong>：历史以人工数据为准；后续仅同步提报单（启动时间待定）。保存后按<strong>原图</strong>实时回扫。
       </div>
 
       <!-- 高危品数据（原存量+增量合并） -->
@@ -305,7 +305,7 @@
         <div class="toolbar">
           <button class="btn btn-primary" type="button" data-act="add-data">+ 新 增</button>
           <button class="btn" type="button" data-act="export-data">导 出</button>
-          <span class="hint">高危原因：SKU / 提报单均可查询带出，可改；保存后自动回扫</span>
+          <span class="hint">同步：历史人工为准，后续仅提报单（时间待定）；保存后自动回扫</span>
           <span class="spacer"></span>
           <span class="meta-count" id="data-count"></span>
         </div>
@@ -643,7 +643,7 @@
   function thumb(t) { return `<div class="thumb">${(t || "图").slice(0, 2)}</div>`; }
 
   // 原型：模拟产品库，按编号（SKU/提报单）查询带出（正式对接同一产品库接口）
-  // 产品库带出字段（含高危原因）；SKU / 提报单查询逻辑相同
+  // 产品库带出字段（含高危原因）；表单查询演示用。入表自动同步口径：历史人工、后续仅提报单
   const skuCatalog = {
     "13430831": { name: "登山手杖伸缩三节碎砖甩棍橡胶手柄", cate: "家居、厨具、家装>>家具>>客厅家具", link: "https://1688.com/offer/s1", img: "登山", reply: "易被认定为管制器械，禁止刊登美站" },
     "14334713": { name: "鱼缸玻璃进出水管", cate: "家居、厨具、家装>>厨房与餐厅>>炊具", link: "https://1688.com/offer/s2", img: "水管", reply: "名称/用途易触发吸毒类政策" },
@@ -660,7 +660,7 @@
   };
 
   // 统一高危品数据：字段通用，仅标识类型名称不同（sku / order）
-  // reply=高危原因：SKU / 提报单均可同步带出
+  // reply=高危原因；自动同步仅提报单（时间待定），历史以人工为准
   const productData = [
     { id: 1, idType: "sku", code: "13430831", cat: "武器", name: "登山手杖伸缩三节碎砖甩棍橡胶手柄", reply: "易被认定为管制器械，禁止刊登美站", cate: "家居、厨具、家装>>家具>>客厅家具", link: "https://1688.com/offer/s1", checked: false, hasImg: true },
     { id: 2, idType: "sku", code: "14334713", cat: "吸毒", name: "鱼缸玻璃进出水管", reply: "名称/用途易触发吸毒类政策", cate: "家居、厨具、家装>>厨房与餐厅>>炊具", link: "https://1688.com/offer/s2", checked: false, hasImg: true },
